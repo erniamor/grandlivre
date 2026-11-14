@@ -3,6 +3,22 @@ import { z } from "zod";
 // Dates travel as ISO 8601 strings in JSON
 export const dateTimeSchema = z.iso.datetime();
 
+/**
+ * Largest amount accepted, in minor units (cents): far above a family's
+ * finances, and small enough for sums to stay exact in JavaScript.
+ */
+export const MAX_AMOUNT = 999_999_999_999;
+
+/**
+ * An amount of money in minor units of the household's currency (cents),
+ * always an integer: 72.50 $ is 7250. Negative for money owed or spent.
+ */
+export const amountSchema = z
+	.number("amount_invalid")
+	.int("amount_invalid")
+	.min(-MAX_AMOUNT, "amount_too_large")
+	.max(MAX_AMOUNT, "amount_too_large");
+
 export const paginationSchema = z.object({
 	page: z.number().int().min(1),
 	pageSize: z.number().int().min(1),

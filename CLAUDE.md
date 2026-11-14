@@ -9,9 +9,9 @@ Grand Livre: a family finance app. The members of a household record the money c
 Product decisions:
 
 - Household: everything (accounts, tags, transactions) belongs to a household, which members join by email invitation. Its currency is set per household. A member is an owner (manages the household, its members and invitations) or a plain member. The data model lets a user belong to several households; the interface handles a single one for now, switching between households comes later.
-- Accounts: each has one or more holders; an account with several holders is a shared account. Only holders write to an account. The real balance is tracked (opening balance, reconciliation).
+- Accounts: each has a type (chequing, savings, credit card, cash, loan, other) and one or more holders; an account with several holders is a shared account. Only holders write to an account. The real balance is tracked (opening balance, reconciliation) and is negative for money owed. When its last holder leaves the household, an account stays without a holder until an owner of the household gives it one or deletes it. The household's currency can no longer change once an account exists. The tables are named `ledger_accounts` (Better Auth owns `accounts`).
 - Visibility: the holder of an account chooses what the other members see of it: its details (default) or its balance only (transaction lines hidden, amounts still counted in totals and reports). No hidden accounts.
-- Consolidated view (the "super account"): computed over every account of the household, never stored. Transfers between accounts are neither income nor expense.
+- Consolidated view (the "super account"): computed over every account of the household, never stored, debts included: assets, liabilities and the net balance. Transfers between accounts are neither income nor expense.
 - Transactions: income, expense or transfer, split into lines; each line has an amount and exactly one tag, so reports never count an amount twice. Each transaction records its origin (manual, voice, receipt, import) and an external identifier for imports.
 - Tags: a hierarchy (a tag has at most one parent); reports roll amounts up to the parents.
 - Amounts: integers in minor units (cents), never floats.

@@ -15,6 +15,13 @@
 			"when": 1794691871878,
 			"tag": "0001_households",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1794694696344,
+			"tag": "0002_ledger_accounts",
+			"breakpoints": true
 		}
 	]
 }
