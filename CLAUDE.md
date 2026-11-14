@@ -8,7 +8,7 @@ Grand Livre: a family finance app. The members of a household record the money c
 
 Product decisions:
 
-- Household: everything (accounts, tags, transactions) belongs to a household, which members join by email invitation. Its currency is set per household.
+- Household: everything (accounts, tags, transactions) belongs to a household, which members join by email invitation. Its currency is set per household. A member is an owner (manages the household, its members and invitations) or a plain member. The data model lets a user belong to several households; the interface handles a single one for now, switching between households comes later.
 - Accounts: each has one or more holders; an account with several holders is a shared account. Only holders write to an account. The real balance is tracked (opening balance, reconciliation).
 - Visibility: the holder of an account chooses what the other members see of it: its details (default) or its balance only (transaction lines hidden, amounts still counted in totals and reports). No hidden accounts.
 - Consolidated view (the "super account"): computed over every account of the household, never stored. Transfers between accounts are neither income nor expense.
