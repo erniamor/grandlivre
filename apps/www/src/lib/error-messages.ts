@@ -13,6 +13,9 @@ const messagesByCode: Record<string, () => string> = {
 	household_name_required: m.error_household_name_required,
 	household_name_too_long: m.error_household_name_too_long,
 	household_currency_invalid: m.error_household_currency_invalid,
+	last_owner: m.error_last_owner,
+	already_member: m.error_already_member,
+	email_unavailable: m.error_email_unavailable,
 };
 
 export function errorMessage(code: string): string {
@@ -59,6 +62,12 @@ export function formErrors(error: unknown): FormErrors {
 		return { form: errorMessage(error.code), fields: {} };
 	}
 	return { form: m.error_generic(), fields: {} };
+}
+
+/** One message for an action outside a form that was refused, e.g. in a toast. */
+export function actionErrorMessage(error: unknown): string {
+	const { form, fields } = formErrors(error);
+	return form ?? Object.values(fields)[0] ?? m.error_generic();
 }
 
 /**

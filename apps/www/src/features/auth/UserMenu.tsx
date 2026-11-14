@@ -12,6 +12,7 @@ import { Link } from "@tanstack/react-router";
 import {
 	CircleUserRoundIcon,
 	DownloadIcon,
+	HouseIcon,
 	LogOutIcon,
 	UserIcon,
 } from "lucide-react";
@@ -27,7 +28,7 @@ interface UserMenuProps {
 	me: Profile;
 }
 
-/** The signed-in user's menu in the header: profile, installing the app, sign-out. */
+/** The signed-in user's menu in the header: profile, household, installing the app, sign-out. */
 export function UserMenu({ me }: UserMenuProps) {
 	const session = useSessionChange();
 	const signOut = useMutation({
@@ -64,6 +65,12 @@ export function UserMenu({ me }: UserMenuProps) {
 						<Link to="/profile">
 							<UserIcon aria-hidden className="size-4" />
 							{m.profile_link()}
+						</Link>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Link to="/household">
+							<HouseIcon aria-hidden className="size-4" />
+							{m.household_link()}
 						</Link>
 					</DropdownMenuItem>
 					{installation.installable && (

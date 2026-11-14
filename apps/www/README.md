@@ -12,6 +12,7 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/sign-in`, `/welcome` | Sign-in, then the name at the first sign-in |
 | `/profile` | The user's email, and their name to change |
 | `/setup` | For a signed-in user without a household: accept an invitation received, or create a household (name, currency). Opened automatically; goes on to the page asked for |
+| `/household` | The household's settings, opened from the account menu: its name and currency, its members (roles, removing, leaving) and its pending invitations (inviting, sending again, cancelling). Owners change them; plain members read them and can leave |
 | `/dashboard` | Home of a signed-in user, in their household: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 

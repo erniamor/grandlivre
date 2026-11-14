@@ -19,6 +19,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
+import { Route as AuthenticatedHouseholdHouseholdRouteImport } from './routes/_authenticated/_household/household'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +70,12 @@ const AuthenticatedHouseholdDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdHouseholdRoute =
+  AuthenticatedHouseholdHouseholdRouteImport.update({
+    id: '/household',
+    path: '/household',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
+  '/household': typeof AuthenticatedHouseholdHouseholdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,6 +97,7 @@ export interface FileRoutesByTo {
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
+  '/household': typeof AuthenticatedHouseholdHouseholdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,6 +111,7 @@ export interface FileRoutesById {
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
+  '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/welcome'
     | '/dashboard'
+    | '/household'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/welcome'
     | '/dashboard'
+    | '/household'
   id:
     | '__root__'
     | '/'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/setup'
     | '/_authenticated/welcome'
     | '/_authenticated/_household/dashboard'
+    | '/_authenticated/_household/household'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -218,16 +231,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdDashboardRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/household': {
+      id: '/_authenticated/_household/household'
+      path: '/household'
+      fullPath: '/household'
+      preLoaderRoute: typeof AuthenticatedHouseholdHouseholdRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
   }
 }
 
 interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
+  AuthenticatedHouseholdHouseholdRoute: typeof AuthenticatedHouseholdHouseholdRoute
 }
 
 const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
   {
     AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
+    AuthenticatedHouseholdHouseholdRoute: AuthenticatedHouseholdHouseholdRoute,
   }
 
 const AuthenticatedHouseholdRouteWithChildren =
