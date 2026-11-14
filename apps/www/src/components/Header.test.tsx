@@ -108,6 +108,22 @@ describe("Header", () => {
 		).toHaveAttribute("href", "/dashboard");
 	});
 
+	it("links to the accounts for a signed-in user only", async () => {
+		const header = await renderHeader(aliceProfile);
+
+		expect(
+			within(header).getByRole("link", { name: "Accounts" }),
+		).toHaveAttribute("href", "/accounts");
+	});
+
+	it("doesn't link a visitor to the accounts, reserved to signed-in users", async () => {
+		const header = await renderHeader();
+
+		expect(
+			within(header).queryByRole("link", { name: "Accounts" }),
+		).not.toBeInTheDocument();
+	});
+
 	it("doesn't link a visitor to the dashboard, reserved to signed-in users", async () => {
 		const header = await renderHeader();
 

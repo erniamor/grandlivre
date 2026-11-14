@@ -2,7 +2,7 @@ import type { Profile } from "@repo/schemas";
 import type { ThemeName } from "@repo/themes";
 import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboardIcon, LogInIcon } from "lucide-react";
+import { LayoutDashboardIcon, LogInIcon, WalletIcon } from "lucide-react";
 import { headerButtonClass } from "@/components/header-styles";
 import { Logo } from "@/components/Logo";
 import { AppearanceMenu } from "@/features/appearance/AppearanceMenu";
@@ -28,16 +28,28 @@ export function Header({ appearance, theme, me }: HeaderProps) {
 				<div className="flex flex-wrap items-center gap-1">
 					{/* The app's pages are reserved to signed-in users */}
 					{me && (
-						<Link
-							to="/dashboard"
-							aria-label={m.dashboard_title()}
-							className={cn(
-								headerButtonClass,
-								"data-[status=active]:bg-inverse-foreground/10",
-							)}
-						>
-							<LayoutDashboardIcon aria-hidden className="size-5" />
-						</Link>
+						<>
+							<Link
+								to="/dashboard"
+								aria-label={m.dashboard_title()}
+								className={cn(
+									headerButtonClass,
+									"data-[status=active]:bg-inverse-foreground/10",
+								)}
+							>
+								<LayoutDashboardIcon aria-hidden className="size-5" />
+							</Link>
+							<Link
+								to="/accounts"
+								aria-label={m.accounts_title()}
+								className={cn(
+									headerButtonClass,
+									"data-[status=active]:bg-inverse-foreground/10",
+								)}
+							>
+								<WalletIcon aria-hidden className="size-5" />
+							</Link>
+						</>
 					)}
 					{/* Changing the language reloads the page in that language */}
 					<LanguageMenu locale={getLocale()} onLocaleChange={setLocale} />

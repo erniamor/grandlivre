@@ -1,4 +1,6 @@
 import type { Household, Profile } from "@repo/schemas";
+import { Link } from "@tanstack/react-router";
+import { HouseholdBalance } from "@/features/accounts/HouseholdBalance";
 import { InstallCard } from "@/features/pwa/InstallCard";
 import { m } from "@/paraglide/messages";
 
@@ -20,6 +22,14 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 					{m.dashboard_household({ name: household.name })}
 				</p>
 			</header>
+			<HouseholdBalance household={household}>
+				<Link
+					to="/accounts"
+					className="justify-self-start rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+				>
+					{m.summary_accounts_link()}
+				</Link>
+			</HouseholdBalance>
 			<InstallCard />
 		</section>
 	);
