@@ -4,7 +4,7 @@
 
 ## Role
 
-Single data access point for the front-end applications: each business resource (`auth`, `me`, then the product's own) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
+Single data access point for the front-end applications: each business resource (`auth`, `me`, `households`, `invitations`...) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
 
 The Zod schemas of the API's inputs and responses live in `packages/schemas`, shared with `apps/api`: this package uses them, it doesn't define them.
 
@@ -28,7 +28,7 @@ The Zod schemas of the API's inputs and responses live in `packages/schemas`, sh
 - `src/http/client.ts`: base HTTP client (`createApiClient`: URL under `/v1`, headers, credentials, response validation) and `parseInput()` to validate an input before sending
 - `src/api/errors.ts`: reading the error envelopes (the API's `{ error: { ... } }` and Better Auth's `{ code, message }`) into typed errors
 - `src/api/page.ts`: helpers for paginated operations (`Page<T>`, `toPage()`, `withQuery()`, `segment()`)
-- `src/<resource>/`: one folder per business resource (`auth`, `me`)
+- `src/<resource>/`: one folder per business resource (`auth`, `me`, `households`, `invitations`)
   - `<resource>.resource.ts`: the resource's operations, as `create<Resource>Resource(client)`
   - `<resource>.resource.test.ts`: their tests
 - `src/errors.ts`: typed error classes (`ApiError` and its subclasses, `NetworkError`)
