@@ -1,9 +1,11 @@
+import { createAccountsResource } from "./accounts/accounts.resource";
 import { createAuthResource } from "./auth/auth.resource";
 import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
 import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
 
+export type { AccountsResource } from "./accounts/accounts.resource";
 export type { Page, PageOptions } from "./api/page";
 export type { AuthResource } from "./auth/auth.resource";
 export {
@@ -25,6 +27,7 @@ export type { MeResource } from "./me/me.resource";
 export function createApi(config: ApiClientConfig) {
 	const client = createApiClient(config);
 	return {
+		accounts: createAccountsResource(client),
 		auth: createAuthResource(client),
 		households: createHouseholdsResource(client),
 		invitations: createInvitationsResource(client),
