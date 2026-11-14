@@ -1,0 +1,174 @@
+import type { Profile } from "@repo/schemas";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Header } from "@/components/Header";
+import { useInstall } from "@/features/pwa/use-install";
+import { readCookie } from "@/lib/cookies";
+import { setTestLocale } from "@/test/locale";
+import { mockSystemAppearance } from "@/test/match-media";
+import { aliceProfile, mockApi } from "@/test/mock-api";
+import { renderWithRouter } from "@/test/render-with-router";
+
+vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
+vi.mock("@/features/pwa/use-install", () => ({ useInstall: vi.fn() }));
+
+function mockInstall(state: "ios" | "installed") {
+	vi.mocked(useInstall).mockReturnValue({
+		state,
+		installable: state === "ios",
+		dismissed: false,
+		install: vi.fn(async () => true),
+		dismiss: vi.fn(),
+	});
+}
+
+beforeEach(() => {
+	mockInstall("installed");
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+	document.documentElement.classList.remove("dark");
+});
+
+async function renderHeader(me: Profile | null = null) {
+	renderWithRouter(<Header appearance="system" theme="stationery" me={me} />);
+	return screen.findByRole("banner");
+}
+
+describe("Header", () => {
+	it("offers a visitor to sign in", async () => {
+		const header = await renderHeader();
+
+		expect(
+			within(header).getByRole("link", { name: "Sign in" }),
+		).toHaveAttribute("href", "/sign-in");
+	});
+
+	it("shows the signed-in user's menu, with the profile and sign-out", async () => {
+		const requests = mockApi(() => ({ status: 200, body: { success: true } }));
+		const user = userEvent.setup();
+		const header = await renderHeader(aliceProfile);
+
+		await user.click(
+			within(header).getByRole("button", { name: "Account: Alice" }),
+		);
+		const menu = screen.getByRole("menu");
+		expect(within(menu).getByText("Alice")).toBeVisible();
+		expect(within(menu).getByText("alice@example.com")).toBeVisible();
+		expect(
+			within(menu).getByRole("menuitem", { name: "Profile" }),
+		).toHaveAttribute("href", "/profile");
+
+		await user.click(within(menu).getByRole("menuitem", { name: "Sign out" }));
+
+		await vi.waitFor(() =>
+			expect(requests).toEqual([
+				{ method: "POST", path: "/auth/sign-out", body: {} },
+			]),
+		);
+	});
+
+	it("explains how to install the app from the account menu, where it isn't yet", async () => {
+		mockInstall("ios");
+		const user = userEvent.setup();
+		const header = await renderHeader(aliceProfile);
+
+		await user.click(
+			within(header).getByRole("button", { name: "Account: Alice" }),
+		);
+		await user.click(screen.getByRole("menuitem", { name: "Install the app" }));
+
+		expect(
+			await screen.findByRole("dialog", {
+				name: "Add Grand Livre to your home screen",
+			}),
+		).toBeVisible();
+	});
+
+	it("doesn't offer to install the app once installed", async () => {
+		const user = userEvent.setup();
+		const header = await renderHeader(aliceProfile);
+
+		await user.click(
+			within(header).getByRole("button", { name: "Account: Alice" }),
+		);
+
+		expect(
+			screen.queryByRole("menuitem", { name: "Install the app" }),
+		).toBeNull();
+	});
+
+	it("links to the dashboard for a signed-in user only", async () => {
+		const header = await renderHeader(aliceProfile);
+
+		expect(
+			within(header).getByRole("link", { name: "Dashboard" }),
+		).toHaveAttribute("href", "/dashboard");
+	});
+
+	it("doesn't link a visitor to the dashboard, reserved to signed-in users", async () => {
+		const header = await renderHeader();
+
+		expect(
+			within(header).queryByRole("link", { name: "Dashboard" }),
+		).toBeNull();
+	});
+
+	it("shows the logo linking to the home page", async () => {
+		const header = await renderHeader();
+
+		expect(
+			within(header).getByRole("link", { name: "Grand Livre, home" }),
+		).toHaveAttribute("href", "/");
+	});
+
+	it.each([
+		["en", "Language: English", "Appearance: System, Stationery"],
+		["fr", "Langue : Français", "Apparence : Système, Papeterie"],
+		["es", "Idioma: Español", "Apariencia: Sistema, Papelería"],
+	] as const)(
+		"names its menus with their current choice, in %s",
+		async (locale, language, appearance) => {
+			setTestLocale(locale);
+
+			const header = await renderHeader();
+
+			expect(
+				within(header).getByRole("button", { name: language }),
+			).toHaveAttribute("aria-haspopup", "menu");
+			expect(
+				within(header).getByRole("button", { name: appearance }),
+			).toHaveAttribute("aria-haspopup", "menu");
+		},
+	);
+
+	it("switches to dark mode from the keyboard", async () => {
+		mockSystemAppearance(false);
+		const user = userEvent.setup();
+		const header = await renderHeader();
+		const trigger = within(header).getByRole("button", {
+			name: "Appearance: System, Stationery",
+		});
+
+		// Logo, language, then appearance
+		await user.tab();
+		await user.tab();
+		await user.tab();
+		expect(trigger).toHaveFocus();
+		await user.keyboard("{Enter}");
+		expect(
+			screen.getByRole("menuitemradio", { name: "System" }),
+		).toHaveAttribute("aria-checked", "true");
+		await user.click(screen.getByRole("menuitemradio", { name: "Dark" }));
+
+		expect(document.documentElement).toHaveClass("dark");
+		expect(readCookie(document.cookie, "appearance")).toBe("dark");
+		expect(
+			within(header).getByRole("button", {
+				name: "Appearance: Dark, Stationery",
+			}),
+		).toHaveFocus();
+	});
+});
