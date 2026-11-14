@@ -82,6 +82,21 @@ A household is visible to its members only: anyone else gets a 404, as for a hou
 
 A household always keeps at least one owner: demoting or removing the last one is refused with a 409 `last_owner`.
 
+### Invitations
+
+An owner invites someone by email. There is no invitation token: the invitation is addressed to an email, and signing in with that email is what proves it is theirs. Invitations are valid for 7 days; accepted, declined and cancelled ones are deleted.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `POST /v1/households/:householdId/invitations` `{ email }` | owner | Invites the email and sends the invitation email, in the language of the request (201). Inviting the same email again renews the invitation and sends the email again. Nothing is saved if the email can't be sent |
+| `GET /v1/households/:householdId/invitations` | member | Lists the household's pending invitations |
+| `DELETE /v1/households/:householdId/invitations/:invitationId` | owner | Cancels an invitation (204) |
+| `GET /v1/invitations` | signed-in user | Lists the pending invitations addressed to the user's email |
+| `POST /v1/invitations/:invitationId/accept` | invited user | Joins the household as a plain member and returns it |
+| `POST /v1/invitations/:invitationId/decline` | invited user | Deletes the invitation (204) |
+
+An invitation that is expired, or addressed to someone else, answers 404.
+
 ### Errors
 
 Every error has the same shape:
@@ -96,6 +111,7 @@ Every error has the same shape:
 | 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household |
 | 404 | `not_found` | Unknown route or resource, or a household the user isn't a member of |
 | 409 | `last_owner` | The change would leave a household without an owner |
+| 409 | `already_member` | The invited email already belongs to a member of the household |
 | 413 | `payload_too_large` | Body over 1 MB |
 | 422 | `validation_error` | Invalid input; `details` lists each field with an error code from `@repo/schemas` |
 | 500 | `internal_error` | Unexpected error, logged on the server, never detailed in the response |

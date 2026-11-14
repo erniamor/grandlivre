@@ -25,6 +25,7 @@ import {
 	updateHousehold,
 	updateMemberRole,
 } from "@/routes/households/households.service";
+import { householdInvitationRoutes } from "@/routes/invitations/invitations.routes";
 
 export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.use(requireAuth)
@@ -37,6 +38,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	// Everything below belongs to one household, open to its members only
 	// ("/:householdId/*" also matches "/:householdId" itself)
 	.use("/:householdId/*", requireHouseholdMember)
+	.route("/:householdId/invitations", householdInvitationRoutes)
 	.get("/:householdId", (c) => c.json(toHousehold(c.get("membership"))))
 	.patch(
 		"/:householdId",

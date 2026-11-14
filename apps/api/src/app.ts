@@ -10,6 +10,7 @@ import { handleError, handleNotFound } from "@/lib/error-handler";
 import { errorBody } from "@/lib/errors";
 import { healthRoutes } from "@/routes/health/health.routes";
 import { householdRoutes } from "@/routes/households/households.routes";
+import { invitationRoutes } from "@/routes/invitations/invitations.routes";
 import { meRoutes } from "@/routes/me/me.routes";
 
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -19,6 +20,7 @@ const v1 = new Hono()
 	.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw))
 	.route("/health", healthRoutes)
 	.route("/households", householdRoutes)
+	.route("/invitations", invitationRoutes)
 	.route("/me", meRoutes);
 
 export const app = new Hono();
