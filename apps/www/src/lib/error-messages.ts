@@ -10,6 +10,9 @@ const messagesByCode: Record<string, () => string> = {
 	too_many_attempts: m.error_too_many_attempts,
 	name_required: m.error_name_required,
 	name_too_long: m.error_name_too_long,
+	household_name_required: m.error_household_name_required,
+	household_name_too_long: m.error_household_name_too_long,
+	household_currency_invalid: m.error_household_currency_invalid,
 };
 
 export function errorMessage(code: string): string {

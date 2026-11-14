@@ -79,5 +79,20 @@
 	"install_ios_close": "Entendido",
 	"sign_in_intro_code": "Escribe tu correo: te enviamos un código para iniciar sesión, sin contraseña. ¿Es tu primera vez? Tu cuenta se crea por el camino.",
 	"dashboard_title": "Panel",
-	"dashboard_intro": "Esta página está reservada a los usuarios conectados. Construye tu aplicación a partir de aquí."
+	"dashboard_household": "Hogar: {name}",
+	"setup_title": "Tu hogar",
+	"setup_intro": "Un hogar reúne las cuentas de la familia. Crea el tuyo o únete a uno al que te hayan invitado.",
+	"invitations_title": "Invitaciones",
+	"invitation_text": "{inviter} te invita a unirte a {household}.",
+	"invitation_accept_button": "Unirme",
+	"invitation_decline_button": "Rechazar",
+	"create_household_title": "Crear un hogar",
+	"household_name_label": "Nombre del hogar",
+	"household_currency_label": "Moneda",
+	"household_currency_hint": "Todos los importes del hogar están en esta moneda.",
+	"create_household_button": "Crear el hogar",
+	"error_household_name_required": "Ponle un nombre al hogar.",
+	"error_household_name_too_long": "El nombre del hogar es demasiado largo (60 caracteres como máximo).",
+	"error_household_currency_invalid": "Elige una moneda de la lista.",
+	"error_invitation_not_found": "Esta invitación ya no es válida."
 }

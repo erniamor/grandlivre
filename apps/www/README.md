@@ -2,7 +2,7 @@
 
 Grand Livre's web app: for now the screens that come before the product's own (sign-in, profile, language, appearance), ready to receive its features. Built with React and TanStack Start, TanStack Query, Paraglide JS for translations, Tailwind CSS and the components of [`@repo/ui`](../../packages/ui).
 
-What's in place: a header (logo, then menus for the language, the appearance and the account: profile and sign-out), sign-in by magic link or code, the name asked at the first sign-in, a home page for visitors, an example page for signed-in users, the installable app (PWA), and the 404 and error pages.
+What's in place: a header (logo, then menus for the language, the appearance and the account: profile and sign-out), sign-in by magic link or code, the name asked at the first sign-in, a home page for visitors, creating or joining a household, the dashboard of signed-in users, the installable app (PWA), and the 404 and error pages.
 
 ## Screens
 
@@ -11,7 +11,8 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/` | Presentation for visitors; signed-in users go to `/dashboard` |
 | `/sign-in`, `/welcome` | Sign-in, then the name at the first sign-in |
 | `/profile` | The user's email, and their name to change |
-| `/dashboard` | Example page reserved to signed-in users: the starting point of the product's own pages |
+| `/setup` | For a signed-in user without a household: accept an invitation received, or create a household (name, currency). Opened automatically; goes on to the page asked for |
+| `/dashboard` | Home of a signed-in user, in their household: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 
 The app calls the API through [`@repo/resources`](../../packages/resources): it needs the API running (see [apps/api/README.md](../api/README.md)).

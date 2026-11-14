@@ -14,9 +14,11 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHouseholdRouteImport } from './routes/_authenticated/_household'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
+import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,9 +44,8 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedHouseholdRoute = AuthenticatedHouseholdRouteImport.update({
+  id: '/_household',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -52,29 +53,42 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHouseholdDashboardRoute =
+  AuthenticatedHouseholdDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -83,9 +97,11 @@ export interface FileRoutesById {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/_household': typeof AuthenticatedHouseholdRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -94,18 +110,20 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/offline'
     | '/sign-in'
-    | '/dashboard'
     | '/profile'
+    | '/setup'
     | '/welcome'
+    | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/manifest.webmanifest'
     | '/offline'
     | '/sign-in'
-    | '/dashboard'
     | '/profile'
+    | '/setup'
     | '/welcome'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -113,9 +131,11 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/offline'
     | '/sign-in'
-    | '/_authenticated/dashboard'
+    | '/_authenticated/_household'
     | '/_authenticated/profile'
+    | '/_authenticated/setup'
     | '/_authenticated/welcome'
+    | '/_authenticated/_household/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,11 +183,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/_household': {
+      id: '/_authenticated/_household'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedHouseholdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -177,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/setup': {
+      id: '/_authenticated/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof AuthenticatedSetupRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/welcome': {
       id: '/_authenticated/welcome'
       path: '/welcome'
@@ -184,18 +211,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/_household/dashboard': {
+      id: '/_authenticated/_household/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedHouseholdDashboardRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
   }
 }
 
+interface AuthenticatedHouseholdRouteChildren {
+  AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
+}
+
+const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
+  {
+    AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
+  }
+
+const AuthenticatedHouseholdRouteWithChildren =
+  AuthenticatedHouseholdRoute._addFileChildren(
+    AuthenticatedHouseholdRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHouseholdRoute: typeof AuthenticatedHouseholdRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHouseholdRoute: AuthenticatedHouseholdRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
 }
 

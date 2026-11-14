@@ -4,7 +4,7 @@
 
 ## Role
 
-Grand Livre's web app, for now: the header (language, appearance, account), sign-in, the profile, an example page for signed-in users (`/dashboard`) and the installable app. The product's own screens are added as features and routes. Consumes the API of `apps/api` through `@repo/resources`.
+Grand Livre's web app, for now: the header (language, appearance, account), sign-in, the profile, creating or joining a household (`/setup`), the dashboard (`/dashboard`) and the installable app. The product's own screens are added as features and routes. Consumes the API of `apps/api` through `@repo/resources`.
 
 ## App-specific stack
 
@@ -25,8 +25,8 @@ Grand Livre's web app, for now: the header (language, appearance, account), sign
 
 ## Structure
 
-- `src/routes/`: TanStack routes; one file per route, thin (loader + page component). `__root.tsx` renders the HTML document, the header and the appearance, and loads the signed-in user. `_authenticated.tsx` is the layout of the pages reserved to signed-in users (`_authenticated/*`).
-- `src/features/<feature>/`: components, hooks and logic specific to a feature (`appearance` (mode), `theme`, `pwa` (installing the app, the offline page, the manifest), `auth` (with `UserMenu`, the header's account menu), `profile` (`NameForm`, shared by `/welcome` and `/profile`), `dashboard` (the example page for signed-in users), `i18n`, `home`)
+- `src/routes/`: TanStack routes; one file per route, thin (loader + page component). `__root.tsx` renders the HTML document, the header and the appearance, and loads the signed-in user. `_authenticated.tsx` is the layout of the pages reserved to signed-in users (`_authenticated/*`); `_authenticated/_household.tsx` is the layout of those that work on a household (`_authenticated/_household/*`).
+- `src/features/<feature>/`: components, hooks and logic specific to a feature (`appearance` (mode), `theme`, `pwa` (installing the app, the offline page, the manifest), `auth` (with `UserMenu`, the header's account menu), `profile` (`NameForm`, shared by `/welcome` and `/profile`), `households` (the user's households and the invitations they received, `SetupPage` to create or join one), `dashboard` (the home of a signed-in user), `i18n`, `home`)
 - `src/components/`: generic components specific to this app (`Header`, `Logo`, `header-styles.ts` (`headerButtonClass`, for buttons on the header's band), `SelectField` (`tone`: `inverse` or `default`), `TextField`, `InlineEditForm`, `ConfirmButton` (an action confirmed in a dialog, as text or as an icon), `IconButton` (icon only, with an `aria-label` and a tooltip), `WithTooltip`, `FormAlert`, `Loading`, `NotFound`, `ErrorView`; shared components go in `packages/ui`)
 - `src/server/`: server-only code (`env.ts`: the server's API URL)
 - `src/lib/`: utilities specific to the app (`api.ts`: the API client; `error-messages.ts`: error codes to messages; `validate-field.ts`: one field checked with its schema before an optimistic change; `redirect.ts`: the safe `redirect` search parameter; `cookies.ts`)
@@ -71,8 +71,8 @@ Grand Livre's web app, for now: the header (language, appearance, account), sign
 - Every call goes through `getApi()` (`src/lib/api.ts`), the resources of `@repo/resources`. In the browser it calls the API directly with the session cookie (`credentials: "include"`); during server rendering it forwards the incoming request's cookie. Both send the app's language as `Accept-Language`.
 - The signed-in user is the `me` query (`features/auth/me-query.ts`): `null` for a visitor. The root route loads it and puts it in the route context (`context.me`), used by the header and the routes' checks.
 - If the API can't be reached, the root's `beforeLoad` fails and its context stays empty: the document (`RootDocument`) then reads the appearance and the theme from their cookies itself and shows a visitor's header, around `ErrorView`, which says the app can't be reached (`NetworkError`). Never make the document depend on the API.
-- After signing in, out or changing the profile, call `useSessionChange()` (`refresh` or `clear`): it updates the `me` query, re-runs the routes' checks and navigates.
-- A page reserved to signed-in users goes under `src/routes/_authenticated/` (`dashboard.tsx` is the example to copy). `/` sends signed-in users to `/dashboard`, where the installed app also opens (`START_URL`). A signed-in user without a name is sent to `/welcome` first (root route).
+- After signing in, out or changing the profile, call `useSessionChange()` (`refresh` or `clear`): it updates the `me` query, drops every other cached query (the previous user's data), re-runs the routes' checks and navigates.
+- A page reserved to signed-in users goes under `src/routes/_authenticated/`. A page of the product, which works on a household, goes under `src/routes/_authenticated/_household/` (`dashboard.tsx` is the example to copy) and reads `household` from the route context: the layout loads the user's households (`householdsQueryOptions()`), takes the current one (`currentHousehold()`, the first: the interface handles a single household for now) and sends a user without a household to `/setup`, which brings them back once they created or joined one (`useHouseholdChange()`). `/` sends signed-in users to `/dashboard`, where the installed app also opens (`START_URL`). A signed-in user without a name is sent to `/welcome` first (root route).
 - A `redirect` search parameter is always parsed with `redirectSearchSchema`: only internal paths are kept, so a link can't send users to another site.
 - Query options and keys (`queryOptions`) live in the features, not in `@repo/resources`.
 

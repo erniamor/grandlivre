@@ -79,5 +79,20 @@
 	"install_ios_close": "Compris",
 	"sign_in_intro_code": "Saisissez votre e-mail : nous vous envoyons un code pour vous connecter, sans mot de passe. Première visite ? Votre compte est créé au passage.",
 	"dashboard_title": "Tableau de bord",
-	"dashboard_intro": "Cette page est réservée aux utilisateurs connectés. Construisez votre application à partir d'ici."
+	"dashboard_household": "Foyer : {name}",
+	"setup_title": "Votre foyer",
+	"setup_intro": "Un foyer réunit les comptes de la famille. Créez le vôtre, ou rejoignez celui où l'on vous a invité.",
+	"invitations_title": "Invitations",
+	"invitation_text": "{inviter} vous invite à rejoindre {household}.",
+	"invitation_accept_button": "Rejoindre",
+	"invitation_decline_button": "Refuser",
+	"create_household_title": "Créer un foyer",
+	"household_name_label": "Nom du foyer",
+	"household_currency_label": "Devise",
+	"household_currency_hint": "Tous les montants du foyer sont dans cette devise.",
+	"create_household_button": "Créer le foyer",
+	"error_household_name_required": "Donnez un nom au foyer.",
+	"error_household_name_too_long": "Le nom du foyer est trop long (60 caractères au maximum).",
+	"error_household_currency_invalid": "Choisissez une devise dans la liste.",
+	"error_invitation_not_found": "Cette invitation n'est plus valable."
 }

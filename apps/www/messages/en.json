@@ -79,5 +79,20 @@
 	"install_ios_close": "Got it",
 	"sign_in_intro_code": "Enter your email: we'll send you a code to sign in, no password needed. New here? Your account is created on the way.",
 	"dashboard_title": "Dashboard",
-	"dashboard_intro": "This page is reserved to signed-in users. Build your app from here."
+	"dashboard_household": "Household: {name}",
+	"setup_title": "Your household",
+	"setup_intro": "A household gathers the family's accounts. Create yours, or join one you were invited to.",
+	"invitations_title": "Invitations",
+	"invitation_text": "{inviter} invites you to join {household}.",
+	"invitation_accept_button": "Join",
+	"invitation_decline_button": "Decline",
+	"create_household_title": "Create a household",
+	"household_name_label": "Household name",
+	"household_currency_label": "Currency",
+	"household_currency_hint": "Every amount of the household is in this currency.",
+	"create_household_button": "Create the household",
+	"error_household_name_required": "Enter a name for the household.",
+	"error_household_name_too_long": "The household's name is too long (60 characters at most).",
+	"error_household_currency_invalid": "Choose a currency from the list.",
+	"error_invitation_not_found": "This invitation is no longer valid."
 }
