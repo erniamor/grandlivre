@@ -11,6 +11,7 @@ import {
 	requireHouseholdMember,
 	requireHouseholdOwner,
 } from "@/middlewares/require-household";
+import { accountRoutes } from "@/routes/accounts/accounts.routes";
 import {
 	householdsQuerySchema,
 	memberParamSchema,
@@ -38,6 +39,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	// Everything below belongs to one household, open to its members only
 	// ("/:householdId/*" also matches "/:householdId" itself)
 	.use("/:householdId/*", requireHouseholdMember)
+	.route("/:householdId/accounts", accountRoutes)
 	.route("/:householdId/invitations", householdInvitationRoutes)
 	.get("/:householdId", (c) => c.json(toHousehold(c.get("membership"))))
 	.patch(

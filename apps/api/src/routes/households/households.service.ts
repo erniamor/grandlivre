@@ -11,6 +11,7 @@ import { db, type Transaction } from "@/db/client";
 import { householdMembers, households, users } from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
+import { hasAccounts } from "@/routes/accounts/accounts.service";
 
 type HouseholdRow = InferSelectModel<typeof households>;
 
@@ -95,6 +96,19 @@ export async function updateHousehold(
 	// Nothing to change: Drizzle rejects an empty update
 	if (input.name === undefined && input.currency === undefined) {
 		return toHousehold(membership);
+	}
+	// Balances are amounts in the household's currency: changing it would
+	// silently change what they are worth
+	if (
+		input.currency !== undefined &&
+		input.currency !== membership.household.currency &&
+		(await hasAccounts(membership.household.id))
+	) {
+		throw new AppError(
+			409,
+			"currency_locked",
+			"The currency can't change once the household has accounts",
+		);
 	}
 	const [household] = await db
 		.update(households)

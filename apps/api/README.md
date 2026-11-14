@@ -82,6 +82,25 @@ A household is visible to its members only: anyone else gets a 404, as for a hou
 
 A household always keeps at least one owner: demoting or removing the last one is refused with a 409 `last_owner`.
 
+### Accounts
+
+The financial accounts of a household (chequing, savings, credit card, cash, loan, other). Amounts are integers in minor units of the household's currency (cents); a balance is negative for money owed. The balance is computed, never stored: the opening balance plus the transactions (none yet).
+
+Every member sees every account of the household. A member who doesn't hold an account whose `visibility` is `balance` sees its balance but not its details (`openingBalance` is `null`).
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/accounts` | member | Lists the household's accounts, oldest first, with their holders and `isHolder` for the signed-in user |
+| `POST /v1/households/:householdId/accounts` `{ name, type, visibility, openingBalance, holderIds? }` | member | Creates an account (201). Its holders are members of the household and include the creator; without `holderIds`, the creator alone |
+| `GET /v1/households/:householdId/accounts/summary` | member | The consolidated view: `{ assets, liabilities, balance }` over every account, whoever holds it and whatever its visibility |
+| `GET /v1/households/:householdId/accounts/:accountId` | member | The account |
+| `PATCH /v1/households/:householdId/accounts/:accountId` | holder | Changes the fields sent; `holderIds` replaces the holders (at least one) |
+| `DELETE /v1/households/:householdId/accounts/:accountId` | holder | Deletes the account (204) |
+
+A member who leaves the household stops holding its accounts. An account left without a holder stays in the household and still counts; an owner of the household can then change it (to give it a holder) or delete it.
+
+Once a household has an account, its currency can't change: `PATCH /v1/households/:householdId` with another `currency` answers 409 `currency_locked`.
+
 ### Invitations
 
 An owner invites someone by email. There is no invitation token: the invitation is addressed to an email, and signing in with that email is what proves it is theirs. Invitations are valid for 7 days; accepted, declined and cancelled ones are deleted.
@@ -108,9 +127,10 @@ Every error has the same shape:
 | Status | `code` | When |
 | --- | --- | --- |
 | 401 | `unauthorized` | No valid session |
-| 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household |
+| 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household or a holder of the account |
 | 404 | `not_found` | Unknown route or resource, or a household the user isn't a member of |
 | 409 | `last_owner` | The change would leave a household without an owner |
+| 409 | `currency_locked` | The household has accounts: its currency can no longer change |
 | 409 | `already_member` | The invited email already belongs to a member of the household |
 | 413 | `payload_too_large` | Body over 1 MB |
 | 422 | `validation_error` | Invalid input; `details` lists each field with an error code from `@repo/schemas` |
