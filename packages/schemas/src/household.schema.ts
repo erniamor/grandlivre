@@ -80,6 +80,12 @@ export const householdMemberSchema = z.object({
 
 export type HouseholdMember = z.infer<typeof householdMemberSchema>;
 
+export const updateHouseholdMemberSchema = z.strictObject({
+	role: householdRoleSchema,
+});
+
+export type UpdateHouseholdMember = z.infer<typeof updateHouseholdMemberSchema>;
+
 export const inviteHouseholdMemberSchema = z.strictObject({
 	email: emailSchema,
 });

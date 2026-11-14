@@ -66,6 +66,22 @@ Handled by Better Auth under `/v1/auth/*`, with a session in an HTTP-only cookie
 
 Codes and links are valid for 10 minutes. Emails are in English, French or Spanish depending on the request's `Accept-Language` (the front end sends the app's language). Password sign-in is disabled. Errors of the `/v1/auth/*` routes come from Better Auth, as `{ code, message }` with uppercase codes (e.g. `INVALID_OTP`); `@repo/resources` reads them like the API's.
 
+### Households
+
+A household is visible to its members only: anyone else gets a 404, as for a household that doesn't exist. A member is an `owner` or a plain `member`; the creator is an owner.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `POST /v1/households` `{ name, currency }` | signed-in user | Creates a household owned by the user (201) |
+| `GET /v1/households` | signed-in user | Lists the user's households, with their role in each |
+| `GET /v1/households/:householdId` | member | The household |
+| `PATCH /v1/households/:householdId` `{ name?, currency? }` | owner | Changes the fields sent |
+| `GET /v1/households/:householdId/members` | member | Lists the members, in the order they joined |
+| `PATCH /v1/households/:householdId/members/:userId` `{ role }` | owner | Changes a member's role (204) |
+| `DELETE /v1/households/:householdId/members/:userId` | owner, or the member themselves | Removes the member, or leaves the household (204) |
+
+A household always keeps at least one owner: demoting or removing the last one is refused with a 409 `last_owner`.
+
 ### Errors
 
 Every error has the same shape:
@@ -77,8 +93,9 @@ Every error has the same shape:
 | Status | `code` | When |
 | --- | --- | --- |
 | 401 | `unauthorized` | No valid session |
-| 403 | `forbidden` | A cross-site form was rejected (CSRF) |
-| 404 | `not_found` | Unknown route |
+| 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household |
+| 404 | `not_found` | Unknown route or resource, or a household the user isn't a member of |
+| 409 | `last_owner` | The change would leave a household without an owner |
 | 413 | `payload_too_large` | Body over 1 MB |
 | 422 | `validation_error` | Invalid input; `details` lists each field with an error code from `@repo/schemas` |
 | 500 | `internal_error` | Unexpected error, logged on the server, never detailed in the response |
