@@ -138,6 +138,19 @@ Who sees: the holders of an account, and every member when the account's `visibi
 
 An account or a tag from outside the household answers 422 (`transaction_account_invalid` on `accountId` or `toAccountId`, `transaction_tag_invalid` on `lines.<n>.tagId`).
 
+### Reports
+
+What the household earns and spends over a period, from the lines of its expenses and incomes; transfers are neither. Amounts are positive integers in minor units, expenses and incomes apart: how to show them (a refund lowering an expense, the totals of a parent tag) is up to the front ends.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/reports/tags?from&to&accountId?` | member | `{ from, to, tags: [{ tagId, expense, income }] }`: each tag that had a line in the period, with its own amounts (the tags under it aren't added), and `tagId: null` for the uncategorized lines |
+| `GET /v1/households/:householdId/reports/monthly?from&to&tagId?&accountId?` | member | `{ months: [{ month, expense, income }] }`: every month the period touches (`"2026-11"`), empty ones included; with `tagId`, only the lines on that tag or on a tag under it. At most 60 months |
+
+`from` and `to` are days, both included. The reports count every account of the household, those that only show their balance included. `accountId` narrows a report to one account, if the user may see its details: otherwise 403, since the report would show, tag by tag, what the account hides.
+
+An invalid period answers 422: `report_period_invalid` on `to` when it comes before `from`, `report_period_too_long` on `from` beyond 60 months. An account or a tag outside the household answers 422 (`transaction_account_invalid`, `transaction_tag_invalid`).
+
 ### Events (real time)
 
 `GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:

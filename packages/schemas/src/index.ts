@@ -4,5 +4,6 @@ export * from "./common";
 export * from "./event.schema";
 export * from "./household.schema";
 export * from "./profile.schema";
+export * from "./report.schema";
 export * from "./tag.schema";
 export * from "./transaction.schema";
