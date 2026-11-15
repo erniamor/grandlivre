@@ -37,10 +37,33 @@ describe("groupAccounts", () => {
 			mine: [mine, savings],
 			shared: [joint],
 			others: [bobs, orphan],
+			archived: [],
+		});
+	});
+
+	it("sets the archived accounts apart, whoever holds them", () => {
+		const mine = account("Mine", [ALICE], true);
+		const old = { ...account("Old", [ALICE], true), archived: true };
+		const oldJoint = {
+			...account("Old joint", [ALICE, BOB], true),
+			archived: true,
+		};
+		const bobsOld = { ...account("Bob's old", [BOB], false), archived: true };
+
+		expect(groupAccounts([old, mine, oldJoint, bobsOld])).toEqual({
+			mine: [mine],
+			shared: [],
+			others: [],
+			archived: [old, oldJoint, bobsOld],
 		});
 	});
 
 	it("has empty groups without accounts", () => {
-		expect(groupAccounts([])).toEqual({ mine: [], shared: [], others: [] });
+		expect(groupAccounts([])).toEqual({
+			mine: [],
+			shared: [],
+			others: [],
+			archived: [],
+		});
 	});
 });

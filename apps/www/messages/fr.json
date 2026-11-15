@@ -279,5 +279,12 @@
 	"error_transfer_same_account": "Choisissez un autre compte : un transfert va d'un compte à un autre.",
 	"error_account_archived": "Ce compte est archivé : il ne reçoit plus de transaction, et ses transactions ne peuvent plus être modifiées.",
 	"error_account_has_transactions": "Ce compte a des transactions : il ne peut pas être supprimé, seulement archivé.",
-	"error_tag_in_use": "Ce tag a des transactions : il ne peut pas être supprimé."
+	"error_tag_in_use": "Ce tag a des transactions : il ne peut pas être supprimé.",
+	"accounts_archived_title": "Comptes archivés",
+	"account_archive_button": "Archiver le compte",
+	"account_unarchive_button": "Désarchiver le compte",
+	"account_archive_hint": "Un compte archivé garde ses transactions et compte toujours dans le solde du foyer, mais ne reçoit plus de transaction. Un compte qui a des transactions ne peut pas être supprimé, seulement archivé.",
+	"account_archived_notice": "Ce compte est archivé : il ne reçoit plus de transaction, et ses transactions ne peuvent plus être modifiées.",
+	"toast_account_archived": "Le compte a été archivé.",
+	"toast_account_unarchived": "Le compte est de nouveau utilisable."
 }

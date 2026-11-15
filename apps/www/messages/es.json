@@ -279,5 +279,12 @@
 	"error_transfer_same_account": "Elige otra cuenta: una transferencia va de una cuenta a otra.",
 	"error_account_archived": "Esta cuenta está archivada: no admite nuevas transacciones y las suyas ya no se pueden modificar.",
 	"error_account_has_transactions": "Esta cuenta tiene transacciones: no se puede eliminar, solo archivar.",
-	"error_tag_in_use": "Esta etiqueta tiene transacciones: no se puede eliminar."
+	"error_tag_in_use": "Esta etiqueta tiene transacciones: no se puede eliminar.",
+	"accounts_archived_title": "Cuentas archivadas",
+	"account_archive_button": "Archivar la cuenta",
+	"account_unarchive_button": "Desarchivar la cuenta",
+	"account_archive_hint": "Una cuenta archivada conserva sus transacciones y sigue contando en el saldo del hogar, pero no admite nuevas transacciones. Una cuenta que tiene transacciones no se puede eliminar, solo archivar.",
+	"account_archived_notice": "Esta cuenta está archivada: no admite nuevas transacciones y las suyas ya no se pueden modificar.",
+	"toast_account_archived": "La cuenta se ha archivado.",
+	"toast_account_unarchived": "La cuenta vuelve a estar en uso."
 }

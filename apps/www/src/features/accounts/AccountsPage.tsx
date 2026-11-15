@@ -62,6 +62,14 @@ export function AccountsPage({ household }: AccountsPageProps) {
 				showHolders
 				isHouseholdOwner={isHouseholdOwner}
 			/>
+			{/* Still counted in the household's balance: kept in sight, at the end */}
+			<AccountGroup
+				title={m.accounts_archived_title()}
+				accounts={groups.archived}
+				currency={currency}
+				showHolders
+				isHouseholdOwner={isHouseholdOwner}
+			/>
 		</section>
 	);
 }

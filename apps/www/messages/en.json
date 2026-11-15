@@ -279,5 +279,12 @@
 	"error_transfer_same_account": "Choose a different account: a transfer goes from one account to another.",
 	"error_account_archived": "This account is archived: it takes no new transaction, and its transactions can't be changed.",
 	"error_account_has_transactions": "This account has transactions: it can't be deleted, only archived.",
-	"error_tag_in_use": "This tag has transactions: it can't be deleted."
+	"error_tag_in_use": "This tag has transactions: it can't be deleted.",
+	"accounts_archived_title": "Archived accounts",
+	"account_archive_button": "Archive the account",
+	"account_unarchive_button": "Bring the account back",
+	"account_archive_hint": "An archived account keeps its transactions and still counts in the household's balance, but takes no new transaction. An account that has transactions can't be deleted, only archived.",
+	"account_archived_notice": "This account is archived: it takes no new transaction, and its transactions can't be changed.",
+	"toast_account_archived": "The account was archived.",
+	"toast_account_unarchived": "The account is back in use."
 }

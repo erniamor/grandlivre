@@ -3,6 +3,7 @@ import { toast } from "@repo/ui";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AccountForm } from "@/features/accounts/AccountForm";
 import { AccountsBackLink } from "@/features/accounts/AccountsBackLink";
+import { ArchiveAccountButton } from "@/features/accounts/ArchiveAccountButton";
 import { canEditAccount } from "@/features/accounts/account-form";
 import {
 	accountQueryOptions,
@@ -50,6 +51,11 @@ export function EditAccountPage({
 			<h1 className="font-heading font-semibold text-2xl">
 				{m.account_edit_title()}
 			</h1>
+			{account.archived && (
+				<p className="rounded-lg border border-border bg-muted p-3 text-sm">
+					{m.account_archived_notice()}
+				</p>
+			)}
 			{canEditAccount(account, household.role === "owner") ? (
 				<>
 					<AccountForm
@@ -63,11 +69,26 @@ export function EditAccountPage({
 						}
 						onSaved={() => finish(m.toast_account_saved())}
 					/>
-					<div className="justify-self-start">
-						<DeleteAccountButton
-							account={account}
-							onDeleted={() => finish(m.toast_account_deleted())}
-						/>
+					<div className="grid gap-2 border-border border-t pt-6">
+						<p className="text-muted-foreground text-sm">
+							{m.account_archive_hint()}
+						</p>
+						<div className="flex flex-wrap gap-2">
+							<ArchiveAccountButton
+								account={account}
+								onChanged={(changed) =>
+									finish(
+										changed.archived
+											? m.toast_account_archived()
+											: m.toast_account_unarchived(),
+									)
+								}
+							/>
+							<DeleteAccountButton
+								account={account}
+								onDeleted={() => finish(m.toast_account_deleted())}
+							/>
+						</div>
 					</div>
 				</>
 			) : (

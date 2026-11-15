@@ -203,6 +203,30 @@ describe("AccountsPage", () => {
 		expect(others.getByText("Bob's Visa")).toBeVisible();
 	});
 
+	it("sets the archived accounts apart, at the end, still with their balance", async () => {
+		setUp([
+			...accounts,
+			account({ name: "Old chequing", balance: 1234, archived: true }),
+		]);
+
+		const archived = await group("Archived accounts");
+		const mine = await group("My accounts");
+
+		expect(archived.getByText("Old chequing")).toBeVisible();
+		expect(archived.getByText("$12.34")).toBeVisible();
+		expect(mine.queryByText("Old chequing")).not.toBeInTheDocument();
+		expect(mine.getAllByRole("listitem")).toHaveLength(1);
+	});
+
+	it("shows no archived group without archived accounts", async () => {
+		setUp();
+
+		await group("My accounts");
+		expect(
+			screen.queryByRole("region", { name: "Archived accounts" }),
+		).not.toBeInTheDocument();
+	});
+
 	it("doesn't let a plain member change an account without a holder", async () => {
 		setUp(accounts, "member");
 

@@ -13,9 +13,9 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/profile` | The user's email, and their name to change |
 | `/setup` | For a signed-in user without a household: accept an invitation received, or create a household (name, currency). Opened automatically; goes on to the page asked for |
 | `/household` | The household's settings, opened from the account menu: its name and currency, its members (roles, removing, leaving) and its pending invitations (inviting, sending again, cancelling). Owners change them; plain members read them and can leave |
-| `/accounts` | The household's accounts with their balance, grouped: the user's own, those shared with other members, the other accounts of the household; with the household's consolidated balance (assets, debts, net) |
+| `/accounts` | The household's accounts with their balance, grouped: the user's own, those shared with other members, the other accounts of the household, and the archived ones apart; with the household's consolidated balance (assets, debts, net) |
 | `/accounts/new` | Creates an account: name, type, opening balance (or the amount owed, for a credit card or a loan), holders among the household's members, and what the other members see of it |
-| `/accounts/:accountId` | Changes or deletes an account, for its holders (and for an owner of the household when the account has no holder left); a 404 for an unknown account |
+| `/accounts/:accountId` | Changes, archives (or brings back) or deletes an account, for its holders (and for an owner of the household when the account has no holder left); a 404 for an unknown account |
 | `/tags` | The household's tags as a tree, named in the user's language (or else in another one), sorted by name. A household without tags is offered to start from the suggested ones |
 | `/tags/suggested` | The suggested tags as a tree of checkboxes, all checked: the user unchecks what doesn't concern the household (a branch goes with its parent), then adds the rest in one go |
 | `/tags/new` | Creates a tag: its name in one language or more, and its parent (`?parent=<id>` proposes one) |

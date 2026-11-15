@@ -168,6 +168,73 @@ describe("EditAccountPage", () => {
 		expect(success).toHaveBeenCalledWith("The account was deleted.");
 	});
 
+	it("archives the account without a confirmation, then leaves", async () => {
+		const success = vi.spyOn(toast, "success").mockImplementation(() => "");
+		const { user, onDone, writes } = setUp({
+			respond: () => ({ status: 200, body: { ...chequing, archived: true } }),
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Archive the account" }),
+		);
+
+		await vi.waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+		expect(writes()).toEqual([
+			{ method: "PATCH", path: accountPath, body: { archived: true } },
+		]);
+		expect(success).toHaveBeenCalledWith("The account was archived.");
+	});
+
+	it("says an archived account is archived, and brings it back", async () => {
+		const success = vi.spyOn(toast, "success").mockImplementation(() => "");
+		const { user, onDone, writes } = setUp({
+			account: { ...chequing, archived: true },
+			respond: () => ({ status: 200, body: chequing }),
+		});
+
+		expect(await screen.findByText(/^This account is archived/)).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Archive the account" }),
+		).not.toBeInTheDocument();
+		await user.click(
+			screen.getByRole("button", { name: "Bring the account back" }),
+		);
+
+		await vi.waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+		expect(writes()).toEqual([
+			{ method: "PATCH", path: accountPath, body: { archived: false } },
+		]);
+		expect(success).toHaveBeenCalledWith("The account is back in use.");
+	});
+
+	it("says why an account that has transactions can't be deleted, and stays", async () => {
+		const error = vi.spyOn(toast, "error").mockImplementation(() => "");
+		const { user, onDone } = setUp({
+			respond: () => ({
+				status: 409,
+				body: {
+					error: { code: "account_has_transactions", message: "Has some" },
+				},
+			}),
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Delete the account" }),
+		);
+		await user.click(
+			within(screen.getByRole("alertdialog")).getByRole("button", {
+				name: "Delete",
+			}),
+		);
+
+		await vi.waitFor(() =>
+			expect(error).toHaveBeenCalledWith(
+				"This account has transactions: it can't be deleted, only archived.",
+			),
+		);
+		expect(onDone).not.toHaveBeenCalled();
+	});
+
 	it("shows no form to a member who doesn't hold the account", async () => {
 		setUp({
 			account: {
@@ -185,6 +252,9 @@ describe("EditAccountPage", () => {
 		expect(screen.queryByLabelText("Account name")).not.toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Delete the account" }),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Archive the account" }),
 		).not.toBeInTheDocument();
 	});
 
