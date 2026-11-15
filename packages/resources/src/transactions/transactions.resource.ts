@@ -1,9 +1,13 @@
 import {
+	type CreateDraft,
 	type CreateTransaction,
+	createDraftSchema,
 	createTransactionSchema,
 	paginatedSchema,
 	type Transaction,
+	type TransactionDraft,
 	type TransactionType,
+	transactionDraftSchema,
 	transactionSchema,
 	type UpdateTransaction,
 	updateTransactionSchema,
@@ -114,6 +118,27 @@ export function createTransactionsResource(client: ApiClient) {
 				path: transactionPath(householdId, transactionId),
 				body: parseInput(updateTransactionSchema, input),
 				response: transactionSchema,
+			});
+		},
+
+		/**
+		 * Turns a note typed or dictated by the member ("gas 72 $") into a
+		 * draft transaction, with the household's assistant. Nothing is saved
+		 * and no tag is created: show the draft for the member to review, then
+		 * record it with `create()`. `today` is the member's day ("2026-11-15").
+		 * Rejects with an ApiError `draft_not_understood` (422) for a note it
+		 * couldn't read, `assistant_unavailable` (503) when the assistant can't
+		 * be reached, and a RateLimitError beyond the notes allowed per hour.
+		 */
+		async draft(
+			householdId: string,
+			input: CreateDraft,
+		): Promise<TransactionDraft> {
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/draft`,
+				body: parseInput(createDraftSchema, input),
+				response: transactionDraftSchema,
 			});
 		},
 

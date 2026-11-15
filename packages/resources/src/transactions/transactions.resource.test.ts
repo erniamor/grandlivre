@@ -3,6 +3,7 @@ import {
 	ApiError,
 	ForbiddenError,
 	NotFoundError,
+	RateLimitError,
 	ServerError,
 	ValidationError,
 } from "../errors";
@@ -267,5 +268,93 @@ describe("transactions", () => {
 		expect(requests[0]?.url).toBe(
 			"http://api.test/v1/households/a%2Fb/transactions/..%2Faccounts",
 		);
+	});
+
+	describe("draft", () => {
+		const draft = {
+			type: "expense",
+			date: "2026-11-14",
+			accountId: ACCOUNT_ID,
+			toAccountId: null,
+			payee: "Shell",
+			note: null,
+			lines: [{ amount: 7240, tagId: null, usesProposedTag: true }],
+			proposedTag: {
+				names: { en: "Tolls", fr: "Péages", es: "Peajes" },
+				parentId: TAG_ID,
+				similarTags: [{ tagId: TAG_ID, reason: "contains" }],
+			},
+			remark: null,
+		};
+
+		it("turns a note into a draft, without the envelope", async () => {
+			const { api, requests } = fakeApi(200, draft);
+
+			expect(
+				await api.transactions.draft(HOUSEHOLD_ID, {
+					text: " péage 72,40 hier ",
+					today: "2026-11-15",
+				}),
+			).toEqual(draft);
+			expect(requests[0]).toMatchObject({
+				url: `${base}/draft`,
+				method: "POST",
+				body: { text: "péage 72,40 hier", today: "2026-11-15" },
+				headers: { "accept-language": "fr" },
+			});
+		});
+
+		it("rejects an empty note before sending", async () => {
+			const { api, fetch } = fakeApi(200, draft);
+
+			const error = await api.transactions
+				.draft(HOUSEHOLD_ID, { text: " ", today: "2026-11-15" })
+				.catch((reason: unknown) => reason);
+
+			expect((error as ValidationError).issues).toEqual([
+				{ field: "text", message: "draft_text_required" },
+			]);
+			expect(fetch).not.toHaveBeenCalled();
+		});
+
+		it("reports a note it couldn't read, and an unavailable assistant, with their codes", async () => {
+			for (const [status, code] of [
+				[422, "draft_not_understood"],
+				[503, "assistant_unavailable"],
+			] as const) {
+				const { api } = fakeApi(status, { error: { code, message: code } });
+
+				await expect(
+					api.transactions.draft(HOUSEHOLD_ID, {
+						text: "gas 72",
+						today: "2026-11-15",
+					}),
+				).rejects.toMatchObject({ status, code });
+			}
+		});
+
+		it("throws a RateLimitError beyond the notes allowed per hour", async () => {
+			const { api } = fakeApi(429, {
+				error: { code: "too_many_requests", message: "Too many" },
+			});
+
+			await expect(
+				api.transactions.draft(HOUSEHOLD_ID, {
+					text: "gas 72",
+					today: "2026-11-15",
+				}),
+			).rejects.toBeInstanceOf(RateLimitError);
+		});
+
+		it("rejects a draft that doesn't match the contract", async () => {
+			const { api } = fakeApi(200, { ...draft, lines: [] });
+
+			await expect(
+				api.transactions.draft(HOUSEHOLD_ID, {
+					text: "gas 72",
+					today: "2026-11-15",
+				}),
+			).rejects.toBeInstanceOf(ServerError);
+		});
 	});
 });
