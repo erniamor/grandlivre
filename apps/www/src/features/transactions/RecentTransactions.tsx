@@ -1,6 +1,8 @@
 import type { Household } from "@repo/schemas";
+import { buttonVariants } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { PlusIcon } from "lucide-react";
 import { useId } from "react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
@@ -29,9 +31,15 @@ export function RecentTransactions({ household }: RecentTransactionsProps) {
 
 	return (
 		<section aria-labelledby={titleId} className="grid gap-3">
-			<h2 id={titleId} className="font-heading font-semibold text-lg">
-				{m.recent_transactions_title()}
-			</h2>
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				<h2 id={titleId} className="font-heading font-semibold text-lg">
+					{m.recent_transactions_title()}
+				</h2>
+				<Link to="/transactions/new" className={buttonVariants({ size: "sm" })}>
+					<PlusIcon aria-hidden />
+					{m.transaction_add_button()}
+				</Link>
+			</div>
 			{transactions.items.length === 0 ? (
 				<p className="text-muted-foreground">{m.transactions_empty()}</p>
 			) : (
@@ -43,6 +51,7 @@ export function RecentTransactions({ household }: RecentTransactionsProps) {
 							accounts={accounts.items}
 							tags={tags}
 							currency={household.currency}
+							linked
 						/>
 					))}
 				</ul>

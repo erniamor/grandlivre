@@ -21,6 +21,8 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/tags/new` | Creates a tag: its name in one language or more, and its parent (`?parent=<id>` proposes one) |
 | `/tags/:tagId` | Changes a tag (names, parent) or deletes it; a 404 for an unknown tag |
 | `/transactions` | The transactions the user may see, grouped by day, most recent first: who was paid, the tags, the account, and the amount as money going out or coming in. `?account=<id>` keeps those of one account (a transfer then leaves it or enters it), `?page=<n>` shows another page |
+| `/transactions/new` | Records an expense, an income or a transfer: amount, tag, account (the one last used by default, or `?account=<id>`), date (today by default), who was paid, a note. An expense or an income can be split into several lines, each with its amount and its tag |
+| `/transactions/:transactionId` | Changes or deletes a transaction, for the holders of its account; the other members who may see it read it. A 404 for a transaction the user may not see |
 | `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance and its latest transactions: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 

@@ -1,5 +1,8 @@
 import type { Household } from "@repo/schemas";
+import { buttonVariants, cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { PlusIcon } from "lucide-react";
 import { SelectField, type SelectOption } from "@/components/SelectField";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
@@ -50,6 +53,14 @@ export function TransactionsPage({
 				</h1>
 				<p className="text-muted-foreground">{m.transactions_intro()}</p>
 			</header>
+			<Link
+				to="/transactions/new"
+				search={{ account: accountId }}
+				className={cn(buttonVariants(), "justify-self-start")}
+			>
+				<PlusIcon aria-hidden />
+				{m.transaction_add_button()}
+			</Link>
 			<SelectField
 				label={m.transactions_account_filter_label()}
 				value={accountId ?? ALL}
@@ -69,6 +80,7 @@ export function TransactionsPage({
 					tags={tags}
 					currency={household.currency}
 					accountId={accountId}
+					linked
 				/>
 			)}
 			<TransactionsPagination

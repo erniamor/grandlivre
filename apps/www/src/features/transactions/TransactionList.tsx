@@ -12,6 +12,8 @@ interface TransactionListProps {
 	currency: string;
 	/** The account the list is about, if any. */
 	accountId?: string;
+	/** Links each transaction to its page. */
+	linked?: boolean;
 }
 
 /** Transactions grouped under their day, written in words. */
@@ -21,6 +23,7 @@ export function TransactionList({
 	tags,
 	currency,
 	accountId,
+	linked = false,
 }: TransactionListProps) {
 	const locale = getLocale();
 
@@ -44,6 +47,7 @@ export function TransactionList({
 								tags={tags}
 								currency={currency}
 								accountId={accountId}
+								linked={linked}
 							/>
 						))}
 					</ul>

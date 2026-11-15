@@ -5,6 +5,7 @@ import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import {
 	base,
 	chequing,
+	fillUp,
 	household,
 	respondWith,
 	savings,
@@ -197,6 +198,27 @@ describe("TransactionsPage", () => {
 		);
 		expect(transactionsQuery()).toBe(
 			`?accountId=${chequing.id}&page=2&pageSize=50`,
+		);
+	});
+
+	it("offers to add a transaction, on the account the list is filtered on", async () => {
+		setUp({ accountId: savings.id });
+
+		expect(
+			await screen.findByRole("link", { name: "Add a transaction" }),
+		).toHaveAttribute("href", `/transactions/new?account=${savings.id}`);
+	});
+
+	it("links each transaction to its page", async () => {
+		setUp();
+
+		expect(await screen.findByRole("link", { name: "Shell" })).toHaveAttribute(
+			"href",
+			`/transactions/${fillUp.id}`,
+		);
+		expect(screen.getByRole("link", { name: "Transfer" })).toHaveAttribute(
+			"href",
+			`/transactions/${toSavings.id}`,
 		);
 	});
 

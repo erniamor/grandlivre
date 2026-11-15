@@ -28,6 +28,8 @@ import { Route as AuthenticatedHouseholdTagsTagIdRouteImport } from './routes/_a
 import { Route as AuthenticatedHouseholdTagsNewRouteImport } from './routes/_authenticated/_household/tags/new'
 import { Route as AuthenticatedHouseholdTagsSuggestedRouteImport } from './routes/_authenticated/_household/tags/suggested'
 import { Route as AuthenticatedHouseholdTransactionsIndexRouteImport } from './routes/_authenticated/_household/transactions/index'
+import { Route as AuthenticatedHouseholdTransactionsTransactionIdRouteImport } from './routes/_authenticated/_household/transactions/$transactionId'
+import { Route as AuthenticatedHouseholdTransactionsNewRouteImport } from './routes/_authenticated/_household/transactions/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -132,6 +134,18 @@ const AuthenticatedHouseholdTransactionsIndexRoute =
     path: '/transactions/',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdTransactionsTransactionIdRoute =
+  AuthenticatedHouseholdTransactionsTransactionIdRouteImport.update({
+    id: '/transactions/$transactionId',
+    path: '/transactions/$transactionId',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdTransactionsNewRoute =
+  AuthenticatedHouseholdTransactionsNewRouteImport.update({
+    id: '/transactions/new',
+    path: '/transactions/new',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -148,6 +162,8 @@ export interface FileRoutesByFullPath {
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
+  '/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
+  '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
@@ -167,6 +183,8 @@ export interface FileRoutesByTo {
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
+  '/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
+  '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/tags': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions': typeof AuthenticatedHouseholdTransactionsIndexRoute
@@ -189,6 +207,8 @@ export interface FileRoutesById {
   '/_authenticated/_household/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/_authenticated/_household/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/_authenticated/_household/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
+  '/_authenticated/_household/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
+  '/_authenticated/_household/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/_authenticated/_household/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/_authenticated/_household/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
@@ -210,6 +230,8 @@ export interface FileRouteTypes {
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
+    | '/transactions/$transactionId'
+    | '/transactions/new'
     | '/accounts/'
     | '/tags/'
     | '/transactions/'
@@ -229,6 +251,8 @@ export interface FileRouteTypes {
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
+    | '/transactions/$transactionId'
+    | '/transactions/new'
     | '/accounts'
     | '/tags'
     | '/transactions'
@@ -250,6 +274,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/tags/$tagId'
     | '/_authenticated/_household/tags/new'
     | '/_authenticated/_household/tags/suggested'
+    | '/_authenticated/_household/transactions/$transactionId'
+    | '/_authenticated/_household/transactions/new'
     | '/_authenticated/_household/accounts/'
     | '/_authenticated/_household/tags/'
     | '/_authenticated/_household/transactions/'
@@ -398,6 +424,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdTransactionsIndexRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/transactions/$transactionId': {
+      id: '/_authenticated/_household/transactions/$transactionId'
+      path: '/transactions/$transactionId'
+      fullPath: '/transactions/$transactionId'
+      preLoaderRoute: typeof AuthenticatedHouseholdTransactionsTransactionIdRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/transactions/new': {
+      id: '/_authenticated/_household/transactions/new'
+      path: '/transactions/new'
+      fullPath: '/transactions/new'
+      preLoaderRoute: typeof AuthenticatedHouseholdTransactionsNewRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
   }
 }
 
@@ -409,6 +449,8 @@ interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdTagsTagIdRoute: typeof AuthenticatedHouseholdTagsTagIdRoute
   AuthenticatedHouseholdTagsNewRoute: typeof AuthenticatedHouseholdTagsNewRoute
   AuthenticatedHouseholdTagsSuggestedRoute: typeof AuthenticatedHouseholdTagsSuggestedRoute
+  AuthenticatedHouseholdTransactionsTransactionIdRoute: typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
+  AuthenticatedHouseholdTransactionsNewRoute: typeof AuthenticatedHouseholdTransactionsNewRoute
   AuthenticatedHouseholdAccountsIndexRoute: typeof AuthenticatedHouseholdAccountsIndexRoute
   AuthenticatedHouseholdTagsIndexRoute: typeof AuthenticatedHouseholdTagsIndexRoute
   AuthenticatedHouseholdTransactionsIndexRoute: typeof AuthenticatedHouseholdTransactionsIndexRoute
@@ -426,6 +468,10 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
     AuthenticatedHouseholdTagsNewRoute: AuthenticatedHouseholdTagsNewRoute,
     AuthenticatedHouseholdTagsSuggestedRoute:
       AuthenticatedHouseholdTagsSuggestedRoute,
+    AuthenticatedHouseholdTransactionsTransactionIdRoute:
+      AuthenticatedHouseholdTransactionsTransactionIdRoute,
+    AuthenticatedHouseholdTransactionsNewRoute:
+      AuthenticatedHouseholdTransactionsNewRoute,
     AuthenticatedHouseholdAccountsIndexRoute:
       AuthenticatedHouseholdAccountsIndexRoute,
     AuthenticatedHouseholdTagsIndexRoute: AuthenticatedHouseholdTagsIndexRoute,

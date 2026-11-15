@@ -36,3 +36,19 @@ export function transactionsQueryOptions(
 			}),
 	});
 }
+
+/** One transaction, with its lines. */
+export function transactionQueryOptions(
+	householdId: string,
+	transactionId: string,
+) {
+	return queryOptions({
+		queryKey: [
+			...transactionsQueryKey(householdId),
+			"detail",
+			transactionId,
+		] as const,
+		queryFn: ({ signal }) =>
+			getApi().transactions.get(householdId, transactionId, { signal }),
+	});
+}

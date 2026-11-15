@@ -88,6 +88,9 @@ describe("DashboardPage", () => {
 			latest.getByRole("link", { name: "See all transactions" }),
 		).toHaveAttribute("href", "/transactions");
 		expect(
+			latest.getByRole("link", { name: "Add a transaction" }),
+		).toHaveAttribute("href", "/transactions/new");
+		expect(
 			urls.find((url) => url.pathname.endsWith(`${base}/transactions`))?.search,
 		).toBe("?page=1&pageSize=5");
 	});
