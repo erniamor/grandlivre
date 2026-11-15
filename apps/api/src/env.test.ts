@@ -29,6 +29,8 @@ describe("parseEnv", () => {
 			],
 			RESEND_API_KEY: "re_production_key",
 			EMAIL_FROM: "Grand Livre <hello@grandlivre.example.com>",
+			// Every 15 minutes
+			RECURRING_RUN_EVERY_SECONDS: 900,
 		});
 	});
 
@@ -38,6 +40,16 @@ describe("parseEnv", () => {
 			NODE_ENV: "development",
 			PORT: 3001,
 		});
+	});
+
+	it("runs the recurring transactions as often as asked, but not more than every 5 seconds", () => {
+		expect(
+			parseEnv({ ...validSource, RECURRING_RUN_EVERY_SECONDS: "10" })
+				.RECURRING_RUN_EVERY_SECONDS,
+		).toBe(10);
+		expect(() =>
+			parseEnv({ ...validSource, RECURRING_RUN_EVERY_SECONDS: "1" }),
+		).toThrow();
 	});
 
 	it("rejects a missing DATABASE_URL", () => {

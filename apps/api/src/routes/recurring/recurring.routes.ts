@@ -1,20 +1,27 @@
 import {
 	createRecurringTransactionSchema,
 	updateRecurringTransactionSchema,
+	updateTransactionSchema,
 } from "@repo/schemas";
 import { type Context, Hono } from "hono";
 import { validate } from "@/lib/validator";
 import type { HouseholdVariables } from "@/middlewares/require-household";
 import type { Viewer } from "@/routes/accounts/accounts.service";
 import {
+	occurrenceParamSchema,
 	recurringParamSchema,
 	recurringQuerySchema,
+	upcomingQuerySchema,
 } from "@/routes/recurring/recurring.schemas";
 import {
+	confirmOccurrence,
 	createRecurring,
 	deleteRecurring,
 	getRecurring,
+	listPending,
 	listRecurring,
+	listUpcoming,
+	skipOccurrence,
 	updateRecurring,
 } from "@/routes/recurring/recurring.service";
 
@@ -36,6 +43,35 @@ export const recurringRoutes = new Hono<Env>()
 	)
 	.post("/", validate("json", createRecurringTransactionSchema), async (c) =>
 		c.json(await createRecurring(viewerOf(c), c.req.valid("json")), 201),
+	)
+	// Before "/:recurringId", which would otherwise read them as ids
+	.get("/pending", validate("query", recurringQuerySchema), async (c) =>
+		c.json(await listPending(viewerOf(c), c.req.valid("query"))),
+	)
+	.post(
+		"/pending/:occurrenceId/confirm",
+		validate("param", occurrenceParamSchema),
+		validate("json", updateTransactionSchema),
+		async (c) =>
+			c.json(
+				await confirmOccurrence(
+					viewerOf(c),
+					c.req.valid("param").occurrenceId,
+					c.req.valid("json"),
+				),
+				201,
+			),
+	)
+	.post(
+		"/pending/:occurrenceId/skip",
+		validate("param", occurrenceParamSchema),
+		async (c) => {
+			await skipOccurrence(viewerOf(c), c.req.valid("param").occurrenceId);
+			return c.body(null, 204);
+		},
+	)
+	.get("/upcoming", validate("query", upcomingQuerySchema), async (c) =>
+		c.json(await listUpcoming(viewerOf(c), c.req.valid("query"))),
 	)
 	.get("/:recurringId", validate("param", recurringParamSchema), async (c) =>
 		c.json(await getRecurring(viewerOf(c), c.req.valid("param").recurringId)),

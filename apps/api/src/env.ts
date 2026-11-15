@@ -21,6 +21,13 @@ const envSchema = z
 		// Claude API: turns notes into draft transactions; without it, the
 		// assistant answers that it is unavailable and members enter by hand
 		ANTHROPIC_API_KEY: z.string().min(1).optional(),
+		// How often the due recurring transactions are recorded or set aside
+		// for a member; shorter in development, to try them
+		RECURRING_RUN_EVERY_SECONDS: z.coerce
+			.number()
+			.int()
+			.min(5)
+			.default(15 * 60),
 		// Resend: sends the emails; required in production, optional elsewhere
 		// (without it, emails are printed to the console)
 		RESEND_API_KEY: z.string().startsWith("re_").optional(),

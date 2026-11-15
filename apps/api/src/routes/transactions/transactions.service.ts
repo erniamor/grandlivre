@@ -1,8 +1,10 @@
 import type {
 	CreateTransaction,
 	Paginated,
+	Receipt,
 	Transaction,
 	TransactionLineInput,
+	TransactionOrigin,
 	UpdateTransaction,
 } from "@repo/schemas";
 import {
@@ -406,7 +408,7 @@ export async function toValues(
 	};
 }
 
-async function insertLines(
+export async function insertLines(
 	tx: Tx,
 	householdId: string,
 	transactionId: string,
@@ -426,6 +428,67 @@ async function insertLines(
 	);
 }
 
+/** Where a transaction comes from, and what came with it. */
+interface Provenance {
+	origin: TransactionOrigin;
+	externalId?: string;
+	receipt?: Receipt;
+}
+
+/**
+ * Records a transaction on an account the viewer holds, inside `tx`; the
+ * caller publishes the event once everything it does is written.
+ */
+export async function recordTransaction(
+	tx: Tx,
+	viewer: Viewer,
+	input: UpdateTransaction,
+	{ origin, externalId, receipt }: Provenance,
+): Promise<Transaction> {
+	const householdId = viewer.membership.household.id;
+	const access = await accountAccess(tx, viewer);
+	const { lines, ...values } = await toValues(tx, viewer, access, input);
+	if (externalId !== undefined) {
+		// The same statement line is never imported twice into an account
+		const [imported] = await tx
+			.select({ id: transactions.id })
+			.from(transactions)
+			.where(
+				and(
+					eq(transactions.accountId, values.accountId),
+					eq(transactions.externalId, externalId),
+				),
+			);
+		if (imported) {
+			throw new AppError(
+				409,
+				"transaction_already_imported",
+				"This transaction was already imported into the account",
+			);
+		}
+	}
+	const [row] = await tx
+		.insert(transactions)
+		.values({
+			...values,
+			householdId,
+			origin,
+			externalId: externalId ?? null,
+			receipt: receipt ?? null,
+			createdBy: viewer.userId,
+		})
+		.returning();
+	if (!row) {
+		throw new Error("The transaction was not created");
+	}
+	await insertLines(tx, householdId, row.id, lines);
+	const [transaction] = await withDetails(tx, [row]);
+	if (!transaction) {
+		throw new Error("The transaction was not created");
+	}
+	return transaction;
+}
+
 /** Records a transaction on an account the viewer holds. */
 export async function createTransaction(
 	viewer: Viewer,
@@ -433,49 +496,17 @@ export async function createTransaction(
 ): Promise<Transaction> {
 	const { receipt, ...input } =
 		"receipt" in fields ? fields : { ...fields, receipt: undefined };
-	const householdId = viewer.membership.household.id;
 	return db.transaction(async (tx) => {
-		const access = await accountAccess(tx, viewer);
-		const { lines, ...values } = await toValues(tx, viewer, access, input);
-		if (externalId !== undefined) {
-			// The same statement line is never imported twice into an account
-			const [imported] = await tx
-				.select({ id: transactions.id })
-				.from(transactions)
-				.where(
-					and(
-						eq(transactions.accountId, values.accountId),
-						eq(transactions.externalId, externalId),
-					),
-				);
-			if (imported) {
-				throw new AppError(
-					409,
-					"transaction_already_imported",
-					"This transaction was already imported into the account",
-				);
-			}
-		}
-		const [row] = await tx
-			.insert(transactions)
-			.values({
-				...values,
-				householdId,
-				origin,
-				externalId: externalId ?? null,
-				receipt: receipt ?? null,
-				createdBy: viewer.userId,
-			})
-			.returning();
-		if (!row) {
-			throw new Error("The transaction was not created");
-		}
-		await insertLines(tx, householdId, row.id, lines);
-		await publishHouseholdEvent(tx, householdId, "transactions");
-		const [transaction] = await withDetails(tx, [row]);
-		if (!transaction) {
-			throw new Error("The transaction was not created");
-		}
+		const transaction = await recordTransaction(tx, viewer, input, {
+			origin,
+			externalId,
+			receipt,
+		});
+		await publishHouseholdEvent(
+			tx,
+			viewer.membership.household.id,
+			"transactions",
+		);
 		return transaction;
 	});
 }

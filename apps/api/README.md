@@ -29,6 +29,7 @@ Validated at startup by [`src/env.ts`](src/env.ts): the API refuses to start wit
 | `CORS_ORIGINS` | yes | Comma-separated front-end origins allowed to call the API (with cookies) |
 | `BETTER_AUTH_SECRET` | yes | At least 32 characters; signs sessions and tokens |
 | `ANTHROPIC_API_KEY` | no | Key of the Claude API, which turns notes and receipt photos into draft transactions (`POST …/transactions/draft`, `…/draft/receipt`). Without it, those routes answer 503 `assistant_unavailable` and members enter by hand |
+| `RECURRING_RUN_EVERY_SECONDS` | no | How often the recurring transactions whose day has come are recorded or set aside (900, every 15 minutes, by default; at least 5). Lower it in development to try them |
 | `RESEND_API_KEY`, `EMAIL_FROM` | in production | Send the emails with [Resend](https://resend.com); both or none. `EMAIL_FROM` is `Name <address>` or `address`, on a domain verified in Resend. Without them (development, tests), emails are printed to the console |
 | `COOKIE_DOMAIN` | in production | Parent domain of the API and the front end (e.g. `grandlivre.example.com` for `api.grandlivre.example.com` and `grandlivre.example.com`): the session cookie is shared with the front end's server. `API_URL` and `APP_URL` must be under it. Unset in development |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no | Enable Google sign-in; both or none. Redirect URI: `<API_URL>/v1/auth/callback/google` |
@@ -194,6 +195,23 @@ A transaction that repeats: a rent, a subscription, a pay. It holds what it reco
 | `DELETE /v1/households/:householdId/recurring-transactions/:recurringId` | holder of its account | Deletes it (204); the transactions it recorded stay |
 
 - Who sees and writes: as for transactions, from its account (and, for a transfer, its destination). An archived account takes none (409 `account_archived`). A tag it records on can't be deleted (409 `tag_in_use`); deleting its account (one without transactions) deletes it.
+#### Their days
+
+The API records them itself: on start, then every `RECURRING_RUN_EVERY_SECONDS`, a run (`runDueRecurrences()`) takes each recurring transaction whose `nextDate` has come in its household's time zone, and handles every day due up to today, so the days missed while the API was down are caught up.
+
+- `automatic`: the transaction is recorded on that day, with the origin `recurring`, on behalf of whoever created the recurring transaction. When its account is archived (or its destination, for a transfer), or has no holder left, the day waits for a member instead.
+- `confirm`: the day waits for a member, who records it as reviewed (its amount, its day, its account can change) or skips it.
+- Each day handled is kept (`recurring_occurrences`, unique per recurring transaction and day): a day is never recorded twice, whatever runs at the same time on several instances of the API (each recurring transaction is locked while it is handled, `SKIP LOCKED`). A recurring transaction that fails is logged by its id only and tried again on the next run.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/recurring-transactions/pending` | member | The days waiting for a member, the oldest first: `{ id, date, recurring }`, `recurring` as it is now |
+| `POST /v1/households/:householdId/recurring-transactions/pending/:occurrenceId/confirm` | holder of the transaction's account | Records the transaction sent (the body of `PUT …/transactions/:id`), with the origin `recurring` (201) |
+| `POST /v1/households/:householdId/recurring-transactions/pending/:occurrenceId/skip` | holder of its account | Records nothing for that day, for good (204) |
+| `GET /v1/households/:householdId/recurring-transactions/upcoming?days=30` | member | The days to come, from the next day of each recurring transaction to `days` (1 to 90) after today: `{ date, recurring }`, the soonest first |
+
+A day already recorded or skipped answers 409 `occurrence_already_handled`.
+
 - A first day before today, in the household's time zone, answers 422 `recurrence_start_in_past` on `schedule.startDate`: what already happened is entered by hand. Other codes: `recurrence_unit_invalid`, `recurrence_interval_invalid`, `recurrence_mode_invalid`, `recurrence_end_before_start` (on `schedule.endDate`). The errors about what it records point into it: `transaction.accountId`, `transaction.lines.<n>.tagId`.
 
 ### Events (real time)

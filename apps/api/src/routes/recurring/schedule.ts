@@ -9,6 +9,13 @@ function toDay(date: Date): string {
 	return date.toISOString().slice(0, 10);
 }
 
+/** The calendar day `days` after `day` (before, when negative). */
+export function addDays(day: string, days: number): string {
+	const date = toUtc(day);
+	date.setUTCDate(date.getUTCDate() + days);
+	return toDay(date);
+}
+
 function daysInMonth(year: number, month: number): number {
 	// Day 0 of the next month: the last day of this one
 	return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -71,9 +78,7 @@ export function occurrencesBetween(
 	let day = nextOccurrence(schedule, from);
 	while (day !== null && day <= to) {
 		days.push(day);
-		const next = toUtc(day);
-		next.setUTCDate(next.getUTCDate() + 1);
-		day = nextOccurrence(schedule, toDay(next));
+		day = nextOccurrence(schedule, addDays(day, 1));
 	}
 	return days;
 }

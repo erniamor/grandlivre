@@ -1,10 +1,14 @@
 import type {
 	CreateRecurringTransaction,
 	Paginated,
+	PendingOccurrence,
 	RecurrenceSchedule,
 	RecurringTransaction,
+	Transaction,
 	TransactionLineInput,
+	UpcomingOccurrence,
 	UpdateRecurringTransaction,
+	UpdateTransaction,
 } from "@repo/schemas";
 import {
 	and,
@@ -13,11 +17,13 @@ import {
 	eq,
 	type InferSelectModel,
 	inArray,
+	lte,
 	or,
 	sql,
 } from "drizzle-orm";
 import { db, type Transaction as Tx } from "@/db/client";
 import {
+	recurringOccurrences,
 	recurringTransactionLines,
 	recurringTransactions,
 	users,
@@ -27,14 +33,22 @@ import { AppError } from "@/lib/errors";
 import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf } from "@/lib/pagination";
 import type { Viewer } from "@/routes/accounts/accounts.service";
-import type { RecurringQuery } from "@/routes/recurring/recurring.schemas";
-import { nextOccurrence } from "@/routes/recurring/schedule";
+import type {
+	RecurringQuery,
+	UpcomingQuery,
+} from "@/routes/recurring/recurring.schemas";
+import {
+	addDays,
+	nextOccurrence,
+	occurrencesBetween,
+} from "@/routes/recurring/schedule";
 import {
 	type AccountAccess,
 	accountAccess,
 	assertAccount,
 	type Database,
 	isVisible,
+	recordTransaction,
 	toValues,
 } from "@/routes/transactions/transactions.service";
 
@@ -404,4 +418,215 @@ export async function deleteRecurring(
 			"recurring",
 		);
 	});
+}
+
+/** The ids of the accounts whose details the viewer sees. */
+function visibleAccountIds(access: Map<string, AccountAccess>): string[] {
+	return [...access]
+		.filter(([, account]) => account.seesDetails)
+		.map(([id]) => id);
+}
+
+/**
+ * The days of the household's recurring transactions that wait for a
+ * member, the oldest first, as the viewer may see them.
+ */
+export async function listPending(
+	viewer: Viewer,
+	pagination: RecurringQuery,
+): Promise<Paginated<PendingOccurrence>> {
+	const access = await accountAccess(db, viewer);
+	const visibleIds = visibleAccountIds(access);
+	if (visibleIds.length === 0) {
+		return { data: [], pagination: { ...pagination, total: 0 } };
+	}
+	const where = and(
+		eq(recurringOccurrences.householdId, viewer.membership.household.id),
+		eq(recurringOccurrences.status, "pending"),
+		or(
+			inArray(recurringTransactions.accountId, visibleIds),
+			inArray(recurringTransactions.toAccountId, visibleIds),
+		),
+	);
+	const [rows, [counted]] = await Promise.all([
+		db
+			.select({ occurrence: recurringOccurrences, rule: recurringTransactions })
+			.from(recurringOccurrences)
+			.innerJoin(
+				recurringTransactions,
+				eq(recurringTransactions.id, recurringOccurrences.recurringId),
+			)
+			.where(where)
+			.orderBy(asc(recurringOccurrences.date), asc(recurringOccurrences.id))
+			.limit(pagination.pageSize)
+			.offset(offsetOf(pagination)),
+		db
+			.select({ total: count() })
+			.from(recurringOccurrences)
+			.innerJoin(
+				recurringTransactions,
+				eq(recurringTransactions.id, recurringOccurrences.recurringId),
+			)
+			.where(where),
+	]);
+	const rules = await withDetails(db, [
+		...new Map(rows.map(({ rule }) => [rule.id, rule])).values(),
+	]);
+	const ruleById = new Map(rules.map((rule) => [rule.id, rule]));
+	return {
+		data: rows.flatMap(({ occurrence }) => {
+			const recurring = ruleById.get(occurrence.recurringId);
+			return recurring
+				? [{ id: occurrence.id, date: occurrence.date, recurring }]
+				: [];
+		}),
+		pagination: { ...pagination, total: counted?.total ?? 0 },
+	};
+}
+
+/**
+ * Locks a waiting day of a recurring transaction the viewer may see; a day
+ * already recorded or skipped answers 409.
+ */
+async function lockPending(
+	tx: Tx,
+	viewer: Viewer,
+	access: Map<string, AccountAccess>,
+	occurrenceId: string,
+) {
+	const [row] = await tx
+		.select({ occurrence: recurringOccurrences, rule: recurringTransactions })
+		.from(recurringOccurrences)
+		.innerJoin(
+			recurringTransactions,
+			eq(recurringTransactions.id, recurringOccurrences.recurringId),
+		)
+		.where(
+			and(
+				eq(recurringOccurrences.id, occurrenceId),
+				eq(recurringOccurrences.householdId, viewer.membership.household.id),
+			),
+		)
+		.for("update", { of: recurringOccurrences });
+	if (!row || !isVisible(row.rule, access)) {
+		throw new AppError(404, "not_found", "Occurrence not found");
+	}
+	if (row.occurrence.status !== "pending") {
+		throw new AppError(
+			409,
+			"occurrence_already_handled",
+			"This day of the recurring transaction was already recorded or skipped",
+		);
+	}
+	return row;
+}
+
+/**
+ * Records the transaction of a waiting day, as the member reviewed it: its
+ * amount, its day, even its account can differ from the recurring
+ * transaction's. Its origin is `recurring`.
+ */
+export async function confirmOccurrence(
+	viewer: Viewer,
+	occurrenceId: string,
+	input: UpdateTransaction,
+): Promise<Transaction> {
+	const householdId = viewer.membership.household.id;
+	return db.transaction(async (tx) => {
+		const access = await accountAccess(tx, viewer);
+		const { occurrence } = await lockPending(tx, viewer, access, occurrenceId);
+		const transaction = await recordTransaction(tx, viewer, input, {
+			origin: "recurring",
+		});
+		await tx
+			.update(recurringOccurrences)
+			.set({ status: "recorded", transactionId: transaction.id })
+			.where(eq(recurringOccurrences.id, occurrence.id));
+		await publishHouseholdEvent(tx, householdId, "transactions");
+		await publishHouseholdEvent(tx, householdId, "recurring");
+		return transaction;
+	});
+}
+
+/** Skips a waiting day: nothing is recorded for it, for good. */
+export async function skipOccurrence(
+	viewer: Viewer,
+	occurrenceId: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const access = await accountAccess(tx, viewer);
+		const { occurrence, rule } = await lockPending(
+			tx,
+			viewer,
+			access,
+			occurrenceId,
+		);
+		if (!access.get(rule.accountId)?.isHolder) {
+			throw new AppError(
+				403,
+				"forbidden",
+				"Only a holder of the account can skip its recurring transactions",
+			);
+		}
+		await tx
+			.update(recurringOccurrences)
+			.set({ status: "skipped" })
+			.where(eq(recurringOccurrences.id, occurrence.id));
+		await publishHouseholdEvent(
+			tx,
+			viewer.membership.household.id,
+			"recurring",
+		);
+	});
+}
+
+/**
+ * The days the viewer's visible recurring transactions will come due, from
+ * today to `days` after, in the household's time zone, the soonest first.
+ */
+export async function listUpcoming(
+	viewer: Viewer,
+	{ days, ...pagination }: UpcomingQuery,
+): Promise<Paginated<UpcomingOccurrence>> {
+	const access = await accountAccess(db, viewer);
+	const visibleIds = visibleAccountIds(access);
+	if (visibleIds.length === 0) {
+		return { data: [], pagination: { ...pagination, total: 0 } };
+	}
+	const today = todayIn(viewer.membership.household.timeZone);
+	const until = addDays(today, days);
+	const rows = await db
+		.select()
+		.from(recurringTransactions)
+		.where(
+			and(
+				eq(recurringTransactions.householdId, viewer.membership.household.id),
+				or(
+					inArray(recurringTransactions.accountId, visibleIds),
+					inArray(recurringTransactions.toAccountId, visibleIds),
+				),
+				lte(recurringTransactions.nextDate, until),
+			),
+		);
+	const rules = await withDetails(db, rows);
+	const upcoming = rules
+		.flatMap((recurring) =>
+			recurring.nextDate === null
+				? []
+				: // From its next day: the ones before are handled, and a next
+					// day just past, not handled yet, is still to come
+					occurrencesBetween(recurring.schedule, recurring.nextDate, until).map(
+						(date) => ({ date, recurring }),
+					),
+		)
+		.sort(
+			(a, b) =>
+				a.date.localeCompare(b.date) ||
+				a.recurring.id.localeCompare(b.recurring.id),
+		);
+	const start = offsetOf(pagination);
+	return {
+		data: upcoming.slice(start, start + pagination.pageSize),
+		pagination: { ...pagination, total: upcoming.length },
+	};
 }

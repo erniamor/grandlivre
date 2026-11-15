@@ -17,6 +17,17 @@ export const RECURRENCE_UNITS = ["week", "month", "year"] as const;
  */
 export const RECURRENCE_MODES = ["automatic", "confirm"] as const;
 
+/**
+ * What became of a day a recurring transaction came due:
+ * - "pending": waits for a member to confirm or skip it;
+ * - "recorded": its transaction was recorded;
+ * - "skipped": a member chose not to record it.
+ */
+export const OCCURRENCE_STATUSES = ["pending", "recorded", "skipped"] as const;
+
+/** How far ahead the upcoming days of the recurring transactions go. */
+export const UPCOMING_MAX_DAYS = 90;
+
 /** Every 1 to 99 weeks, months or years. */
 export const RECURRENCE_MAX_INTERVAL = 99;
 
@@ -111,3 +122,21 @@ export const recurringTransactionSchema = z.object({
 });
 
 export type RecurringTransaction = z.infer<typeof recurringTransactionSchema>;
+
+/** A day a recurring transaction came due, waiting for a member to confirm or skip it. */
+export const pendingOccurrenceSchema = z.object({
+	id: z.uuid(),
+	date: calendarDateSchema,
+	/** What it records, as it is now: the confirmation can change it. */
+	recurring: recurringTransactionSchema,
+});
+
+export type PendingOccurrence = z.infer<typeof pendingOccurrenceSchema>;
+
+/** A day a recurring transaction will come due. */
+export const upcomingOccurrenceSchema = z.object({
+	date: calendarDateSchema,
+	recurring: recurringTransactionSchema,
+});
+
+export type UpcomingOccurrence = z.infer<typeof upcomingOccurrenceSchema>;
