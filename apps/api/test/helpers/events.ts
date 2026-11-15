@@ -33,8 +33,9 @@ export async function openEvents(householdId: string, cookie?: string) {
 				const messages = buffer.split("\n\n");
 				buffer = messages.pop() ?? "";
 				for (const message of messages) {
-					if (message.startsWith(": connected")) {
+					if (message.startsWith("event: ready")) {
 						connected = true;
+						continue;
 					}
 					const data = message
 						.split("\n")

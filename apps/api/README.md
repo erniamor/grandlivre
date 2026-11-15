@@ -149,7 +149,7 @@ data: {"topic":"transactions"}
 Topics: `household` (name, currency), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances). On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
 
 - An event is sent only once the change is saved: a refused change sends nothing.
-- The stream starts with a `: connected` comment, once events are listened to, then a `: ping` comment every 25 seconds so proxies keep it open.
+- The stream starts with a `ready` event (`event: ready`), sent once events are listened to: reload the data then, not on `EventSource`'s `open`, which comes a moment earlier. A `: ping` comment follows every 25 seconds so proxies keep the stream open.
 - A member who leaves the household, or is removed from it, has their stream closed.
 - Events travel through PostgreSQL (`LISTEN`/`NOTIFY` on the `household_events` channel), so they reach the members connected to any instance of the API.
 - What was missed while disconnected isn't replayed: on reconnection, the front end reloads everything.

@@ -61,8 +61,10 @@ export const eventRoutes = new Hono<{ Variables: HouseholdVariables }>().get(
 			heartbeat.unref();
 
 			try {
-				// Events are now listened to: the client can rely on the stream
-				await stream.write(": connected\n\n");
+				// Events are now listened to: the client can reload its data and
+				// rely on the stream from here on. A named event, not a comment,
+				// so the browser sees it; with data, or the browser drops it.
+				await stream.writeSSE({ event: "ready", data: "{}" });
 				await ended;
 			} finally {
 				clearInterval(heartbeat);

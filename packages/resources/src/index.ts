@@ -1,5 +1,6 @@
 import { createAccountsResource } from "./accounts/accounts.resource";
 import { createAuthResource } from "./auth/auth.resource";
+import { createEventsResource } from "./events/events.resource";
 import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
 import { createInvitationsResource } from "./invitations/invitations.resource";
@@ -20,6 +21,10 @@ export {
 	UnauthorizedError,
 	ValidationError,
 } from "./errors";
+export type {
+	EventsResource,
+	HouseholdEventHandlers,
+} from "./events/events.resource";
 export type { HouseholdsResource } from "./households/households.resource";
 export type { ApiClientConfig } from "./http/client";
 export type { InvitationsResource } from "./invitations/invitations.resource";
@@ -36,6 +41,7 @@ export function createApi(config: ApiClientConfig) {
 	return {
 		accounts: createAccountsResource(client),
 		auth: createAuthResource(client),
+		events: createEventsResource(client),
 		households: createHouseholdsResource(client),
 		invitations: createInvitationsResource(client),
 		me: createMeResource(client),

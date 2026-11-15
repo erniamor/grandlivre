@@ -4,7 +4,7 @@
 
 ## Role
 
-Single data access point for the front-end applications: each business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`...) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
+Single data access point for the front-end applications: each business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `events`...) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
 
 The Zod schemas of the API's inputs and responses live in `packages/schemas`, shared with `apps/api`: this package uses them, it doesn't define them.
 
@@ -12,7 +12,7 @@ The Zod schemas of the API's inputs and responses live in `packages/schemas`, sh
 
 - TypeScript in `strict` mode, with no dependency on React or a front-end framework: the core is usable anywhere.
 - Zod schemas from `@repo/schemas` to validate inputs and some responses
-- Native `fetch` as transport
+- Native `fetch` as transport, and the browser's `EventSource` for the real-time events (both replaceable in the configuration, for tests)
 - Tests: Vitest, with a mocked network (`src/test/fake-fetch.ts`)
 - No TanStack Query here: the query options (`queryOptions`, query keys) live in the apps, next to their routes, so this package stays a plain client
 - The `apps/api` REST API, versioned (`/v1`), with its `{ data, pagination }` responses and `{ error: { code, message, details? } }` errors
@@ -25,14 +25,14 @@ The Zod schemas of the API's inputs and responses live in `packages/schemas`, sh
 
 ## Structure
 
-- `src/http/client.ts`: base HTTP client (`createApiClient`: URL under `/v1`, headers, credentials, response validation) and `parseInput()` to validate an input before sending
+- `src/http/client.ts`: base HTTP client (`createApiClient`: URL under `/v1`, headers, credentials, response validation; `openEventSource()` for a stream of server-sent events) and `parseInput()` to validate an input before sending
 - `src/api/errors.ts`: reading the error envelopes (the API's `{ error: { ... } }` and Better Auth's `{ code, message }`) into typed errors
 - `src/api/page.ts`: helpers for paginated operations (`Page<T>`, `toPage()`, `withQuery()`, `segment()`)
-- `src/<resource>/`: one folder per business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`)
+- `src/<resource>/`: one folder per business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `events`)
   - `<resource>.resource.ts`: the resource's operations, as `create<Resource>Resource(client)`
   - `<resource>.resource.test.ts`: their tests
 - `src/errors.ts`: typed error classes (`ApiError` and its subclasses, `NetworkError`)
-- `src/test/`: test helpers (`fakeFetch()`, `fakeApi()`)
+- `src/test/`: test helpers (`fakeFetch()`, `fakeApi()`, `FakeEventSource`, which plays the server's part of a stream)
 - `src/index.ts`: the package's public API: `createApi(config)`, which groups the resources, the error classes and the types (what is exported here is the contract)
 - Resource operations are `async`: an invalid input rejects the promise with a `ValidationError`, it never throws synchronously.
 

@@ -14,6 +14,8 @@ export interface ApiClientConfig {
 	credentials?: RequestCredentials;
 	/** Replaces the global fetch, e.g. in tests. */
 	fetch?: typeof fetch;
+	/** Replaces the global EventSource, e.g. in tests. */
+	EventSource?: typeof EventSource;
 }
 
 interface RequestOptions<Output> {
@@ -29,6 +31,11 @@ interface RequestOptions<Output> {
 
 export interface ApiClient {
 	request<Output = void>(options: RequestOptions<Output>): Promise<Output>;
+	/**
+	 * Opens a stream of server-sent events at a path under /v1, with the
+	 * session cookie when `credentials` is "include".
+	 */
+	openEventSource(path: string): EventSource;
 }
 
 /** Validates an input before sending it: invalid input throws a ValidationError. */
@@ -104,6 +111,13 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 				);
 			}
 			return parsed.data;
+		},
+
+		openEventSource(path: string): EventSource {
+			const Source = config.EventSource ?? globalThis.EventSource;
+			return new Source(`${config.baseUrl}/v1${path}`, {
+				withCredentials: config.credentials === "include",
+			});
 		},
 	};
 }
