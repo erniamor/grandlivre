@@ -26,6 +26,9 @@ export const amountSchema = z
 	.min(-MAX_AMOUNT, "amount_too_large")
 	.max(MAX_AMOUNT, "amount_too_large");
 
+/** A calendar day, without time or time zone: "2026-11-14". */
+export const calendarDateSchema = z.iso.date("date_invalid");
+
 export const paginationSchema = z.object({
 	page: z.number().int().min(1),
 	pageSize: z.number().int().min(1),

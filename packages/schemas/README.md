@@ -19,14 +19,15 @@ Add it to a project with `"@repo/schemas": "workspace:*"`. It is consumed as Typ
 
 | Domain | Schemas and types | Constants |
 | --- | --- | --- |
-| Common | `dateTimeSchema`, `emailSchema`, `paginationSchema` / `Pagination`, `amountSchema` (money in minor units), `localeSchema` / `Locale`, `paginatedSchema(item)` / `Paginated<T>`, `apiErrorBodySchema` / `ApiErrorBody` (the API's error responses), `validationIssueSchema` / `ValidationIssue` | `MAX_AMOUNT`, `LOCALES` |
+| Common | `dateTimeSchema`, `emailSchema`, `paginationSchema` / `Pagination`, `amountSchema` (money in minor units), `calendarDateSchema` (a day, `2026-11-14`), `localeSchema` / `Locale`, `paginatedSchema(item)` / `Paginated<T>`, `apiErrorBodySchema` / `ApiErrorBody` (the API's error responses), `validationIssueSchema` / `ValidationIssue` | `MAX_AMOUNT`, `LOCALES` |
 | Sign-in | `sendMagicLinkSchema` / `SendMagicLink`, `sendSignInCodeSchema` / `SendSignInCode`, `signInWithCodeSchema` / `SignInWithCode` | `SIGN_IN_CODE_LENGTH` (6) |
 | Profile | `profileSchema` / `Profile`, `updateProfileSchema` / `UpdateProfile`, `profileNameSchema` | `PROFILE_NAME_MAX_LENGTH` (60) |
 | Accounts | `accountSchema` / `Account`, `createAccountSchema` / `CreateAccount`, `updateAccountSchema` / `UpdateAccount`, `accountHolderSchema` / `AccountHolder`, `accountsSummarySchema` / `AccountsSummary`, `accountNameSchema`, `accountTypeSchema` / `AccountType`, `accountVisibilitySchema` / `AccountVisibility`, `accountHolderIdsSchema` | `ACCOUNT_NAME_MAX_LENGTH` (60), `ACCOUNT_TYPES`, `ACCOUNT_DEBT_TYPES`, `ACCOUNT_VISIBILITIES`, `ACCOUNT_MAX_HOLDERS` (20) |
 | Tags | `tagSchema` / `Tag`, `createTagSchema` / `CreateTag`, `updateTagSchema` / `UpdateTag`, `tagNamesSchema` / `TagNames`, `tagNameSchema`, `tagDisplayName(names, locale)` (the name in a language, or else in the first language that has one), `suggestedTagSchema` / `SuggestedTag`, `suggestedTagsSchema` / `SuggestedTags`, `addSuggestedTagsSchema` / `AddSuggestedTags` | `TAG_NAME_MAX_LENGTH` (40), `MAX_TAGS_PER_HOUSEHOLD` (500) |
+| Transactions | `transactionSchema` / `Transaction`, `createTransactionSchema` / `CreateTransaction`, `updateTransactionSchema` / `UpdateTransaction` (the whole transaction, which replaces the previous one), `transactionLineSchema` / `TransactionLine`, `transactionLineInputSchema` / `TransactionLineInput`, `transactionAmountSchema`, `transactionTypeSchema` / `TransactionType`, `transactionOriginSchema` / `TransactionOrigin` | `TRANSACTION_TYPES`, `TRANSACTION_ORIGINS`, `TRANSACTION_MAX_LINES` (50), `TRANSACTION_PAYEE_MAX_LENGTH` (80), `TRANSACTION_NOTE_MAX_LENGTH` (500), `TRANSACTION_EXTERNAL_ID_MAX_LENGTH` (200) |
 | Households | `householdSchema` / `Household`, `createHouseholdSchema` / `CreateHousehold`, `updateHouseholdSchema` / `UpdateHousehold`, `householdMemberSchema` / `HouseholdMember`, `updateHouseholdMemberSchema` / `UpdateHouseholdMember`, `inviteHouseholdMemberSchema` / `InviteHouseholdMember`, `householdInvitationSchema` / `HouseholdInvitation`, `receivedInvitationSchema` / `ReceivedInvitation`, `householdNameSchema`, `householdCurrencySchema` / `HouseholdCurrency`, `householdRoleSchema` / `HouseholdRole` | `HOUSEHOLD_NAME_MAX_LENGTH` (60), `HOUSEHOLD_CURRENCIES`, `HOUSEHOLD_ROLES`, `HOUSEHOLD_INVITATION_EXPIRES_IN_DAYS` (7) |
 
-In responses, dates are ISO 8601 strings. Amounts of money are integers in minor units of the household's currency (cents), never decimals.
+In responses, dates are ISO 8601 strings; the day of a transaction is a calendar day without time (`2026-11-14`). Amounts of money are integers in minor units of the household's currency (cents), never decimals.
 
 ## Error codes
 
@@ -40,6 +41,16 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `name_too_long` | The user's name is over `PROFILE_NAME_MAX_LENGTH` characters |
 | `amount_invalid` | The amount isn't an integer number of minor units |
 | `amount_too_large` | The amount is beyond `MAX_AMOUNT` |
+| `amount_not_positive` | The amount of a transaction or of a line is zero or negative |
+| `date_invalid` | The date isn't a calendar day (`YYYY-MM-DD`) |
+| `transaction_type_invalid` | The type isn't one of `TRANSACTION_TYPES` |
+| `transaction_account_invalid` | An account of the transaction isn't an id |
+| `transaction_tag_invalid` | The tag of a line isn't an id |
+| `transaction_lines_required` | An expense or an income has no line |
+| `transaction_lines_too_many` | More than `TRANSACTION_MAX_LINES` lines |
+| `transaction_payee_too_long` | The payee is over `TRANSACTION_PAYEE_MAX_LENGTH` characters |
+| `transaction_note_too_long` | The note is over `TRANSACTION_NOTE_MAX_LENGTH` characters |
+| `transfer_same_account` | A transfer goes to the account it leaves |
 | `account_name_required` | The account's name is empty or blank |
 | `account_name_too_long` | The account's name is over `ACCOUNT_NAME_MAX_LENGTH` characters |
 | `account_type_invalid` | The type isn't one of `ACCOUNT_TYPES` |

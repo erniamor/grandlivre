@@ -8,5 +8,7 @@ export { ledgerAccounts } from "@/db/schema/ledger-accounts";
 export { sessions } from "@/db/schema/sessions";
 export { tagNames } from "@/db/schema/tag-names";
 export { tags } from "@/db/schema/tags";
+export { transactionLines } from "@/db/schema/transaction-lines";
+export { transactions } from "@/db/schema/transactions";
 export { users } from "@/db/schema/users";
 export { verifications } from "@/db/schema/verifications";
