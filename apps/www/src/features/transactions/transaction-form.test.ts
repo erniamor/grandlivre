@@ -1,4 +1,9 @@
-import type { Account, Transaction } from "@repo/schemas";
+import type {
+	Account,
+	Transaction,
+	TransactionDraft,
+	UpdateTransaction,
+} from "@repo/schemas";
 import { describe, expect, it } from "vitest";
 import {
 	canEditTransaction,
@@ -7,6 +12,7 @@ import {
 	formStateOf,
 	type TransactionFormState,
 	toTransactionInput,
+	withOrigin,
 	writableAccounts,
 } from "@/features/transactions/transaction-form";
 
@@ -244,5 +250,70 @@ describe("who may record and change transactions", () => {
 		expect(canEditTransaction(on("archived"), accounts)).toBe(false);
 		expect(canEditTransaction(on("bobs"), accounts)).toBe(false);
 		expect(canEditTransaction(on("hidden"), accounts)).toBe(false);
+	});
+});
+
+describe("withOrigin", () => {
+	const expense: UpdateTransaction = {
+		type: "expense",
+		accountId: "chequing",
+		date: "2026-11-14",
+		payee: "IGA",
+		note: null,
+		lines: [{ amount: 500, tagId: null }],
+	};
+	const receipt = {
+		merchant: "IGA",
+		items: [{ name: "Apples", amount: 500 }],
+		subtotal: null,
+		taxes: [],
+		total: 500,
+	};
+	const fromNote: TransactionDraft = {
+		type: "expense",
+		date: "2026-11-14",
+		accountId: null,
+		toAccountId: null,
+		payee: null,
+		note: null,
+		lines: [],
+		proposedTag: null,
+		remark: null,
+		receipt: null,
+		warnings: [],
+	};
+
+	it("tells a transaction typed in the form from one from a note", () => {
+		expect(withOrigin(expense, undefined)).toEqual({
+			...expense,
+			origin: "manual",
+		});
+		expect(withOrigin(expense, fromNote)).toEqual({
+			...expense,
+			origin: "voice",
+		});
+	});
+
+	it("keeps the receipt with an expense read from it, not with a transfer", () => {
+		const fromReceipt = { ...fromNote, receipt };
+
+		expect(withOrigin(expense, fromReceipt)).toEqual({
+			...expense,
+			origin: "receipt",
+			receipt,
+		});
+		expect(
+			withOrigin(
+				{
+					type: "transfer",
+					accountId: "chequing",
+					toAccountId: "savings",
+					date: "2026-11-14",
+					amount: 500,
+					note: null,
+				},
+				fromReceipt,
+			),
+		).not.toHaveProperty("receipt");
 	});
 });

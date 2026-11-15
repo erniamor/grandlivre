@@ -6,6 +6,7 @@ export interface ApiRequest {
 	method: string;
 	/** Path under /v1, e.g. "/me". */
 	path: string;
+	/** Parsed JSON, or the FormData sent as is. */
 	body: unknown;
 }
 
@@ -35,7 +36,11 @@ export function mockApi(respond: Respond): ApiRequest[] {
 				method: init?.method ?? "GET",
 				path: fullUrl.pathname.replace(/^\/v1/, ""),
 				body:
-					typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
+					typeof init?.body === "string"
+						? JSON.parse(init.body)
+						: init?.body instanceof FormData
+							? init.body
+							: undefined,
 			};
 			requests.push(request);
 			const response = (await respond(request, fullUrl)) ?? {

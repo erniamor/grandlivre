@@ -2,17 +2,23 @@ import type { Household, ProposedTag, UpdateTransaction } from "@repo/schemas";
 import { buttonVariants, toast } from "@repo/ui";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { SparklesIcon } from "lucide-react";
 import { useRef } from "react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryKey, tagsQueryOptions } from "@/features/tags/tags-query";
+import { AssistantNotes } from "@/features/transactions/AssistantNotes";
 import { rememberLastAccount } from "@/features/transactions/last-account";
-import { useNoteDraft, useOpenDraft } from "@/features/transactions/note-draft";
+import {
+	useDraftPhoto,
+	useNoteDraft,
+	useOpenDraft,
+} from "@/features/transactions/note-draft";
 import { QuickEntry } from "@/features/transactions/QuickEntry";
+import { ReceiptDetails } from "@/features/transactions/ReceiptDetails";
 import { TransactionForm } from "@/features/transactions/TransactionForm";
 import { TransactionsBackLink } from "@/features/transactions/TransactionsBackLink";
 import {
 	withCreatedTag,
+	withOrigin,
 	writableAccounts,
 } from "@/features/transactions/transaction-form";
 import { useTransactionChange } from "@/features/transactions/use-transaction-change";
@@ -31,7 +37,8 @@ interface NewTransactionPageProps {
 
 /**
  * Records a transaction on an account the signed-in user holds: typed in
- * the form, or described in a note the assistant turns into a draft.
+ * the form, or described in a note or scanned from a receipt, which the
+ * assistant turns into a draft.
  */
 export function NewTransactionPage({
 	household,
@@ -46,6 +53,7 @@ export function NewTransactionPage({
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
 	const refresh = useTransactionChange(household.id);
 	const draft = useNoteDraft(draftId);
+	const photo = useDraftPhoto(draftId);
 	const openDraft = useOpenDraft();
 	// The tag created for this draft: a retry after a failure doesn't create it twice
 	const createdTag = useRef<string>(undefined);
@@ -64,11 +72,10 @@ export function NewTransactionPage({
 			).id;
 			transaction = withCreatedTag(input, createdTag.current);
 		}
-		return getApi().transactions.create(household.id, {
-			...transaction,
-			// From a note, typed or dictated
-			origin: draft ? "voice" : "manual",
-		});
+		return getApi().transactions.create(
+			household.id,
+			withOrigin(transaction, draft),
+		);
 	};
 
 	return (
@@ -92,13 +99,15 @@ export function NewTransactionPage({
 				<>
 					<QuickEntry
 						householdId={household.id}
-						onDraft={(next) => openDraft(next, { replace: true })}
+						onDraft={(next, photo) => openDraft(next, { replace: true, photo })}
 					/>
-					{draft?.remark && (
-						<p className="flex gap-2 rounded-lg border border-border bg-muted p-3 text-sm">
-							<SparklesIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-							<span>{m.assistant_remark({ remark: draft.remark })}</span>
-						</p>
+					{draft && <AssistantNotes draft={draft} />}
+					{draft?.receipt && (
+						<ReceiptDetails
+							receipt={draft.receipt}
+							photo={photo}
+							currency={household.currency}
+						/>
 					)}
 					{/* A new draft starts a fresh form: the key follows it */}
 					<TransactionForm

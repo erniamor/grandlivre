@@ -1,5 +1,6 @@
 import type {
 	Account,
+	CreateTransaction,
 	Transaction,
 	TransactionDraft,
 	TransactionType,
@@ -243,4 +244,24 @@ export function withCreatedTag(
 			line.tagId === PROPOSED_TAG ? { ...line, tagId } : line,
 		),
 	};
+}
+
+/**
+ * The transaction to record, with where it comes from: the form alone
+ * (`manual`), a note (`voice`) or a receipt (`receipt`), whose details are
+ * kept with an expense or an income.
+ */
+export function withOrigin(
+	input: UpdateTransaction,
+	draft: TransactionDraft | undefined,
+): CreateTransaction {
+	if (!draft) {
+		return { ...input, origin: "manual" };
+	}
+	if (!draft.receipt) {
+		return { ...input, origin: "voice" };
+	}
+	return input.type === "transfer"
+		? { ...input, origin: "receipt" }
+		: { ...input, origin: "receipt", receipt: draft.receipt };
 }

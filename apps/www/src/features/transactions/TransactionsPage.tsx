@@ -60,7 +60,7 @@ export function TransactionsPage({
 			</Link>
 			<QuickEntry
 				householdId={household.id}
-				onDraft={(draft) => openDraft(draft)}
+				onDraft={(draft, photo) => openDraft(draft, { photo })}
 			/>
 			<TransactionFilters
 				filters={filters}

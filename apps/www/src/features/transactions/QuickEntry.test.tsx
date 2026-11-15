@@ -107,4 +107,85 @@ describe("QuickEntry", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(message);
 		expect(onDraft).not.toHaveBeenCalled();
 	});
+
+	describe("scanning a receipt", () => {
+		const receiptDraft: TransactionDraft = {
+			...draft,
+			payee: "IGA",
+			receipt: {
+				merchant: "IGA",
+				items: [{ name: "Apples", amount: 7240 }],
+				subtotal: null,
+				taxes: [],
+				total: 7240,
+			},
+		};
+		const photo = () =>
+			new File([new Uint8Array([0xff, 0xd8, 0xff])], "IMG_0042.jpg", {
+				type: "image/jpeg",
+			});
+
+		it.each([
+			["en", "Scan a receipt"],
+			["fr", "Scanner un ticket"],
+			["es", "Escanear un ticket"],
+		] as const)("offers to take a photo, in %s", (locale, label) => {
+			setTestLocale(locale);
+			setUp();
+
+			const input = screen.getByLabelText(label);
+			expect(input).toHaveAttribute("type", "file");
+			expect(input).toHaveAttribute("accept", "image/*");
+		});
+
+		it("sends the photo with the user's day, and hands the draft on with the photo", async () => {
+			const { user, onDraft, requests } = setUp({
+				status: 200,
+				body: receiptDraft,
+			});
+
+			await user.upload(screen.getByLabelText("Scan a receipt"), photo());
+
+			await vi.waitFor(() => expect(onDraft).toHaveBeenCalledOnce());
+			expect(onDraft.mock.calls[0]?.[0]).toEqual(receiptDraft);
+			expect(onDraft.mock.calls[0]?.[1]).toBeInstanceOf(Blob);
+			const [request] = requests;
+			expect(request).toMatchObject({
+				method: "POST",
+				path: `${base}/transactions/draft/receipt`,
+			});
+			const form = request?.body as FormData;
+			expect(form.get("today")).toBe(localToday());
+			expect(form.get("photo")).toBeInstanceOf(Blob);
+		});
+
+		it.each([
+			[
+				422,
+				{ code: "draft_not_understood", message: "No" },
+				"The assistant couldn't read this receipt. Try a sharper photo, or fill in the form below.",
+			],
+			[
+				422,
+				{
+					code: "validation_error",
+					message: "Invalid",
+					details: [{ field: "photo", message: "receipt_photo_invalid" }],
+				},
+				"This file isn't a photo the assistant can read. Choose a JPEG, PNG, WebP or GIF image.",
+			],
+			[
+				413,
+				{ code: "payload_too_large", message: "Too large" },
+				"This photo is too large (5 MB at most).",
+			],
+		])("says what went wrong (%i)", async (status, error, message) => {
+			const { user, onDraft } = setUp({ status, body: { error } });
+
+			await user.upload(screen.getByLabelText("Scan a receipt"), photo());
+
+			expect(await screen.findByRole("alert")).toHaveTextContent(message);
+			expect(onDraft).not.toHaveBeenCalled();
+		});
+	});
 });

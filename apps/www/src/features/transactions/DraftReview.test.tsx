@@ -72,6 +72,7 @@ function setUp(
 	respond: (
 		request: ApiRequest,
 	) => { status: number; body?: unknown } | undefined = () => undefined,
+	photo?: Blob,
 ) {
 	const reads = respondWith();
 	const requests = mockApi((request) => {
@@ -90,6 +91,9 @@ function setUp(
 		defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 	});
 	queryClient.setQueryData(["note-draft", "d1"], review);
+	if (photo) {
+		queryClient.setQueryData(["note-draft", "d1", "photo"], photo);
+	}
 	const onCreated = vi.fn();
 	const router = createRouter({
 		routeTree: createRootRoute({
@@ -351,5 +355,82 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 		expect(screen.getByLabelText("Amount")).toHaveValue("");
 		expect(screen.getByLabelText("Account")).toHaveValue(chequing.id);
 		expect(screen.queryByText(/^The assistant:/)).not.toBeInTheDocument();
+	});
+
+	describe("read on a receipt", () => {
+		const receipt = {
+			merchant: "IGA",
+			items: [
+				{ name: "Apples", amount: 600 },
+				{ name: "Coupon", amount: -100 },
+			],
+			subtotal: 500,
+			taxes: [
+				{ name: "TPS", amount: 25 },
+				{ name: "TVQ", amount: 50 },
+			],
+			total: 575,
+		};
+		const fromReceipt = (fields: Partial<TransactionDraft> = {}) =>
+			draft({
+				payee: "IGA",
+				proposedTag: null,
+				lines: [{ amount: 575, tagId: food.id, usesProposedTag: false }],
+				remark: null,
+				receipt,
+				...fields,
+			});
+
+		it("shows the photo and what was read on it, to check the draft against", async () => {
+			vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:receipt");
+			vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
+			setUp(fromReceipt(), undefined, new Blob(["photo"]));
+
+			const details = within(
+				await screen.findByRole("region", { name: "The receipt from IGA" }),
+			);
+
+			expect(
+				details.getByRole("img", { name: "Photo of the receipt" }),
+			).toHaveAttribute("src", "blob:receipt");
+			expect(details.getByText("Items read on the receipt (2)")).toBeVisible();
+			expect(details.getByText("Coupon")).toBeInTheDocument();
+			expect(details.getByText("-$1.00")).toBeInTheDocument();
+			expect(details.getByText("Subtotal")).toBeVisible();
+			expect(details.getByText("TVQ")).toBeVisible();
+			expect(details.getByText("$5.75")).toBeVisible();
+		});
+
+		it("says when the receipt's figures don't add up", async () => {
+			setUp(fromReceipt({ warnings: ["receipt_total_mismatch"] }));
+
+			expect(
+				await screen.findByText(
+					/^The items and taxes read on the receipt don't add up to its total/,
+				),
+			).toBeVisible();
+		});
+
+		it("records the expense with the receipt, as read on a receipt", async () => {
+			const { user, onCreated, writes } = setUp(fromReceipt());
+
+			await user.click(
+				await screen.findByRole("button", { name: "Record the transaction" }),
+			);
+
+			await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
+			expect(writes()).toEqual([
+				{
+					method: "POST",
+					path: `${base}/transactions`,
+					body: expect.objectContaining({
+						payee: "IGA",
+						lines: [{ amount: 575, tagId: food.id }],
+						origin: "receipt",
+						receipt,
+					}),
+				},
+			]);
+		});
 	});
 });

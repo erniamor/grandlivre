@@ -28,7 +28,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 			</header>
 			<QuickEntry
 				householdId={household.id}
-				onDraft={(draft) => openDraft(draft)}
+				onDraft={(draft, photo) => openDraft(draft, { photo })}
 			/>
 			<HouseholdBalance household={household}>
 				<Link

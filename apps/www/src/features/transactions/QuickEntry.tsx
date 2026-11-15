@@ -5,6 +5,7 @@ import { SparklesIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { TextField } from "@/components/TextField";
+import { ReceiptScanButton } from "@/features/transactions/ReceiptScanButton";
 import { localToday } from "@/features/transactions/use-local-today";
 import { getApi } from "@/lib/api";
 import { formErrors } from "@/lib/error-messages";
@@ -12,13 +13,17 @@ import { m } from "@/paraglide/messages";
 
 interface QuickEntryProps {
 	householdId: string;
-	/** Called with the draft the assistant made of the note, to review. */
-	onDraft: (draft: TransactionDraft) => void | Promise<void>;
+	/**
+	 * Called with the draft the assistant made of a note or a receipt, to
+	 * review, and the receipt's photo.
+	 */
+	onDraft: (draft: TransactionDraft, photo?: Blob) => void | Promise<void>;
 }
 
 /**
  * A note typed, or dictated with the keyboard's microphone ("gas 72 $
- * yesterday"), turned into a draft transaction by the assistant.
+ * yesterday"), or the photo of a receipt, turned into a draft transaction by
+ * the assistant.
  */
 export function QuickEntry({ householdId, onDraft }: QuickEntryProps) {
 	const titleId = useId();
@@ -26,7 +31,7 @@ export function QuickEntry({ householdId, onDraft }: QuickEntryProps) {
 		mutationFn: (text: string) =>
 			// The user's day, which only their device knows
 			getApi().transactions.draft(householdId, { text, today: localToday() }),
-		onSuccess: onDraft,
+		onSuccess: (next) => onDraft(next),
 	});
 	const errors = draft.error ? formErrors(draft.error) : { fields: {} };
 
@@ -68,6 +73,7 @@ export function QuickEntry({ householdId, onDraft }: QuickEntryProps) {
 					{draft.isPending ? m.quick_entry_pending() : m.quick_entry_button()}
 				</Button>
 			</form>
+			<ReceiptScanButton householdId={householdId} onDraft={onDraft} />
 		</section>
 	);
 }
