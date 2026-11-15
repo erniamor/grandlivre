@@ -4,10 +4,12 @@ import type {
 	RecurrenceSchedule,
 	RecurrenceUnit,
 	RecurringTransaction,
+	Transaction,
 } from "@repo/schemas";
 import { RECURRENCE_MAX_INTERVAL } from "@repo/schemas";
 import {
 	emptyLine,
+	formStateOf,
 	type TransactionFormState,
 	toTransactionInput,
 } from "@/features/transactions/transaction-form";
@@ -182,4 +184,45 @@ export function formFieldsOf(
 			message,
 		]),
 	);
+}
+
+/**
+ * The day `months` months after `day`, on the same day of the month, or on
+ * the last one of a shorter month ("2026-01-31" and 1: "2026-02-28").
+ */
+export function addMonths(day: string, months: number): string {
+	const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+	const total = year * 12 + (month - 1) + months;
+	const targetYear = Math.floor(total / 12);
+	const targetMonth = total % 12;
+	// Day 0 of the next month: the last day of this one
+	const lastDay = new Date(
+		Date.UTC(targetYear, targetMonth + 1, 0),
+	).getUTCDate();
+	const iso = new Date(
+		Date.UTC(targetYear, targetMonth, Math.min(date, lastDay)),
+	).toISOString();
+	return iso.slice(0, 10);
+}
+
+/**
+ * A monthly recurring transaction made from a transaction: what it records,
+ * from the same day a month later, or the first such day from `today` on.
+ */
+export function recurringStateOfTransaction(
+	transaction: Transaction,
+	currency: string,
+	locale: string,
+	today: string,
+): RecurringFormState {
+	let months = 1;
+	let startDate = addMonths(transaction.date, months);
+	while (startDate < today) {
+		months += 1;
+		startDate = addMonths(transaction.date, months);
+	}
+	return {
+		...emptyRecurringState(startDate),
+		transaction: { ...formStateOf(transaction, currency, locale), date: "" },
+	};
 }

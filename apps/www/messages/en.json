@@ -421,5 +421,7 @@
 	"toast_occurrence_skipped": "Date skipped.",
 	"upcoming_recurring_title": "In the next {days} days",
 	"upcoming_recurring_more": "And {count} more.",
-	"upcoming_recurring_link": "See the recurring transactions"
+	"upcoming_recurring_link": "See the recurring transactions",
+	"transaction_make_recurring": "Make it recurring",
+	"recurring_from_intro": "Made from a transaction: check how often it comes back, and from when."
 }

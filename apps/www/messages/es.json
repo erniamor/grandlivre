@@ -421,5 +421,7 @@
 	"toast_occurrence_skipped": "Fecha omitida.",
 	"upcoming_recurring_title": "En los próximos {days} días",
 	"upcoming_recurring_more": "Y {count} más.",
-	"upcoming_recurring_link": "Ver las transacciones recurrentes"
+	"upcoming_recurring_link": "Ver las transacciones recurrentes",
+	"transaction_make_recurring": "Hacerla recurrente",
+	"recurring_from_intro": "Hecha a partir de una transacción: revisa con qué frecuencia vuelve y desde cuándo."
 }

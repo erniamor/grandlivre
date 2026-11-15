@@ -3,6 +3,7 @@ import type {
 	CreateRecurringTransaction,
 	RecurringTransaction,
 	Tag,
+	Transaction,
 } from "@repo/schemas";
 import { Button } from "@repo/ui";
 import { useMutation } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import {
 	formFieldsOf,
 	formStateOfRecurring,
 	type RecurringFormState,
+	recurringStateOfTransaction,
 	toRecurringInput,
 } from "@/features/recurring/recurring-form";
 import { ScheduleFields } from "@/features/recurring/ScheduleFields";
@@ -33,6 +35,8 @@ interface RecurringFormProps {
 	tags: Tag[];
 	/** The recurring transaction to change; without it, the form creates one. */
 	recurring?: RecurringTransaction;
+	/** A transaction to make recurring: the new one starts from it. */
+	from?: Transaction;
 	/** The account proposed for a new one, when the user holds it. */
 	defaultAccountId?: string;
 	submitLabel: string;
@@ -50,6 +54,7 @@ export function RecurringForm({
 	accounts,
 	tags,
 	recurring,
+	from,
 	defaultAccountId,
 	submitLabel,
 	save,
@@ -60,7 +65,9 @@ export function RecurringForm({
 	const [state, setState] = useState<RecurringFormState>(() =>
 		recurring
 			? formStateOfRecurring(recurring, currency, locale)
-			: emptyRecurringState(today),
+			: from
+				? recurringStateOfTransaction(from, currency, locale, today)
+				: emptyRecurringState(today),
 	);
 	const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 	const mutation = useMutation({ mutationFn: save, onSuccess: onSaved });

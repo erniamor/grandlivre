@@ -1,6 +1,8 @@
 import type { Household } from "@repo/schemas";
-import { toast } from "@repo/ui";
+import { buttonVariants, toast } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { RepeatIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { DeleteTransactionButton } from "@/features/transactions/DeleteTransactionButton";
@@ -63,7 +65,18 @@ export function EditTransactionPage({
 						}
 						onSaved={() => finish(m.toast_transaction_saved())}
 					/>
-					<div className="justify-self-start">
+					<div className="flex flex-wrap gap-2">
+						{/* Already recorded by a recurring transaction: nothing to make */}
+						{transaction.origin !== "recurring" && (
+							<Link
+								to="/recurring/new"
+								search={{ from: transaction.id }}
+								className={buttonVariants({ variant: "outline" })}
+							>
+								<RepeatIcon aria-hidden />
+								{m.transaction_make_recurring()}
+							</Link>
+						)}
 						<DeleteTransactionButton
 							transaction={transaction}
 							onDeleted={() => finish(m.toast_transaction_deleted())}

@@ -508,6 +508,23 @@ describe("EditTransactionPage", () => {
 		expect(success).toHaveBeenCalledWith("The transaction was deleted.");
 	});
 
+	it("offers to make it recurring, unless a recurring transaction recorded it", async () => {
+		renderEdit(fillUp);
+
+		expect(
+			await screen.findByRole("link", { name: "Make it recurring" }),
+		).toHaveAttribute("href", `/recurring/new?from=${fillUp.id}`);
+	});
+
+	it("doesn't offer to make recurring what a recurring transaction recorded", async () => {
+		renderEdit({ ...fillUp, origin: "recurring" });
+
+		await screen.findByRole("button", { name: "Save" });
+		expect(
+			screen.queryByRole("link", { name: "Make it recurring" }),
+		).not.toBeInTheDocument();
+	});
+
 	it("shows a transaction without its form to a member who doesn't hold its account", async () => {
 		// Recorded on Bob's card, which Alice doesn't hold
 		renderEdit({ ...fillUp, accountId: bobsCard.id });

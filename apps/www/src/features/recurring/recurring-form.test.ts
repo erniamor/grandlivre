@@ -1,10 +1,12 @@
-import type { RecurringTransaction } from "@repo/schemas";
+import type { RecurringTransaction, Transaction } from "@repo/schemas";
 import { describe, expect, it } from "vitest";
 import {
+	addMonths,
 	emptyRecurringState,
 	formFieldsOf,
 	formStateOfRecurring,
 	type RecurringFormState,
+	recurringStateOfTransaction,
 	toRecurringInput,
 } from "@/features/recurring/recurring-form";
 
@@ -158,5 +160,68 @@ describe("formFieldsOf", () => {
 			"lines.0.tagId": "transaction_tag_invalid",
 			"schedule.startDate": "recurrence_start_in_past",
 		});
+	});
+});
+
+describe("addMonths", () => {
+	it("keeps the day of the month, or the last of a shorter month", () => {
+		expect(addMonths("2026-11-14", 1)).toBe("2026-12-14");
+		expect(addMonths("2026-12-14", 1)).toBe("2027-01-14");
+		expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+		expect(addMonths("2026-01-31", 3)).toBe("2026-04-30");
+		expect(addMonths("2027-12-31", 2)).toBe("2028-02-29");
+	});
+});
+
+describe("recurringStateOfTransaction", () => {
+	const hydro: Transaction = {
+		id: "t",
+		householdId: "h",
+		type: "expense",
+		date: "2026-11-02",
+		accountId: "chequing",
+		toAccountId: null,
+		amount: 9_000,
+		payee: "Hydro",
+		note: null,
+		origin: "manual",
+		receipt: null,
+		lines: [{ id: "l", amount: 9_000, tagId: "home" }],
+		createdBy: null,
+		createdAt: "2026-11-02T12:00:00.000Z",
+		updatedAt: "2026-11-02T12:00:00.000Z",
+	};
+
+	it("records the same, monthly, from the same day a month later", () => {
+		const state = recurringStateOfTransaction(hydro, "CAD", "en", TODAY);
+
+		expect(state.schedule).toEqual({
+			unit: "month",
+			interval: "1",
+			startDate: "2026-12-02",
+			endDate: "",
+		});
+		expect(state.mode).toBe("confirm");
+		expect(toRecurringInput(state, "CAD", "en", TODAY)).toMatchObject({
+			input: {
+				transaction: {
+					type: "expense",
+					accountId: "chequing",
+					payee: "Hydro",
+					lines: [{ amount: 9_000, tagId: "home" }],
+				},
+			},
+		});
+	});
+
+	it("starts on the first such day from today on, for an old transaction", () => {
+		expect(
+			recurringStateOfTransaction(
+				{ ...hydro, date: "2026-01-31" },
+				"CAD",
+				"en",
+				TODAY,
+			).schedule.startDate,
+		).toBe("2026-11-30");
 	});
 });

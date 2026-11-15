@@ -9,6 +9,7 @@ import {
 	base,
 	bobsCard,
 	chequing,
+	fillUp,
 	gas,
 	household,
 	page,
@@ -275,6 +276,50 @@ describe("NewRecurringPage", () => {
 		expect(
 			await screen.findByText("Enter a whole number from 1 to 99."),
 		).toBeVisible();
+	});
+});
+
+describe("NewRecurringPage, from a transaction", () => {
+	it("starts from it: what it records, monthly, from a month later", async () => {
+		const requests = api([], (request) =>
+			request.method === "POST" ? { status: 201, body: rent } : undefined,
+		);
+		const onCreated = vi.fn();
+		const user = userEvent.setup();
+		renderWithRouter(
+			<NewRecurringPage
+				household={household}
+				from={fillUp}
+				onCreated={onCreated}
+			/>,
+		);
+
+		expect(
+			await screen.findByText(
+				"Made from a transaction: check how often it comes back, and from when.",
+			),
+		).toBeVisible();
+		expect(screen.getByLabelText("Amount")).toHaveValue("72.00");
+		expect(screen.getByLabelText("Paid to (optional)")).toHaveValue("Shell");
+		expect(screen.getByLabelText("First date")).toHaveValue("2026-12-14");
+		await user.click(
+			screen.getByRole("button", { name: "Create the recurring transaction" }),
+		);
+
+		await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
+		expect(writes(requests)).toMatchObject([
+			{
+				body: {
+					transaction: {
+						type: "expense",
+						accountId: fillUp.accountId,
+						payee: "Shell",
+						lines: [{ amount: 7_200, tagId: gas.id }],
+					},
+					schedule: { unit: "month", interval: 1, startDate: "2026-12-14" },
+				},
+			},
+		]);
 	});
 });
 

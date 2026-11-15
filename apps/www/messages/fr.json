@@ -421,5 +421,7 @@
 	"toast_occurrence_skipped": "Échéance sautée.",
 	"upcoming_recurring_title": "Dans les {days} prochains jours",
 	"upcoming_recurring_more": "Et {count} de plus.",
-	"upcoming_recurring_link": "Voir les transactions récurrentes"
+	"upcoming_recurring_link": "Voir les transactions récurrentes",
+	"transaction_make_recurring": "Rendre récurrente",
+	"recurring_from_intro": "Faite à partir d'une transaction : vérifiez à quelle fréquence elle revient, et à partir de quand."
 }
