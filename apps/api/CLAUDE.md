@@ -36,7 +36,7 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 - `src/index.ts`: entry point; starts the Node server with the app built in `app.ts`
 - `src/app.ts`: builds the Hono app (global middlewares, mounting of route modules, error handler), with no side effect, so tests can import it
 - `src/env.ts`: environment variables validated with Zod at startup; the only place that reads `process.env`
-- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`...)
+- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`...)
   - `<domain>.routes.ts`: the domain's Hono sub-app (routes, validators, call to the service)
   - `<domain>.service.ts`: business logic, independent of Hono
   - `<domain>.schemas.ts`: Zod schemas used only by this API (shared ones are in `@repo/schemas`)
@@ -46,7 +46,7 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 - `src/lib/`: utilities specific to the app (`auth.ts`: Better Auth instance; `errors.ts`: `AppError` and the error body; `error-handler.ts`: global error and not-found handlers; `mailer.ts`: email sending; `locale.ts`: locale resolution from `Accept-Language`; `validator.ts`: `validate()`, the `zValidator` answering 422 in the API's error format; `pagination.ts`: pagination query schema and offset)
 - `src/emails/`: email contents, in every supported locale
 - `src/routes/tags/suggested-tags.ts`: the tags suggested to a household starting out, named in every language; add one with `tag(en, fr, es, [children])`, its key is derived from its English names (`suggested-tags.test.ts` checks the list)
-- `test/`: Vitest global setup (checks the test database and applies the migrations), database reset before each test, and helpers (`helpers/auth.ts`: `signIn()`, `captureEmails()`; `helpers/api.ts`: `api()`, `json()`; `helpers/households.ts`: `signInUser()`, `createTestHousehold()`, `addTestMember()`), imported through the `@test/` alias
+- `test/`: Vitest global setup (checks the test database and applies the migrations), database reset before each test, and helpers (`helpers/auth.ts`: `signIn()`, `captureEmails()`; `helpers/api.ts`: `api()`, `json()`; `helpers/households.ts`: `signInUser()`, `createTestHousehold()`, `addTestMember()`; `helpers/transactions.ts`: `householdApi()`, shortcuts to the accounts, tags and transactions of a household), imported through the `@test/` alias
 - `drizzle/`: generated SQL migrations, committed, never edited after they have been applied
 - `docker-compose.yml`, `docker/`: local PostgreSQL
 

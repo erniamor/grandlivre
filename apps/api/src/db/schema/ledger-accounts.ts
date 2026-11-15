@@ -4,6 +4,7 @@ import {
 	index,
 	pgTable,
 	text,
+	timestamp,
 	unique,
 	uuid,
 } from "drizzle-orm/pg-core";
@@ -26,6 +27,9 @@ export const ledgerAccounts = pgTable(
 		// Minor units of the household's currency (cents), negative for money
 		// owed. The current balance is never stored: it is this plus the transactions.
 		openingBalance: bigint({ mode: "number" }).notNull(),
+		// Set when the account is put aside: it keeps its transactions but takes
+		// no new one
+		archivedAt: timestamp({ withTimezone: true }),
 		createdAt: createdAt(),
 		updatedAt: updatedAt(),
 	},

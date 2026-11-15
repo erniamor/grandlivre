@@ -22,7 +22,7 @@ import {
 	sql,
 } from "drizzle-orm";
 import { db, type Transaction } from "@/db/client";
-import { households, tagNames, tags } from "@/db/schema";
+import { households, tagNames, tags, transactionLines } from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
 import { suggestedTags } from "@/routes/tags/suggested-tags";
@@ -307,7 +307,10 @@ export async function updateTag(
 	});
 }
 
-/** A tag that has child tags can't be deleted: they would lose their place. */
+/**
+ * A tag that has child tags or transactions can't be deleted: they would
+ * lose their place or their category.
+ */
 export async function deleteTag(
 	householdId: string,
 	tagId: string,
@@ -331,6 +334,19 @@ export async function deleteTag(
 				409,
 				"tag_has_children",
 				"A tag that has child tags can't be deleted",
+			);
+		}
+		// Its transactions would lose their category
+		const [line] = await tx
+			.select({ id: transactionLines.id })
+			.from(transactionLines)
+			.where(eq(transactionLines.tagId, tagId))
+			.limit(1);
+		if (line) {
+			throw new AppError(
+				409,
+				"tag_in_use",
+				"A tag that has transactions can't be deleted",
 			);
 		}
 		await tx.delete(tags).where(eq(tags.id, tagId));

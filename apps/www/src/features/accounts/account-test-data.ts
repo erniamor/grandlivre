@@ -46,6 +46,7 @@ export const chequing: Account = {
 	openingBalance: 125_050,
 	holders: [{ userId: aliceProfile.id, name: "Alice" }],
 	isHolder: true,
+	archived: false,
 	createdAt: NOW,
 };
 

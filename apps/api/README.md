@@ -84,7 +84,7 @@ A household always keeps at least one owner: demoting or removing the last one i
 
 ### Accounts
 
-The financial accounts of a household (chequing, savings, credit card, cash, loan, other). Amounts are integers in minor units of the household's currency (cents); a balance is negative for money owed. The balance is computed, never stored: the opening balance plus the transactions (none yet).
+The financial accounts of a household (chequing, savings, credit card, cash, loan, other). Amounts are integers in minor units of the household's currency (cents); a balance is negative for money owed. The balance is computed, never stored: the opening balance, plus the incomes and the transfers received, minus the expenses and the transfers sent.
 
 Every member sees every account of the household. A member who doesn't hold an account whose `visibility` is `balance` sees its balance but not its details (`openingBalance` is `null`).
 
@@ -94,10 +94,12 @@ Every member sees every account of the household. A member who doesn't hold an a
 | `POST /v1/households/:householdId/accounts` `{ name, type, visibility, openingBalance, holderIds? }` | member | Creates an account (201). Its holders are members of the household and include the creator; without `holderIds`, the creator alone |
 | `GET /v1/households/:householdId/accounts/summary` | member | The consolidated view: `{ assets, liabilities, balance }` over every account, whoever holds it and whatever its visibility |
 | `GET /v1/households/:householdId/accounts/:accountId` | member | The account |
-| `PATCH /v1/households/:householdId/accounts/:accountId` | holder | Changes the fields sent; `holderIds` replaces the holders (at least one) |
-| `DELETE /v1/households/:householdId/accounts/:accountId` | holder | Deletes the account (204) |
+| `PATCH /v1/households/:householdId/accounts/:accountId` | holder | Changes the fields sent; `holderIds` replaces the holders (at least one); `archived` puts the account aside or brings it back |
+| `DELETE /v1/households/:householdId/accounts/:accountId` | holder | Deletes an account without transactions (204); otherwise 409 `account_has_transactions`: archive it instead |
 
 A member who leaves the household stops holding its accounts. An account left without a holder stays in the household and still counts; an owner of the household can then change it (to give it a holder) or delete it.
+
+An archived account (`archived: true`) keeps its transactions and still counts in the consolidated view, but takes no new transaction, and its transactions can no longer be changed or deleted (409 `account_archived`).
 
 Once a household has an account, its currency can't change: `PATCH /v1/households/:householdId` with another `currency` answers 409 `currency_locked`.
 
@@ -112,9 +114,29 @@ The categories of a household's transactions: a tree (a tag has at most one pare
 | `GET /v1/households/:householdId/tags/suggested` | member | The tags the product suggests to a household starting out: `{ tags }`, a tree where each tag has its `key` (the path leading to it, e.g. `transport/car/gas`), its `names` in every language and its `children` |
 | `POST /v1/households/:householdId/tags/suggested` `{ keys }` | member | Adds the suggestions chosen, with the ones above them: a tag comes with its parents (204). A suggestion whose name a tag already has at the same place isn't added again (its children go under that tag), so it adds nothing twice. An unknown key answers 422 with `suggested_tags_invalid` on `keys`, and adds nothing |
 | `PATCH /v1/households/:householdId/tags/:tagId` `{ names?, parentId? }` | member | `names` replaces every name of the tag; `parentId` moves it with its child tags (`null`: to the root) |
-| `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags (204) |
+| `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags nor transactions (204); otherwise 409 `tag_has_children` or `tag_in_use` |
 
 A name a sibling already has, when creating, renaming or moving a tag, answers 422 with `tag_name_taken` on `names.<locale>`; a parent from outside the household, or the tag itself or one of its descendants, answers 422 with `tag_parent_invalid` on `parentId`.
+
+### Transactions
+
+Money entering an account (`income`), leaving it (`expense`) or moving to another account of the household (`transfer`, neither an income nor an expense). Amounts are positive integers in minor units; the type says which way the money goes. The `date` is a calendar day (`2026-11-14`).
+
+An expense or an income is split into `lines`, each with an `amount` and at most one `tagId` (none: uncategorized). Its `amount` is the sum of its lines and is never sent. A transfer has an `amount`, a `toAccountId`, and no lines.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/transactions` | member | Lists the transactions the user may see, the most recent day first. Filters: `accountId` (transfers received included), `tagId` (the tags under it included), `type`, `from` and `to` (days, included) |
+| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
+| `GET /v1/households/:householdId/transactions/:transactionId` | member who may see it | The transaction, with its lines and who recorded it |
+| `PUT /v1/households/:householdId/transactions/:transactionId` | holder of its account | Replaces the transaction with the one sent, of any type and on any account the user holds; where it comes from is kept |
+| `DELETE /v1/households/:householdId/transactions/:transactionId` | holder of its account | Deletes the transaction (204) |
+
+Who writes: the holders of `accountId`, the account the money leaves (expense, transfer) or enters (income), whoever recorded the transaction. A transfer's destination can be any account of the household.
+
+Who sees: the holders of an account, and every member when the account's `visibility` is `details`. The transactions of a `balance` account are hidden from the members who don't hold it (404, and absent from the list), but still count in the balances. A transfer shows to those who see the details of either of its accounts.
+
+An account or a tag from outside the household answers 422 (`transaction_account_invalid` on `accountId` or `toAccountId`, `transaction_tag_invalid` on `lines.<n>.tagId`).
 
 ### Invitations
 
@@ -142,10 +164,14 @@ Every error has the same shape:
 | Status | `code` | When |
 | --- | --- | --- |
 | 401 | `unauthorized` | No valid session |
-| 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household or a holder of the account |
+| 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household or a holder of the account (its own changes, its transactions) |
 | 404 | `not_found` | Unknown route or resource, or a household the user isn't a member of |
 | 409 | `last_owner` | The change would leave a household without an owner |
 | 409 | `tag_has_children` | The tag has child tags: it can't be deleted |
+| 409 | `tag_in_use` | The tag has transactions: it can't be deleted |
+| 409 | `account_has_transactions` | The account has transactions: it can't be deleted, only archived |
+| 409 | `account_archived` | The account is archived: it takes no new transaction and its transactions can't change |
+| 409 | `transaction_already_imported` | A transaction with this `externalId` is already on the account |
 | 409 | `tag_limit_reached` | The household already has its maximum number of tags |
 | 409 | `currency_locked` | The household has accounts: its currency can no longer change |
 | 409 | `already_member` | The invited email already belongs to a member of the household |

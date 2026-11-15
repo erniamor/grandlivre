@@ -74,8 +74,14 @@ export const createAccountSchema = z.strictObject({
 
 export type CreateAccount = z.infer<typeof createAccountSchema>;
 
-/** Every field is optional: only the ones sent are changed. */
-export const updateAccountSchema = z.strictObject(accountFields).partial();
+/**
+ * Every field is optional: only the ones sent are changed. `archived` puts
+ * the account aside: it keeps its transactions and still counts in the
+ * household's balance, but takes no new transaction.
+ */
+export const updateAccountSchema = z
+	.strictObject({ ...accountFields, archived: z.boolean() })
+	.partial();
 
 export type UpdateAccount = z.infer<typeof updateAccountSchema>;
 
@@ -102,6 +108,8 @@ export const accountSchema = z.object({
 	holders: z.array(accountHolderSchema),
 	/** The signed-in user holds the account: they can change it. */
 	isHolder: z.boolean(),
+	/** Put aside: it takes no new transaction. */
+	archived: z.boolean(),
 	createdAt: dateTimeSchema,
 });
 

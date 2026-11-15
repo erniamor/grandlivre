@@ -13,14 +13,18 @@ import {
 	eq,
 	type InferSelectModel,
 	inArray,
+	isNotNull,
 	notInArray,
+	or,
 	sql,
+	sum,
 } from "drizzle-orm";
 import { db, type Transaction } from "@/db/client";
 import {
 	householdMembers,
 	ledgerAccountHolders,
 	ledgerAccounts,
+	transactions,
 	users,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
@@ -53,6 +57,8 @@ function toAccount(
 	row: AccountRow,
 	holders: AccountHolder[],
 	userId: string,
+	/** What the account's transactions add to, or take from, its opening balance. */
+	movement: number,
 ): Account {
 	const isHolder = holders.some((holder) => holder.userId === userId);
 	const seesDetails = isHolder || row.visibility === "details";
@@ -62,13 +68,56 @@ function toAccount(
 		name: row.name,
 		type: row.type,
 		visibility: row.visibility,
-		// Until transactions exist, the balance is the opening balance
-		balance: row.openingBalance,
+		balance: row.openingBalance + movement,
 		openingBalance: seesDetails ? row.openingBalance : null,
 		holders,
 		isHolder,
+		archived: row.archivedAt !== null,
 		createdAt: row.createdAt.toISOString(),
 	};
+}
+
+/**
+ * What the transactions of the household add to, or take from, the opening
+ * balance of each account: incomes and transfers received, minus expenses
+ * and transfers sent. An account without transactions is absent.
+ */
+export async function movementsOf(
+	householdId: string,
+	database: typeof db | Transaction = db,
+): Promise<Map<string, number>> {
+	const ofHousehold = eq(transactions.householdId, householdId);
+	// Sums of bigint come back as numeric strings, hence mapWith(Number)
+	const [own, received] = await Promise.all([
+		database
+			.select({
+				accountId: transactions.accountId,
+				// Raw SQL: a signed sum has no Drizzle helper. Only an income
+				// adds to its account.
+				total:
+					sql`sum(case when ${transactions.type} = 'income' then ${transactions.amount} else -${transactions.amount} end)`.mapWith(
+						Number,
+					),
+			})
+			.from(transactions)
+			.where(ofHousehold)
+			.groupBy(transactions.accountId),
+		database
+			.select({
+				accountId: transactions.toAccountId,
+				total: sum(transactions.amount).mapWith(Number),
+			})
+			.from(transactions)
+			.where(and(ofHousehold, isNotNull(transactions.toAccountId)))
+			.groupBy(transactions.toAccountId),
+	]);
+	const movements = new Map<string, number>();
+	for (const { accountId, total } of [...own, ...received]) {
+		if (accountId !== null) {
+			movements.set(accountId, (movements.get(accountId) ?? 0) + total);
+		}
+	}
+	return movements;
 }
 
 /** The holders of each of the accounts, sorted by name. */
@@ -156,9 +205,19 @@ export async function listAccounts(
 			.offset(offsetOf(pagination)),
 		db.select({ total: count() }).from(ledgerAccounts).where(ofHousehold),
 	]);
-	const holders = await holdersOf(rows.map((row) => row.id));
+	const [holders, movements] = await Promise.all([
+		holdersOf(rows.map((row) => row.id)),
+		movementsOf(membership.household.id),
+	]);
 	return {
-		data: rows.map((row) => toAccount(row, holders.get(row.id) ?? [], userId)),
+		data: rows.map((row) =>
+			toAccount(
+				row,
+				holders.get(row.id) ?? [],
+				userId,
+				movements.get(row.id) ?? 0,
+			),
+		),
 		pagination: { ...pagination, total: counted?.total ?? 0 },
 	};
 }
@@ -174,8 +233,16 @@ export async function getAccount(
 	if (!row) {
 		throw notFound();
 	}
-	const holders = await holdersOf([row.id]);
-	return toAccount(row, holders.get(row.id) ?? [], userId);
+	const [holders, movements] = await Promise.all([
+		holdersOf([row.id]),
+		movementsOf(membership.household.id),
+	]);
+	return toAccount(
+		row,
+		holders.get(row.id) ?? [],
+		userId,
+		movements.get(row.id) ?? 0,
+	);
 }
 
 /**
@@ -207,7 +274,8 @@ export async function createAccount(
 			})),
 		);
 		const holders = await holdersOf([row.id], tx);
-		return toAccount(row, holders.get(row.id) ?? [], userId);
+		// A new account has no transactions yet
+		return toAccount(row, holders.get(row.id) ?? [], userId, 0);
 	});
 }
 
@@ -247,16 +315,23 @@ async function lockForChange(
 export async function updateAccount(
 	viewer: Viewer,
 	accountId: string,
-	{ holderIds, ...fields }: UpdateAccount,
+	{ holderIds, archived, ...fields }: UpdateAccount,
 ): Promise<Account> {
 	const householdId = viewer.membership.household.id;
 	return db.transaction(async (tx) => {
 		let row = await lockForChange(tx, viewer, accountId);
+		const changes = {
+			...fields,
+			// Keeps the date of an account that is already archived
+			...(archived === undefined || archived === (row.archivedAt !== null)
+				? {}
+				: { archivedAt: archived ? new Date() : null }),
+		};
 		// Nothing to change: Drizzle rejects an empty update
-		if (Object.values(fields).some((value) => value !== undefined)) {
+		if (Object.values(changes).some((value) => value !== undefined)) {
 			const [updated] = await tx
 				.update(ledgerAccounts)
-				.set(fields)
+				.set(changes)
 				.where(eq(ledgerAccounts.id, accountId))
 				.returning();
 			row = updated ?? row;
@@ -282,8 +357,16 @@ export async function updateAccount(
 				)
 				.onConflictDoNothing();
 		}
-		const holders = await holdersOf([accountId], tx);
-		return toAccount(row, holders.get(accountId) ?? [], viewer.userId);
+		const [holders, movements] = await Promise.all([
+			holdersOf([accountId], tx),
+			movementsOf(householdId, tx),
+		]);
+		return toAccount(
+			row,
+			holders.get(accountId) ?? [],
+			viewer.userId,
+			movements.get(accountId) ?? 0,
+		);
 	});
 }
 
@@ -293,34 +376,57 @@ export async function deleteAccount(
 ): Promise<void> {
 	await db.transaction(async (tx) => {
 		await lockForChange(tx, viewer, accountId);
+		// Its transactions are the household's history: the account is
+		// archived instead
+		const [used] = await tx
+			.select({ id: transactions.id })
+			.from(transactions)
+			.where(
+				or(
+					eq(transactions.accountId, accountId),
+					eq(transactions.toAccountId, accountId),
+				),
+			)
+			.limit(1);
+		if (used) {
+			throw new AppError(
+				409,
+				"account_has_transactions",
+				"An account that has transactions can't be deleted, only archived",
+			);
+		}
 		await tx.delete(ledgerAccounts).where(eq(ledgerAccounts.id, accountId));
 	});
 }
 
 /**
  * The consolidated view of the household: every account counts, whoever
- * holds it and whatever its visibility.
+ * holds it, whatever its visibility, archived or not. Transfers cancel out:
+ * what leaves an account enters another.
  */
 export async function summarizeAccounts(
 	householdId: string,
 ): Promise<AccountsSummary> {
-	// Raw SQL: conditional sums (FILTER) have no Drizzle helper. Sums of
-	// bigint come back as numeric strings, hence mapWith(Number).
-	const [sums] = await db
-		.select({
-			assets:
-				sql`coalesce(sum(${ledgerAccounts.openingBalance}) filter (where ${ledgerAccounts.openingBalance} > 0), 0)`.mapWith(
-					Number,
-				),
-			liabilities:
-				sql`coalesce(sum(${ledgerAccounts.openingBalance}) filter (where ${ledgerAccounts.openingBalance} < 0), 0)`.mapWith(
-					Number,
-				),
-		})
-		.from(ledgerAccounts)
-		.where(eq(ledgerAccounts.householdId, householdId));
-	const assets = sums?.assets ?? 0;
-	const liabilities = sums?.liabilities ?? 0;
+	const [rows, movements] = await Promise.all([
+		db
+			.select({
+				id: ledgerAccounts.id,
+				openingBalance: ledgerAccounts.openingBalance,
+			})
+			.from(ledgerAccounts)
+			.where(eq(ledgerAccounts.householdId, householdId)),
+		movementsOf(householdId),
+	]);
+	let assets = 0;
+	let liabilities = 0;
+	for (const row of rows) {
+		const balance = row.openingBalance + (movements.get(row.id) ?? 0);
+		if (balance > 0) {
+			assets += balance;
+		} else {
+			liabilities += balance;
+		}
+	}
 	return { assets, liabilities, balance: assets + liabilities };
 }
 

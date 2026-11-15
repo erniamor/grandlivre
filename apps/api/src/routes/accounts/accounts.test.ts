@@ -89,6 +89,7 @@ describe("POST /v1/households/:householdId/accounts", () => {
 			openingBalance: 125_050,
 			holders: [{ userId: bob.id, name: "bob@example.com" }],
 			isHolder: true,
+			archived: false,
 			createdAt: expect.any(String),
 		});
 	});

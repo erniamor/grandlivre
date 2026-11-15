@@ -21,6 +21,7 @@ const account = {
 	openingBalance: 125_050,
 	holders: [{ userId: USER_ID, name: "Alice" }],
 	isHolder: true,
+	archived: false,
 	createdAt: "2026-11-14T12:00:00.000Z",
 };
 

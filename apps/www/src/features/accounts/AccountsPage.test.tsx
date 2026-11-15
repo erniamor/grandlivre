@@ -34,6 +34,7 @@ function account(fields: Partial<Account> & { name: string }): Account {
 		openingBalance: 0,
 		holders: [ALICE],
 		isHolder: true,
+		archived: false,
 		createdAt: NOW,
 		...fields,
 	};
@@ -53,6 +54,7 @@ const accounts = [
 		visibility: "balance",
 		holders: [BOB],
 		isHolder: false,
+		archived: false,
 		balance: -45_000,
 		openingBalance: null,
 	}),

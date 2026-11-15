@@ -62,6 +62,7 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `tag_name_taken` | Answered by the API: another tag under the same parent has this name in this language |
 | `suggested_tags_required` | No suggested tag is chosen |
 | `suggested_tags_invalid` | The suggested tags chosen aren't a list of known keys |
+| `tag_in_use` | Answered by the API (409): the tag has transactions |
 | `tag_parent_invalid` | The parent isn't a tag of the household, or is the tag itself or one of its descendants |
 | `household_name_required` | The household's name is empty or blank |
 | `household_name_too_long` | The household's name is over `HOUSEHOLD_NAME_MAX_LENGTH` characters |
