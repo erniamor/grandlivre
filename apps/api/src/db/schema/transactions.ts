@@ -1,4 +1,8 @@
-import { TRANSACTION_ORIGINS, TRANSACTION_TYPES } from "@repo/schemas";
+import {
+	type Receipt,
+	TRANSACTION_ORIGINS,
+	TRANSACTION_TYPES,
+} from "@repo/schemas";
 import { sql } from "drizzle-orm";
 import {
 	bigint,
@@ -6,6 +10,7 @@ import {
 	date,
 	foreignKey,
 	index,
+	jsonb,
 	pgTable,
 	text,
 	unique,
@@ -42,6 +47,9 @@ export const transactions = pgTable(
 		origin: text({ enum: TRANSACTION_ORIGINS }).notNull().default("manual"),
 		// Identifier in the statement it was imported from
 		externalId: text(),
+		// What its receipt said, when it was recorded from one; the photo itself
+		// is never stored
+		receipt: jsonb().$type<Receipt>(),
 		// Who recorded it; kept when they leave the household
 		createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
 		createdAt: createdAt(),

@@ -93,6 +93,7 @@ describe("POST /v1/households/:householdId/transactions", () => {
 			payee: "Shell",
 			note: "Full tank",
 			origin: "manual",
+			receipt: null,
 			lines: [{ id: expect.any(String), amount: 7200, tagId: gas.id }],
 			createdBy: { userId: alice.id, name: "alice@example.com" },
 			createdAt: expect.any(String),

@@ -27,6 +27,7 @@ const transaction = {
 	payee: "Shell",
 	note: null,
 	origin: "manual",
+	receipt: null,
 	lines: [
 		{ id: "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f", amount: 7200, tagId: TAG_ID },
 	],
@@ -285,6 +286,8 @@ describe("transactions", () => {
 				similarTags: [{ tagId: TAG_ID, reason: "contains" }],
 			},
 			remark: null,
+			receipt: null,
+			warnings: [],
 		};
 
 		it("turns a note into a draft, without the envelope", async () => {

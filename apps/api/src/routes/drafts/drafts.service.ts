@@ -1,5 +1,9 @@
 import {
 	type CreateDraft,
+	RECEIPT_ITEM_NAME_MAX_LENGTH,
+	RECEIPT_MAX_ITEMS,
+	RECEIPT_MAX_TAXES,
+	RECEIPT_PHOTO_MAX_BYTES,
 	type Tag,
 	TRANSACTION_NOTE_MAX_LENGTH,
 	TRANSACTION_PAYEE_MAX_LENGTH,
@@ -16,19 +20,27 @@ import {
 	transactionLines,
 	transactions,
 } from "@/db/schema";
-import { type AssistantDraft, assistant } from "@/lib/assistant";
+import {
+	type AssistantDraft,
+	type AssistantReceipt,
+	assistant,
+} from "@/lib/assistant";
 import { AppError } from "@/lib/errors";
 import type { Locale } from "@/lib/locale";
 import { createRateLimiter } from "@/lib/rate-limit";
 import type { Viewer } from "@/routes/accounts/accounts.service";
-import { parseDraftAmount } from "@/routes/drafts/draft-amounts";
+import {
+	parseDraftAmount,
+	parsePrintedAmount,
+} from "@/routes/drafts/draft-amounts";
 import {
 	buildDraftContext,
 	buildDraftEntry,
-	type ContextAccount,
 	type ContextPayee,
 	type References,
 } from "@/routes/drafts/draft-context";
+import { shareTotal } from "@/routes/drafts/receipt-lines";
+import { detectImageType } from "@/routes/drafts/receipt-photo";
 import { findSimilarTags } from "@/routes/tags/similar-tags";
 
 /** Notes a member may turn into drafts per hour: far above any real use. */
@@ -39,8 +51,24 @@ export const draftLimiter = createRateLimiter({
 	windowMs: 60 * 60 * 1000,
 });
 
+/** Receipts a member may scan per hour, counted apart from the notes. */
+export const RECEIPTS_PER_HOUR = 30;
+
+export const receiptLimiter = createRateLimiter({
+	limit: RECEIPTS_PER_HOUR,
+	windowMs: 60 * 60 * 1000,
+});
+
 /** Recent payees sent with each note, so the assistant learns the household's habits. */
 const PAYEE_HISTORY = 50;
+
+function tooMany(): AppError {
+	return new AppError(
+		429,
+		"too_many_requests",
+		"Too many in the last hour: enter by hand or try again later",
+	);
+}
 
 function notUnderstood(): AppError {
 	return new AppError(
@@ -276,7 +304,38 @@ export function toDraft(
 		lines,
 		proposedTag: usesProposedTag && proposal?.tag ? proposal.tag : null,
 		remark: text(answer.remark, 300),
+		receipt: null,
+		warnings: [],
 	};
+}
+
+/**
+ * Turns a member's note into a draft transaction, to review: nothing is
+ * saved, no tag is created.
+ */
+/** The household as the assistant sees it, for this member. */
+async function contextFor(viewer: Viewer, locale: Locale) {
+	const { household } = viewer.membership;
+	const [accounts, householdTags] = await Promise.all([
+		accountsFor(viewer),
+		tagsOf(household.id),
+	]);
+	const payees = await recentPayees(
+		household.id,
+		accounts
+			.filter((account) => account.seesDetails)
+			.map((account) => account.id),
+	);
+	const { context, references } = buildDraftContext({
+		currency: household.currency,
+		locale,
+		accounts: accounts
+			.filter((account) => !account.archived)
+			.map(({ id, name, writable }) => ({ id, name, writable })),
+		tags: householdTags,
+		payees,
+	});
+	return { context, references, accounts, householdTags };
 }
 
 /**
@@ -289,38 +348,176 @@ export async function draftTransaction(
 	locale: Locale,
 ): Promise<TransactionDraft> {
 	if (!draftLimiter.consume(viewer.userId)) {
-		throw new AppError(
-			429,
-			"too_many_requests",
-			"Too many notes in the last hour: enter by hand or try again later",
-		);
+		throw tooMany();
 	}
 	const { household } = viewer.membership;
-	const [accounts, householdTags] = await Promise.all([
-		accountsFor(viewer),
-		tagsOf(household.id),
-	]);
-	const payees = await recentPayees(
-		household.id,
-		accounts
-			.filter((account) => account.seesDetails)
-			.map((account) => account.id),
-	);
-	const contextAccounts: ContextAccount[] = accounts
-		.filter((account) => !account.archived)
-		.map(({ id, name, writable }) => ({ id, name, writable }));
-	const { context, references } = buildDraftContext({
-		currency: household.currency,
+	const { context, references, accounts, householdTags } = await contextFor(
+		viewer,
 		locale,
-		accounts: contextAccounts,
-		tags: householdTags,
-		payees,
-	});
+	);
 	const answer = await assistant.draftTransaction({
 		context,
 		entry: buildDraftEntry(note, today),
 	});
 	return toDraft(answer, {
+		references,
+		accounts,
+		householdTags,
+		currency: household.currency,
+		today,
+	});
+}
+
+/** The key of a receipt's group of items: a tag, the proposed tag, or none. */
+const PROPOSED = "new";
+const UNCATEGORIZED = "";
+
+/**
+ * What the assistant read on a receipt, checked against the household and
+ * turned into a draft: its items grouped by tag, the taxes shared out among
+ * them, and the receipt itself to keep with the transaction.
+ */
+export function toReceiptDraft(
+	answer: AssistantReceipt,
+	{
+		references,
+		accounts,
+		householdTags,
+		currency,
+		today,
+	}: {
+		references: References;
+		accounts: Awaited<ReturnType<typeof accountsFor>>;
+		householdTags: Tag[];
+		currency: string;
+		today: string;
+	},
+): TransactionDraft {
+	const total = parseDraftAmount(answer.total, currency);
+	if (total === null) {
+		throw notUnderstood();
+	}
+	const proposal = proposeTag(answer.new_tag, references, householdTags);
+	const keyOf = (tag: string | null): string => {
+		if (tag === PROPOSED) {
+			if (proposal?.existingTagId) {
+				return proposal.existingTagId;
+			}
+			return proposal?.tag ? PROPOSED : UNCATEGORIZED;
+		}
+		return (tag && references.tags.get(tag)) || UNCATEGORIZED;
+	};
+
+	const items = answer.items.flatMap(({ name, amount, tag }) => {
+		const parsed = parsePrintedAmount(amount, currency);
+		const label = text(name, RECEIPT_ITEM_NAME_MAX_LENGTH);
+		return parsed === null || label === null
+			? []
+			: [{ name: label, amount: parsed, key: keyOf(tag) }];
+	});
+	const taxes = answer.taxes.flatMap(({ name, amount }) => {
+		const parsed = parsePrintedAmount(amount, currency);
+		const label = text(name, 40);
+		return parsed === null || label === null
+			? []
+			: [{ name: label, amount: parsed }];
+	});
+	const subtotal =
+		answer.subtotal === null
+			? null
+			: parsePrintedAmount(answer.subtotal, currency);
+
+	const groups = new Map<string, number>();
+	for (const { key, amount } of items) {
+		groups.set(key, (groups.get(key) ?? 0) + amount);
+	}
+	const lines = shareTotal(
+		total,
+		[...groups].map(([key, amount]) => ({ key, amount })),
+		UNCATEGORIZED,
+	).map(({ key, amount }) => ({
+		amount,
+		tagId: key === UNCATEGORIZED || key === PROPOSED ? null : key,
+		usesProposedTag: key === PROPOSED,
+	}));
+
+	// The lines follow the total, what was paid: say when the receipt's own
+	// figures don't add up to it
+	const itemsSum = items.reduce((sum, item) => sum + item.amount, 0);
+	const taxesSum = taxes.reduce((sum, tax) => sum + tax.amount, 0);
+	const mismatch =
+		items.length > 0 &&
+		(itemsSum + taxesSum !== total ||
+			(subtotal !== null && subtotal !== itemsSum));
+
+	const account = accounts.find(
+		(candidate) =>
+			answer.account !== null &&
+			candidate.id === references.accounts.get(answer.account),
+	);
+	const merchant = text(answer.merchant, RECEIPT_ITEM_NAME_MAX_LENGTH);
+	return {
+		type: "expense",
+		date: isCalendarDay(answer.date) ? answer.date : today,
+		accountId: account?.writable ? account.id : null,
+		toAccountId: null,
+		payee: merchant
+			? merchant.slice(0, TRANSACTION_PAYEE_MAX_LENGTH).trim()
+			: null,
+		note: text(answer.note, TRANSACTION_NOTE_MAX_LENGTH),
+		lines,
+		proposedTag:
+			lines.some((line) => line.usesProposedTag) && proposal?.tag
+				? proposal.tag
+				: null,
+		remark: text(answer.remark, 300),
+		receipt: {
+			merchant,
+			items: items
+				.slice(0, RECEIPT_MAX_ITEMS)
+				.map(({ name, amount }) => ({ name, amount })),
+			subtotal,
+			taxes: taxes.slice(0, RECEIPT_MAX_TAXES),
+			total,
+		},
+		warnings: mismatch ? ["receipt_total_mismatch"] : [],
+	};
+}
+
+/**
+ * Turns the photo of a receipt into a draft expense, to review. The photo
+ * is read in memory, sent to the assistant and forgotten: never stored, never
+ * logged.
+ */
+export async function draftFromReceipt(
+	viewer: Viewer,
+	{ photo, today }: { photo: File; today: string },
+	locale: Locale,
+): Promise<TransactionDraft> {
+	if (photo.size > RECEIPT_PHOTO_MAX_BYTES) {
+		throw new AppError(413, "payload_too_large", "The photo is too large");
+	}
+	const bytes = new Uint8Array(await photo.arrayBuffer());
+	const mediaType = detectImageType(bytes);
+	if (!mediaType) {
+		throw new AppError(422, "validation_error", "Invalid request", [
+			{ field: "photo", message: "receipt_photo_invalid" },
+		]);
+	}
+	if (!receiptLimiter.consume(viewer.userId)) {
+		throw tooMany();
+	}
+	const { household } = viewer.membership;
+	const { context, references, accounts, householdTags } = await contextFor(
+		viewer,
+		locale,
+	);
+	const answer = await assistant.readReceipt({
+		context,
+		photo: { mediaType, data: Buffer.from(bytes).toString("base64") },
+		today,
+	});
+	return toReceiptDraft(answer, {
 		references,
 		accounts,
 		householdTags,

@@ -61,6 +61,8 @@ const draft = (fields: Partial<TransactionDraft> = {}): TransactionDraft => ({
 		similarTags: [{ tagId: food.id, reason: "contains" }],
 	},
 	remark: "J'ai proposé « Loisirs › Loterie ».",
+	receipt: null,
+	warnings: [],
 	...fields,
 });
 

@@ -153,6 +153,34 @@ describe("createTransactionSchema", () => {
 		).toEqual([["toAccountId", "transfer_same_account"]]);
 	});
 
+	it("keeps the details of a receipt with an expense, not with a transfer", () => {
+		const receipt = {
+			merchant: " IGA ",
+			items: [
+				{ name: "Apples", amount: 600 },
+				{ name: "Coupon", amount: -100 },
+			],
+			subtotal: 500,
+			taxes: [{ name: "TPS", amount: 25 }],
+			total: 525,
+		};
+
+		expect(
+			createTransactionSchema.parse({ ...expense, origin: "receipt", receipt }),
+		).toMatchObject({ receipt: { ...receipt, merchant: "IGA" } });
+		expect(
+			issues(
+				createTransactionSchema.safeParse({
+					...expense,
+					receipt: { ...receipt, total: 0 },
+				}),
+			),
+		).toEqual([["receipt.total", "amount_not_positive"]]);
+		expect(
+			createTransactionSchema.safeParse({ ...transfer, receipt }).success,
+		).toBe(false);
+	});
+
 	it("keeps each type to its own fields", () => {
 		// A transfer has no lines, an expense no destination
 		expect(

@@ -147,6 +147,7 @@ describe("formStateOf", () => {
 		payee: "Costco",
 		note: null,
 		origin: "manual",
+		receipt: null,
 		lines: [
 			{ id: "a", amount: 12_000, tagId: "food" },
 			{ id: "b", amount: 6000, tagId: null },

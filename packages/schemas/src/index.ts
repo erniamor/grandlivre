@@ -5,6 +5,7 @@ export * from "./draft.schema";
 export * from "./event.schema";
 export * from "./household.schema";
 export * from "./profile.schema";
+export * from "./receipt.schema";
 export * from "./report.schema";
 export * from "./tag.schema";
 export * from "./transaction.schema";

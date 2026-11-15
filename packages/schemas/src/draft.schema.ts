@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { calendarDateSchema } from "./common";
+import { receiptSchema } from "./receipt.schema";
 import { transactionTypeSchema } from "./transaction.schema";
 
 export const DRAFT_TEXT_MAX_LENGTH = 500;
@@ -20,6 +21,16 @@ export const createDraftSchema = z.strictObject({
 });
 
 export type CreateDraft = z.infer<typeof createDraftSchema>;
+
+/**
+ * - "receipt_total_mismatch": the items and the taxes of the receipt don't
+ *   add up to its total; the lines follow the total, which is what was paid.
+ */
+export const DRAFT_WARNINGS = ["receipt_total_mismatch"] as const;
+
+export const draftWarningSchema = z.enum(DRAFT_WARNINGS);
+
+export type DraftWarning = z.infer<typeof draftWarningSchema>;
 
 /** Why an existing tag looks like the one proposed. */
 export const SIMILAR_TAG_REASONS = [
@@ -81,6 +92,10 @@ export const transactionDraftSchema = z.object({
 	proposedTag: proposedTagSchema.nullable(),
 	/** A word from the assistant when something is uncertain, in the member's language. */
 	remark: z.string().nullable(),
+	/** For a draft made from a receipt: what it says, to keep with the transaction. */
+	receipt: receiptSchema.nullable(),
+	/** What the API noticed, as codes the front ends translate. */
+	warnings: z.array(draftWarningSchema),
 });
 
 export type TransactionDraft = z.infer<typeof transactionDraftSchema>;

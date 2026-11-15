@@ -15,6 +15,14 @@ import { meRoutes } from "@/routes/me/me.routes";
 
 const MAX_BODY_SIZE = 1024 * 1024;
 
+const RECEIPT_ROUTE = /^\/v1\/households\/[^/]+\/transactions\/draft\/receipt$/;
+
+const defaultBodyLimit = bodyLimit({
+	maxSize: MAX_BODY_SIZE,
+	onError: (c) =>
+		c.json(errorBody("payload_too_large", "Request body is too large"), 413),
+});
+
 const v1 = new Hono()
 	// Better Auth endpoints: sign-in, sign-out, session...
 	.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw))
@@ -33,15 +41,9 @@ app
 	.use(secureHeaders())
 	.use(cors({ origin: env.CORS_ORIGINS, credentials: true }))
 	.use(csrf({ origin: env.CORS_ORIGINS }))
-	.use(
-		bodyLimit({
-			maxSize: MAX_BODY_SIZE,
-			onError: (c) =>
-				c.json(
-					errorBody("payload_too_large", "Request body is too large"),
-					413,
-				),
-		}),
+	.use((c, next) =>
+		// The photo of a receipt has its own, larger limit, on its route
+		RECEIPT_ROUTE.test(c.req.path) ? next() : defaultBodyLimit(c, next),
 	)
 	.route("/v1", v1);
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { amountSchema, calendarDateSchema, dateTimeSchema } from "./common";
+import { receiptSchema } from "./receipt.schema";
 
 /**
  * - "expense": money leaves the account;
@@ -142,12 +143,18 @@ const originFields = {
 		.optional(),
 };
 
+/**
+ * What the receipt of an expense or an income said, when it was recorded
+ * from one. Kept as is when the transaction is changed later.
+ */
+const receiptFields = { receipt: receiptSchema.optional() };
+
 export const createTransactionSchema = z
 	.discriminatedUnion(
 		"type",
 		[
-			expenseInputSchema.extend(originFields),
-			incomeInputSchema.extend(originFields),
+			expenseInputSchema.extend({ ...originFields, ...receiptFields }),
+			incomeInputSchema.extend({ ...originFields, ...receiptFields }),
 			transferInputSchema.extend(originFields),
 		],
 		"transaction_type_invalid",
@@ -185,6 +192,8 @@ export const transactionSchema = z.object({
 	origin: transactionOriginSchema,
 	/** In the order they were entered; empty for a transfer. */
 	lines: z.array(transactionLineSchema),
+	/** What its receipt said, when it was recorded from one. */
+	receipt: receiptSchema.nullable(),
 	/** Who recorded it; null once they left the product. */
 	createdBy: z
 		.object({

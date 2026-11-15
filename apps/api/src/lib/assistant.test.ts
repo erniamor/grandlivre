@@ -88,6 +88,61 @@ describe("the Claude assistant", () => {
 		expect(String(params?.system)).not.toContain("2026");
 	});
 
+	it("sends a receipt's photo after the cached context, then the day, and asks for its figures", async () => {
+		const reading = {
+			merchant: "IGA",
+			date: null,
+			account: null,
+			note: null,
+			items: [{ name: "Apples", amount: "5.00", tag: null }],
+			subtotal: null,
+			taxes: [],
+			total: "5.00",
+			new_tag: null,
+			remark: null,
+		};
+		const { client, parse } = fakeClient({
+			stop_reason: "end_turn",
+			parsed_output: reading,
+		});
+
+		expect(
+			await createClaudeAssistant(client).readReceipt({
+				context: request.context,
+				photo: { mediaType: "image/png", data: "iVBORw0KGgo=" },
+				today: "2026-11-15",
+			}),
+		).toEqual(reading);
+		const [params] =
+			(parse.mock.calls as unknown as Record<string, unknown>[][])[0] ?? [];
+		expect(params).toMatchObject({
+			model: ASSISTANT_MODEL,
+			output_config: { effort: "low", format: expect.any(Object) },
+			messages: [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: request.context,
+							cache_control: { type: "ephemeral" },
+						},
+						{
+							type: "image",
+							source: {
+								type: "base64",
+								media_type: "image/png",
+								data: "iVBORw0KGgo=",
+							},
+						},
+						{ type: "text", text: expect.stringContaining("2026-11-15") },
+					],
+				},
+			],
+		});
+		expect(String(params?.system)).toContain("receipt");
+	});
+
 	it("says the note wasn't understood when every model declines it", async () => {
 		const error = await failure({
 			stop_reason: "refusal",

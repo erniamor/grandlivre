@@ -21,6 +21,8 @@ const draft: TransactionDraft = {
 	lines: [{ amount: 7240, tagId: null, usesProposedTag: false }],
 	proposedTag: null,
 	remark: null,
+	receipt: null,
+	warnings: [],
 };
 
 function setUp(response: ApiResponse = { status: 200, body: draft }) {

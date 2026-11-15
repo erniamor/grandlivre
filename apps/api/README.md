@@ -28,7 +28,7 @@ Validated at startup by [`src/env.ts`](src/env.ts): the API refuses to start wit
 | `DATABASE_URL` | yes | PostgreSQL connection URL |
 | `CORS_ORIGINS` | yes | Comma-separated front-end origins allowed to call the API (with cookies) |
 | `BETTER_AUTH_SECRET` | yes | At least 32 characters; signs sessions and tokens |
-| `ANTHROPIC_API_KEY` | no | Key of the Claude API, which turns notes into draft transactions (`POST …/transactions/draft`). Without it, that route answers 503 `assistant_unavailable` and members enter by hand |
+| `ANTHROPIC_API_KEY` | no | Key of the Claude API, which turns notes and receipt photos into draft transactions (`POST …/transactions/draft`, `…/draft/receipt`). Without it, those routes answer 503 `assistant_unavailable` and members enter by hand |
 | `RESEND_API_KEY`, `EMAIL_FROM` | in production | Send the emails with [Resend](https://resend.com); both or none. `EMAIL_FROM` is `Name <address>` or `address`, on a domain verified in Resend. Without them (development, tests), emails are printed to the console |
 | `COOKIE_DOMAIN` | in production | Parent domain of the API and the front end (e.g. `grandlivre.example.com` for `api.grandlivre.example.com` and `grandlivre.example.com`): the session cookie is shared with the front end's server. `API_URL` and `APP_URL` must be under it. Unset in development |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no | Enable Google sign-in; both or none. Redirect URI: `<API_URL>/v1/auth/callback/google` |
@@ -143,7 +143,7 @@ An account or a tag from outside the household answers 422 (`transaction_account
 
 `POST /v1/households/:householdId/transactions/draft` `{ text, today }` (members) turns a note typed or dictated by the member ("gas 72 $", "restaurant 85.40 yesterday") into a draft transaction, with the Claude API. Nothing is saved and no tag is created: the front end shows the draft in the transaction form, and the member records it, or not, through the routes above. `today` is the member's day, to read "yesterday".
 
-The draft: `{ type, date, accountId, toAccountId, payee, note, lines: [{ amount, tagId, usesProposedTag }], proposedTag, remark }`. What the assistant couldn't tell is `null`. Only accounts the member may record on (and, for a transfer, any other account of the household) and tags of the household come back; anything else is dropped. `remark` is a word from the assistant in the member's language when something is uncertain.
+The draft: `{ type, date, accountId, toAccountId, payee, note, lines: [{ amount, tagId, usesProposedTag }], proposedTag, remark, receipt, warnings }` (`receipt` is `null` and `warnings` empty for a note). What the assistant couldn't tell is `null`. Only accounts the member may record on (and, for a transfer, any other account of the household) and tags of the household come back; anything else is dropped. `remark` is a word from the assistant in the member's language when something is uncertain.
 
 When no tag fits, the assistant may propose one: `proposedTag: { names: { en, fr, es }, parentId, similarTags: [{ tagId, reason }] }`, with the lines on it marked `usesProposedTag`. It is never created here. `similarTags` lists the household's tags that look like it, in any language (`same_name`: the same name but for case, accents and plural; `similar_name`: a typo away; `contains`: one name holds the other), the closest first. A proposal of the same name as an existing tag under the same parent is replaced by that tag.
 
@@ -153,6 +153,17 @@ What the Claude API receives: the note, the member's day, the household's curren
 - 422 `draft_not_understood`: no amount could be read, or every model declined the note.
 - 503 `assistant_unavailable`: no `ANTHROPIC_API_KEY`, or the Claude API failed or gave an unusable answer (logged without the note).
 - Model: `claude-opus-5-5` at low effort, the household's context cached between notes, and a server-side fallback to another model when one declines a note.
+
+#### Receipts
+
+`POST /v1/households/:householdId/transactions/draft/receipt` (members), a multipart form with `photo` (a JPEG, PNG, WebP or GIF image, up to 5 MB, `RECEIPT_PHOTO_MAX_BYTES`) and `today`, turns the photo of a receipt into a draft expense. The photo is sent to the Claude API, then dropped: never stored, never logged. The same context as for a note goes with it.
+
+- The items are grouped by tag, one line per tag (an item no tag fits is uncategorized, or on the proposed tag), and the taxes are shared out among the lines in proportion to their amounts, rounded so the lines add up to the total paid exactly. A discount lowers its tag.
+- `receipt: { merchant, items: [{ name, amount }], subtotal, taxes: [{ name, amount }], total }` keeps what was read (amounts in minor units, a discount negative); send it back with the transaction (`origin: "receipt"`, `receipt`, on an expense or an income) to keep it. It stays when the transaction changes.
+- `warnings`: `receipt_total_mismatch` when the items and taxes don't add up to the total, or the items to the subtotal: the lines follow the total, the member should check them.
+- 30 receipts per hour and per member, apart from the notes: beyond, 429 `too_many_requests`.
+- 422 `validation_error` on `photo`: `receipt_photo_required`, or `receipt_photo_invalid` when the file isn't one of those images, told by its first bytes; 413 `payload_too_large` over 5 MB. Every other route keeps the 1 MB limit.
+- 422 `draft_not_understood`: no total could be read (not a receipt, unreadable), or every model declined the photo.
 
 ### Reports
 

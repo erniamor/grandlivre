@@ -60,6 +60,10 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `draft_text_too_long` | The note is over `DRAFT_TEXT_MAX_LENGTH` characters |
 | `draft_not_understood` | Answered by the API (422): the note couldn't be turned into a transaction |
 | `assistant_unavailable` | Answered by the API (503): the assistant can't be reached; enter by hand |
+| `receipt_photo_required` | Answered by the API (422, field `photo`): no photo was sent |
+| `receipt_photo_invalid` | Answered by the API (422, field `photo`): the file isn't a JPEG, PNG, WebP or GIF image |
+
+A draft also carries `warnings`, codes the front ends translate as well (`DRAFT_WARNINGS`): `receipt_total_mismatch`, the items and taxes read on a receipt don't add up to its total, so the lines follow the total and the member should check them.
 | `account_name_required` | The account's name is empty or blank |
 | `account_name_too_long` | The account's name is over `ACCOUNT_NAME_MAX_LENGTH` characters |
 | `account_type_invalid` | The type isn't one of `ACCOUNT_TYPES` |

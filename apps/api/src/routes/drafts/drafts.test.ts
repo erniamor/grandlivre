@@ -134,6 +134,8 @@ describe("POST /v1/households/:householdId/transactions/draft", () => {
 			lines: [{ amount: 7240, tagId: gas.id, usesProposedTag: false }],
 			proposedTag: null,
 			remark: "Hier, d'après la note.",
+			receipt: null,
+			warnings: [],
 		});
 		const transactions = await json<{ data: unknown[] }>(await h.list(alice));
 		expect(transactions.data).toEqual([]);

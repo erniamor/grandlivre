@@ -28,3 +28,24 @@ export function parseDraftAmount(
 	const amount = Number(`${whole}${decimals.padEnd(digits, "0")}`);
 	return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
 }
+
+/**
+ * Reads an amount as printed on a receipt ("12.99", "-2.00" for a
+ * discount, "0.00") into minor units, or null when it isn't one.
+ */
+export function parsePrintedAmount(
+	text: string,
+	currency: string,
+): number | null {
+	const trimmed = text.trim();
+	const negative = trimmed.startsWith("-");
+	const digits = negative ? trimmed.slice(1) : trimmed;
+	if (/^0+(?:[.,]0+)?$/.test(digits.trim())) {
+		return 0;
+	}
+	const amount = parseDraftAmount(digits, currency);
+	if (amount === null) {
+		return null;
+	}
+	return negative ? -amount : amount;
+}

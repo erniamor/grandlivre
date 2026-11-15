@@ -127,6 +127,7 @@ function toTransaction(
 		payee: row.payee,
 		note: row.note,
 		origin: row.origin,
+		receipt: row.receipt,
 		lines: lines.map((line) => ({
 			id: line.id,
 			amount: line.amount,
@@ -428,8 +429,10 @@ async function insertLines(
 /** Records a transaction on an account the viewer holds. */
 export async function createTransaction(
 	viewer: Viewer,
-	{ origin = "manual", externalId, ...input }: CreateTransaction,
+	{ origin = "manual", externalId, ...fields }: CreateTransaction,
 ): Promise<Transaction> {
+	const { receipt, ...input } =
+		"receipt" in fields ? fields : { ...fields, receipt: undefined };
 	const householdId = viewer.membership.household.id;
 	return db.transaction(async (tx) => {
 		const access = await accountAccess(tx, viewer);
@@ -460,6 +463,7 @@ export async function createTransaction(
 				householdId,
 				origin,
 				externalId: externalId ?? null,
+				receipt: receipt ?? null,
 				createdBy: viewer.userId,
 			})
 			.returning();
