@@ -5,6 +5,7 @@ import { type ApiClientConfig, createApiClient } from "./http/client";
 import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
 import { createTagsResource } from "./tags/tags.resource";
+import { createTransactionsResource } from "./transactions/transactions.resource";
 
 export type { AccountsResource } from "./accounts/accounts.resource";
 export type { Page, PageOptions } from "./api/page";
@@ -24,6 +25,10 @@ export type { ApiClientConfig } from "./http/client";
 export type { InvitationsResource } from "./invitations/invitations.resource";
 export type { MeResource } from "./me/me.resource";
 export type { TagsResource } from "./tags/tags.resource";
+export type {
+	TransactionFilters,
+	TransactionsResource,
+} from "./transactions/transactions.resource";
 
 /** The API's resources, sharing one configuration. */
 export function createApi(config: ApiClientConfig) {
@@ -35,6 +40,7 @@ export function createApi(config: ApiClientConfig) {
 		invitations: createInvitationsResource(client),
 		me: createMeResource(client),
 		tags: createTagsResource(client),
+		transactions: createTransactionsResource(client),
 	};
 }
 

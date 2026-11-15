@@ -4,7 +4,7 @@
 
 ## Role
 
-Single data access point for the front-end applications: each business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`...) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
+Single data access point for the front-end applications: each business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`...) matches a domain of `apps/api` and exposes its typed operations (list, detail, create, update, delete) on top of its REST API. Consumed by `apps/www`.
 
 The Zod schemas of the API's inputs and responses live in `packages/schemas`, shared with `apps/api`: this package uses them, it doesn't define them.
 
@@ -28,7 +28,7 @@ The Zod schemas of the API's inputs and responses live in `packages/schemas`, sh
 - `src/http/client.ts`: base HTTP client (`createApiClient`: URL under `/v1`, headers, credentials, response validation) and `parseInput()` to validate an input before sending
 - `src/api/errors.ts`: reading the error envelopes (the API's `{ error: { ... } }` and Better Auth's `{ code, message }`) into typed errors
 - `src/api/page.ts`: helpers for paginated operations (`Page<T>`, `toPage()`, `withQuery()`, `segment()`)
-- `src/<resource>/`: one folder per business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`)
+- `src/<resource>/`: one folder per business resource (`auth`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`)
   - `<resource>.resource.ts`: the resource's operations, as `create<Resource>Resource(client)`
   - `<resource>.resource.test.ts`: their tests
 - `src/errors.ts`: typed error classes (`ApiError` and its subclasses, `NetworkError`)
@@ -50,7 +50,7 @@ The Zod schemas of the API's inputs and responses live in `packages/schemas`, sh
 
 ## Resource conventions
 
-- A resource is an object that groups the operations of a backend resource: `projects.list()`, `projects.get(id)`, `projects.create(input)`, `projects.update(id, input)`, `projects.remove(id)`. Keep this vocabulary consistent across resources.
+- A resource is an object that groups the operations of a backend resource: `projects.list()`, `projects.get(id)`, `projects.create(input)`, `projects.update(id, input)` (the fields given) or `projects.replace(id, input)` (the whole resource), `projects.remove(id)`. Keep this vocabulary consistent across resources.
 - Inputs and outputs are typed with the types of `@repo/schemas`: never a type copied by hand as a duplicate, never a type derived from the Drizzle schema, which stays internal to the API.
 - Validate inputs before sending with their schema from `@repo/schemas`; validate the responses of critical data with their response schema.
 - Lists return the items with the pagination information, read from `{ data, pagination }`. Respect the pagination limits configured in the backend.

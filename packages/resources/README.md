@@ -35,6 +35,7 @@ During server rendering, pass the incoming request's cookie in `headers` instead
 | `households.invitations` | `list(householdId)`, `create(householdId, { email })`, `remove(householdId, invitationId)` |
 | `accounts` | The accounts of a household: `list(householdId)`, `get(householdId, id)`, `summary(householdId)` (assets, liabilities, net balance), `create(householdId, { name, type, visibility, openingBalance, holderIds? })`, `update(householdId, id, { ... })`, `remove(householdId, id)`. Amounts are integers in minor units (cents) |
 | `tags` | The tags of a household, a tree named in each language: `list(householdId)` (every tag, as an array), `create(householdId, { names, parentId? })`, `suggested(householdId)` (the tree of suggested tags), `addSuggested(householdId, { keys })` (adds the ones chosen), `update(householdId, id, { names?, parentId? })`, `remove(householdId, id)` |
+| `transactions` | The transactions of a household: `list(householdId, { accountId?, tagId?, type?, from?, to?, page?, pageSize? })` (the ones the user may see, most recent first), `get(householdId, id)`, `create(householdId, transaction)`, `replace(householdId, id, transaction)` (the whole transaction), `remove(householdId, id)`. Amounts are positive integers in minor units; dates are calendar days (`2026-11-14`) |
 | `invitations` | The invitations received by the user: `list()`, `accept(id)` (returns the household joined), `decline(id)` |
 
 Add a resource per domain of the API: a `src/<resource>/<resource>.resource.ts` exporting `create<Resource>Resource(client)`, registered in `createApi()` (`src/index.ts`).
@@ -51,7 +52,7 @@ Add a resource per domain of the API: a `src/<resource>/<resource>.resource.ts` 
 | `NotFoundError` | 404 | `code` |
 | `RateLimitError` | 429 | `code` |
 | `ServerError` | 5xx, or a response that doesn't match its schema (`code: "unexpected_response"`) | `code` |
-| `ApiError` | Any other error status (e.g. 409 with the code `last_owner`, `already_member`, `currency_locked` or `tag_has_children`); parent class of all the above | `status`, `code`, `message` |
+| `ApiError` | Any other error status (e.g. 409 with the code `last_owner`, `already_member`, `currency_locked`, `tag_has_children`, `tag_in_use`, `account_has_transactions`, `account_archived` or `transaction_already_imported`); parent class of all the above | `status`, `code`, `message` |
 | `NetworkError` | The API couldn't be reached | `cause` |
 
 Errors of the sign-in routes (handled by Better Auth) are read the same way, with their codes lowercased: a wrong code is a `ValidationError` with the code `invalid_otp`. A cancelled request (`AbortSignal`) rejects with the original `AbortError`.

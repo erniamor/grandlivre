@@ -17,7 +17,7 @@ export interface ApiClientConfig {
 }
 
 interface RequestOptions<Output> {
-	method?: "GET" | "POST" | "PATCH" | "DELETE";
+	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	/** Path under /v1, e.g. "/me". */
 	path: string;
 	/** Sent as JSON. */
