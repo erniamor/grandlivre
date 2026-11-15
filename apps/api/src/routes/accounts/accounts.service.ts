@@ -28,6 +28,7 @@ import {
 	users,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
 import type { Membership } from "@/routes/households/households.service";
 
@@ -273,6 +274,7 @@ export async function createAccount(
 				userId: holderId,
 			})),
 		);
+		await publishHouseholdEvent(tx, householdId, "accounts");
 		const holders = await holdersOf([row.id], tx);
 		// A new account has no transactions yet
 		return toAccount(row, holders.get(row.id) ?? [], userId, 0);
@@ -357,6 +359,7 @@ export async function updateAccount(
 				)
 				.onConflictDoNothing();
 		}
+		await publishHouseholdEvent(tx, householdId, "accounts");
 		const [holders, movements] = await Promise.all([
 			holdersOf([accountId], tx),
 			movementsOf(householdId, tx),
@@ -396,6 +399,7 @@ export async function deleteAccount(
 			);
 		}
 		await tx.delete(ledgerAccounts).where(eq(ledgerAccounts.id, accountId));
+		await publishHouseholdEvent(tx, viewer.membership.household.id, "accounts");
 	});
 }
 

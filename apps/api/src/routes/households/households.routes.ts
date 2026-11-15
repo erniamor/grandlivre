@@ -12,6 +12,7 @@ import {
 	requireHouseholdOwner,
 } from "@/middlewares/require-household";
 import { accountRoutes } from "@/routes/accounts/accounts.routes";
+import { eventRoutes } from "@/routes/events/events.routes";
 import {
 	householdsQuerySchema,
 	memberParamSchema,
@@ -42,6 +43,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	// ("/:householdId/*" also matches "/:householdId" itself)
 	.use("/:householdId/*", requireHouseholdMember)
 	.route("/:householdId/accounts", accountRoutes)
+	.route("/:householdId/events", eventRoutes)
 	.route("/:householdId/invitations", householdInvitationRoutes)
 	.route("/:householdId/tags", tagRoutes)
 	.route("/:householdId/transactions", transactionRoutes)

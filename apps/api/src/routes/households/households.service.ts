@@ -10,6 +10,7 @@ import { and, asc, count, eq, type InferSelectModel } from "drizzle-orm";
 import { db, type Transaction } from "@/db/client";
 import { householdMembers, households, users } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
 import { hasAccounts } from "@/routes/accounts/accounts.service";
 
@@ -118,6 +119,7 @@ export async function updateHousehold(
 	if (!household) {
 		throw new AppError(404, "not_found", "Household not found");
 	}
+	await publishHouseholdEvent(db, household.id, "household");
 	return toHousehold({ household, role: membership.role });
 }
 
@@ -207,6 +209,7 @@ export async function updateMemberRole(
 			.update(householdMembers)
 			.set({ role })
 			.where(isMember(householdId, userId));
+		await publishHouseholdEvent(tx, householdId, "members");
 	});
 }
 
@@ -236,5 +239,8 @@ export async function removeMember(
 			assertNotLastOwner(members, userId);
 		}
 		await tx.delete(householdMembers).where(isMember(householdId, userId));
+		await publishHouseholdEvent(tx, householdId, "members");
+		// They no longer hold the accounts they held
+		await publishHouseholdEvent(tx, householdId, "accounts");
 	});
 }

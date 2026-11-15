@@ -138,6 +138,22 @@ Who sees: the holders of an account, and every member when the account's `visibi
 
 An account or a tag from outside the household answers 422 (`transaction_account_invalid` on `accountId` or `toAccountId`, `transaction_tag_invalid` on `lines.<n>.tagId`).
 
+### Events (real time)
+
+`GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:
+
+```
+data: {"topic":"transactions"}
+```
+
+Topics: `household` (name, currency), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances). On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
+
+- An event is sent only once the change is saved: a refused change sends nothing.
+- The stream starts with a `: connected` comment, once events are listened to, then a `: ping` comment every 25 seconds so proxies keep it open.
+- A member who leaves the household, or is removed from it, has their stream closed.
+- Events travel through PostgreSQL (`LISTEN`/`NOTIFY` on the `household_events` channel), so they reach the members connected to any instance of the API.
+- What was missed while disconnected isn't replayed: on reconnection, the front end reloads everything.
+
 ### Invitations
 
 An owner invites someone by email. There is no invitation token: the invitation is addressed to an email, and signing in with that email is what proves it is theirs. Invitations are valid for 7 days; accepted, declined and cancelled ones are deleted.

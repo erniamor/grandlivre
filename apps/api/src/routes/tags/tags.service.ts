@@ -24,6 +24,7 @@ import {
 import { db, type Transaction } from "@/db/client";
 import { households, tagNames, tags, transactionLines } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
 import { suggestedTags } from "@/routes/tags/suggested-tags";
 
@@ -228,6 +229,7 @@ export async function createTag(
 		}
 		await assertNamesFree(tx, householdId, parentId, names);
 		const row = await insertTag(tx, householdId, names, parentId);
+		await publishHouseholdEvent(tx, householdId, "tags");
 		return toTag(row, Object.fromEntries(entriesOf(names)));
 	});
 }
@@ -303,6 +305,7 @@ export async function updateTag(
 			await tx.delete(tagNames).where(eq(tagNames.tagId, tagId));
 			await insertNames(tx, householdId, tagId, names);
 		}
+		await publishHouseholdEvent(tx, householdId, "tags");
 		return toTag(row, names ? Object.fromEntries(entriesOf(names)) : current);
 	});
 }
@@ -350,6 +353,7 @@ export async function deleteTag(
 			);
 		}
 		await tx.delete(tags).where(eq(tags.id, tagId));
+		await publishHouseholdEvent(tx, householdId, "tags");
 	});
 }
 
@@ -436,5 +440,6 @@ export async function addSuggestedTags(
 			}
 		};
 		await add(suggestedTags, null);
+		await publishHouseholdEvent(tx, householdId, "tags");
 	});
 }

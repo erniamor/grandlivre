@@ -22,7 +22,7 @@ What stays out of this package: the Drizzle schema (internal to the API), schema
 ## Structure
 
 - `src/common.ts`: shared building blocks (dates, calendar days, amounts of money, languages, pagination envelope)
-- `src/<domain>.schema.ts`: one file per domain (`auth`, `profile`, `household`, `account`, `tag`, `transaction`...), with its constants (maximum lengths...)
+- `src/<domain>.schema.ts`: one file per domain (`auth`, `profile`, `household`, `account`, `tag`, `transaction`, `event`...), with its constants (maximum lengths...)
 - `src/<domain>.schema.test.ts`: its tests
 - `src/index.ts`: the package's public API (what is exported here is the contract)
 

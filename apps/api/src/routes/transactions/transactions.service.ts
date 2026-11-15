@@ -29,6 +29,7 @@ import {
 	users,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
+import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf } from "@/lib/pagination";
 import type { Viewer } from "@/routes/accounts/accounts.service";
 import type { TransactionsQuery } from "@/routes/transactions/transactions.schemas";
@@ -466,6 +467,7 @@ export async function createTransaction(
 			throw new Error("The transaction was not created");
 		}
 		await insertLines(tx, householdId, row.id, lines);
+		await publishHouseholdEvent(tx, householdId, "transactions");
 		const [transaction] = await withDetails(tx, [row]);
 		if (!transaction) {
 			throw new Error("The transaction was not created");
@@ -524,6 +526,7 @@ export async function updateTransaction(
 			.delete(transactionLines)
 			.where(eq(transactionLines.transactionId, transactionId));
 		await insertLines(tx, householdId, transactionId, lines);
+		await publishHouseholdEvent(tx, householdId, "transactions");
 		const [transaction] = await withDetails(tx, [row]);
 		if (!transaction) {
 			throw notFound();
@@ -540,5 +543,10 @@ export async function deleteTransaction(
 		const access = await accountAccess(tx, viewer);
 		await lockForChange(tx, viewer, access, transactionId);
 		await tx.delete(transactions).where(eq(transactions.id, transactionId));
+		await publishHouseholdEvent(
+			tx,
+			viewer.membership.household.id,
+			"transactions",
+		);
 	});
 }

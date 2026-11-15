@@ -17,6 +17,7 @@ import { householdInvitationEmail } from "@/emails/household-invitation";
 import { env } from "@/env";
 import type { AuthUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
+import { publishHouseholdEvent } from "@/lib/events";
 import type { Locale } from "@/lib/locale";
 import { mailer } from "@/lib/mailer";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
@@ -89,6 +90,8 @@ export async function inviteMember(
 		if (!invitation) {
 			throw new Error("The invitation was not created");
 		}
+
+		await publishHouseholdEvent(tx, household.id, "invitations");
 
 		// Inside the transaction: a failed sending rolls the invitation back
 		await mailer.send(
@@ -166,6 +169,7 @@ export async function cancelInvitation(
 	if (deleted.length === 0) {
 		throw notFound();
 	}
+	await publishHouseholdEvent(db, householdId, "invitations");
 }
 
 /**
@@ -258,6 +262,8 @@ export async function acceptInvitation(
 		if (!row) {
 			throw new Error("The member was not added to the household");
 		}
+		await publishHouseholdEvent(tx, invitation.householdId, "members");
+		await publishHouseholdEvent(tx, invitation.householdId, "invitations");
 		return toHousehold(row);
 	});
 }
@@ -269,11 +275,12 @@ export async function declineInvitation(
 	if (!user.emailVerified) {
 		throw notFound();
 	}
-	const deleted = await db
+	const [declined] = await db
 		.delete(householdInvitations)
 		.where(and(eq(householdInvitations.id, invitationId), addressedTo(user)))
-		.returning({ id: householdInvitations.id });
-	if (deleted.length === 0) {
+		.returning({ householdId: householdInvitations.householdId });
+	if (!declined) {
 		throw notFound();
 	}
+	await publishHouseholdEvent(db, declined.householdId, "invitations");
 }
