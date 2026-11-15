@@ -141,6 +141,7 @@ describe("NewTransactionPage", () => {
 					payee: null,
 					note: null,
 					lines: [{ amount: 7200, tagId: null }],
+					origin: "manual",
 				},
 			},
 		]);

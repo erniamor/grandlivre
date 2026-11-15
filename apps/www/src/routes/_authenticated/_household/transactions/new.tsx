@@ -4,9 +4,11 @@ import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { NewTransactionPage } from "@/features/transactions/NewTransactionPage";
 
-// The account proposed in the form; anything else is dropped
+// The account proposed in the form, and the draft to review; anything else
+// is dropped
 const searchSchema = z.object({
 	account: z.uuid().optional().catch(undefined),
+	draft: z.string().max(40).optional().catch(undefined),
 });
 
 export const Route = createFileRoute(
@@ -25,13 +27,14 @@ export const Route = createFileRoute(
 
 function NewTransactionRoute() {
 	const { household } = Route.useRouteContext();
-	const { account } = Route.useSearch();
+	const { account, draft } = Route.useSearch();
 	const navigate = useNavigate();
 
 	return (
 		<NewTransactionPage
 			household={household}
 			accountId={account}
+			draftId={draft}
 			// Back to the list it was opened from
 			onCreated={() => navigate({ to: "/transactions", search: { account } })}
 		/>

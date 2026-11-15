@@ -5,6 +5,8 @@ import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
+import { useOpenDraft } from "@/features/transactions/note-draft";
+import { QuickEntry } from "@/features/transactions/QuickEntry";
 import { TransactionFilters } from "@/features/transactions/TransactionFilters";
 import { TransactionList } from "@/features/transactions/TransactionList";
 import { TransactionsPagination } from "@/features/transactions/TransactionsPagination";
@@ -38,6 +40,7 @@ export function TransactionsPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const openDraft = useOpenDraft();
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-6 px-4 py-12">
@@ -55,6 +58,10 @@ export function TransactionsPage({
 				<PlusIcon aria-hidden />
 				{m.transaction_add_button()}
 			</Link>
+			<QuickEntry
+				householdId={household.id}
+				onDraft={(draft) => openDraft(draft)}
+			/>
 			<TransactionFilters
 				filters={filters}
 				accounts={accounts.items}

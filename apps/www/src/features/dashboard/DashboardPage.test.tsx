@@ -95,6 +95,17 @@ describe("DashboardPage", () => {
 		).toBe("?page=1&pageSize=5");
 	});
 
+	it("offers the quick entry", async () => {
+		mockSummary();
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		expect(
+			await screen.findByRole("region", { name: "Quick entry" }),
+		).toBeVisible();
+		expect(screen.getByLabelText("Describe the transaction")).toBeVisible();
+	});
+
 	it("says when the household has no transaction yet", async () => {
 		mockSummary([]);
 

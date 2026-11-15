@@ -2,10 +2,10 @@ import type { Account, Transaction } from "@repo/schemas";
 import { describe, expect, it } from "vitest";
 import {
 	canEditTransaction,
-	draftOf,
 	draftTotal,
 	emptyLine,
-	type TransactionDraft,
+	formStateOf,
+	type TransactionFormState,
 	toTransactionInput,
 	writableAccounts,
 } from "@/features/transactions/transaction-form";
@@ -18,7 +18,9 @@ const line = (amount: string, tagId = "") => ({
 	tagId,
 });
 
-function draft(fields: Partial<TransactionDraft> = {}): TransactionDraft {
+function draft(
+	fields: Partial<TransactionFormState> = {},
+): TransactionFormState {
 	return {
 		type: "expense",
 		accountId: "chequing",
@@ -31,7 +33,7 @@ function draft(fields: Partial<TransactionDraft> = {}): TransactionDraft {
 	};
 }
 
-const read = (fields?: Partial<TransactionDraft>, locale = "en") =>
+const read = (fields?: Partial<TransactionFormState>, locale = "en") =>
 	toTransactionInput(draft(fields), "CAD", locale);
 
 describe("toTransactionInput", () => {
@@ -133,7 +135,7 @@ describe("toTransactionInput", () => {
 	});
 });
 
-describe("draftOf", () => {
+describe("formStateOf", () => {
 	const transaction: Transaction = {
 		id: "t",
 		householdId: "h",
@@ -155,7 +157,7 @@ describe("draftOf", () => {
 	};
 
 	it("fills the form with a transaction, amounts written in the user's language", () => {
-		expect(draftOf(transaction, "CAD", "fr")).toMatchObject({
+		expect(formStateOf(transaction, "CAD", "fr")).toMatchObject({
 			type: "expense",
 			accountId: "chequing",
 			toAccountId: "",
@@ -171,7 +173,7 @@ describe("draftOf", () => {
 
 	it("fills the form with a transfer: one amount, the destination", () => {
 		expect(
-			draftOf(
+			formStateOf(
 				{ ...transaction, type: "transfer", toAccountId: "savings", lines: [] },
 				"CAD",
 				"en",
@@ -185,7 +187,7 @@ describe("draftOf", () => {
 
 	it("is read back as the same transaction", () => {
 		const result = toTransactionInput(
-			draftOf(transaction, "CAD", "fr"),
+			formStateOf(transaction, "CAD", "fr"),
 			"CAD",
 			"fr",
 		);
@@ -204,7 +206,7 @@ describe("draftOf", () => {
 	});
 
 	it("gives each line its own key", () => {
-		const { lines } = draftOf(transaction, "CAD", "en");
+		const { lines } = formStateOf(transaction, "CAD", "en");
 
 		expect(new Set(lines.map((each) => each.key)).size).toBe(2);
 	});

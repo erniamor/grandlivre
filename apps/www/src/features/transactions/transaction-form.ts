@@ -1,6 +1,7 @@
 import type {
 	Account,
 	Transaction,
+	TransactionDraft,
 	TransactionType,
 	UpdateTransaction,
 } from "@repo/schemas";
@@ -17,7 +18,7 @@ export interface LineDraft {
 }
 
 /** The transaction as the form holds it. */
-export interface TransactionDraft {
+export interface TransactionFormState {
 	type: TransactionType;
 	/** Empty while no account is chosen. */
 	accountId: string;
@@ -34,6 +35,12 @@ export interface TransactionDraft {
 	lines: LineDraft[];
 }
 
+/**
+ * The value a line's tag takes while it is on the tag the assistant
+ * proposed: the tag doesn't exist yet, it is created on saving.
+ */
+export const PROPOSED_TAG = "proposed";
+
 let nextKey = 0;
 
 export function emptyLine(): LineDraft {
@@ -42,11 +49,11 @@ export function emptyLine(): LineDraft {
 }
 
 /** The form's content for a transaction that exists. */
-export function draftOf(
+export function formStateOf(
 	transaction: Transaction,
 	currency: string,
 	locale: string,
-): TransactionDraft {
+): TransactionFormState {
 	const amountText = (amount: number) =>
 		formatAmountInput(amount, currency, locale);
 	return {
@@ -93,7 +100,7 @@ function readAmount(
  * next to the fields that can't be read.
  */
 export function toTransactionInput(
-	draft: TransactionDraft,
+	draft: TransactionFormState,
 	currency: string,
 	locale: string,
 ): DraftResult {
@@ -190,4 +197,50 @@ export function canEditTransaction(
 	return writableAccounts(accounts).some(
 		(account) => account.id === transaction.accountId,
 	);
+}
+
+/** The form's content for a draft of the assistant, to review. */
+export function formStateOfDraft(
+	draft: TransactionDraft,
+	currency: string,
+	locale: string,
+): TransactionFormState {
+	return {
+		type: draft.type,
+		// Empty: the form proposes the account the user last recorded on
+		accountId: draft.accountId ?? "",
+		toAccountId: draft.toAccountId ?? "",
+		date: draft.date,
+		payee: draft.payee ?? "",
+		note: draft.note ?? "",
+		lines: draft.lines.map((line) => ({
+			...emptyLine(),
+			amount: formatAmountInput(line.amount, currency, locale),
+			tagId: line.usesProposedTag ? PROPOSED_TAG : (line.tagId ?? ""),
+		})),
+	};
+}
+
+/** Whether some line of the form is on the proposed tag. */
+export function usesProposedTag(state: TransactionFormState): boolean {
+	return (
+		state.type !== "transfer" &&
+		state.lines.some((line) => line.tagId === PROPOSED_TAG)
+	);
+}
+
+/** The transaction to send, its lines on the proposed tag now on the tag created. */
+export function withCreatedTag(
+	input: UpdateTransaction,
+	tagId: string,
+): UpdateTransaction {
+	if (input.type === "transfer") {
+		return input;
+	}
+	return {
+		...input,
+		lines: input.lines.map((line) =>
+			line.tagId === PROPOSED_TAG ? { ...line, tagId } : line,
+		),
+	};
 }

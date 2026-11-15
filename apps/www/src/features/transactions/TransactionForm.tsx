@@ -1,7 +1,9 @@
 import type {
 	Account,
+	ProposedTag,
 	Tag,
 	Transaction,
+	TransactionDraft,
 	UpdateTransaction,
 } from "@repo/schemas";
 import { Button } from "@repo/ui";
@@ -12,13 +14,17 @@ import { SelectField, type SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { useLastAccountId } from "@/features/transactions/last-account";
+import { ProposedTagPanel } from "@/features/transactions/ProposedTagPanel";
 import { TransactionLinesField } from "@/features/transactions/TransactionLinesField";
 import { TransactionTypeField } from "@/features/transactions/TransactionTypeField";
 import {
-	draftOf,
 	emptyLine,
-	type TransactionDraft,
+	formStateOf,
+	formStateOfDraft,
+	PROPOSED_TAG,
+	type TransactionFormState,
 	toTransactionInput,
+	usesProposedTag,
 	writableAccounts,
 } from "@/features/transactions/transaction-form";
 import { useLocalToday } from "@/features/transactions/use-local-today";
@@ -36,8 +42,17 @@ interface TransactionFormProps {
 	transaction?: Transaction;
 	/** The account proposed for a new transaction, when the user holds it. */
 	defaultAccountId?: string;
+	/** A draft of the assistant, to review: the form starts from it. */
+	draft?: TransactionDraft;
 	submitLabel: string;
-	save: (input: UpdateTransaction) => Promise<Transaction>;
+	/**
+	 * Saves the transaction. `proposedTag` is the tag the assistant proposed,
+	 * when lines are still on it: to create first (their tag is `PROPOSED_TAG`).
+	 */
+	save: (
+		input: UpdateTransaction,
+		proposedTag: ProposedTag | null,
+	) => Promise<Transaction>;
 	onSaved: (transaction: Transaction) => void | Promise<void>;
 }
 
@@ -54,26 +69,40 @@ export function TransactionForm({
 	tags,
 	transaction,
 	defaultAccountId,
+	draft: noteDraft,
 	submitLabel,
 	save,
 	onSaved,
 }: TransactionFormProps) {
 	const locale = getLocale();
-	const [draft, setDraft] = useState<TransactionDraft>(() =>
+	const [draft, setDraft] = useState<TransactionFormState>(() =>
 		transaction
-			? draftOf(transaction, currency, locale)
-			: {
-					type: "expense",
-					accountId: NONE,
-					toAccountId: NONE,
-					date: "",
-					payee: "",
-					note: "",
-					lines: [emptyLine()],
-				},
+			? formStateOf(transaction, currency, locale)
+			: noteDraft
+				? formStateOfDraft(noteDraft, currency, locale)
+				: {
+						type: "expense",
+						accountId: NONE,
+						toAccountId: NONE,
+						date: "",
+						payee: "",
+						note: "",
+						lines: [emptyLine()],
+					},
 	);
+	// The tag the assistant proposed, until the user turns it down
+	const [proposal, setProposal] = useState(noteDraft?.proposedTag ?? null);
 	const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-	const mutation = useMutation({ mutationFn: save, onSuccess: onSaved });
+	const mutation = useMutation({
+		mutationFn: ({
+			input,
+			proposedTag,
+		}: {
+			input: UpdateTransaction;
+			proposedTag: ProposedTag | null;
+		}) => save(input, proposedTag),
+		onSuccess: onSaved,
+	});
 	const apiErrors = mutation.error
 		? formErrors(mutation.error)
 		: { fields: {} as Record<string, string>, form: undefined };
@@ -95,12 +124,12 @@ export function TransactionForm({
 		[defaultAccountId, lastAccountId, mine[0]?.id].find((id) =>
 			mine.some((account) => account.id === id),
 		) ?? NONE;
-	const current: TransactionDraft = {
+	const current: TransactionFormState = {
 		...draft,
 		accountId: draft.accountId || proposedAccountId,
 		date: draft.date || today,
 	};
-	const change = (fields: Partial<TransactionDraft>) =>
+	const change = (fields: Partial<TransactionFormState>) =>
 		setDraft({ ...current, ...fields });
 
 	const isTransfer = current.type === "transfer";
@@ -118,11 +147,36 @@ export function TransactionForm({
 	];
 	const tagOptions: SelectOption<string>[] = [
 		{ value: NONE, label: m.transaction_uncategorized() },
+		...(proposal
+			? [
+					{
+						value: PROPOSED_TAG,
+						label: m.proposed_tag_option({ name: proposal.names[locale] }),
+					},
+				]
+			: []),
 		...flattenTagTree(buildTagTree(tags, locale)).map(({ tag, path }) => ({
 			value: tag.id,
 			label: path,
 		})),
 	];
+	/** Moves the lines on the proposed tag to `tagId` ("" leaves them uncategorized). */
+	const leaveProposal = (tagId: string) => {
+		change({
+			lines: current.lines.map((line) =>
+				line.tagId === PROPOSED_TAG ? { ...line, tagId } : line,
+			),
+		});
+		setProposal(null);
+	};
+	// An error about a field the form doesn't show (the proposed tag's
+	// names, its parent): said for the whole form
+	const unshownError = Object.entries(apiErrors.fields).find(
+		([field]) =>
+			!/^(lines\.|amount$|accountId$|toAccountId$|date$|payee$|note$)/.test(
+				field,
+			),
+	)?.[1];
 
 	return (
 		<form
@@ -143,13 +197,24 @@ export function TransactionForm({
 					return;
 				}
 				setLocalErrors({});
-				mutation.mutate(result.input);
+				mutation.mutate({
+					input: result.input,
+					proposedTag: proposal && usesProposedTag(current) ? proposal : null,
+				});
 			}}
 		>
 			<TransactionTypeField
 				value={current.type}
 				onChange={(type) => change({ type })}
 			/>
+			{proposal && usesProposedTag(current) && (
+				<ProposedTagPanel
+					proposal={proposal}
+					tags={tags}
+					onUseTag={leaveProposal}
+					onDismiss={() => leaveProposal(NONE)}
+				/>
+			)}
 			<TransactionLinesField
 				lines={current.lines}
 				onChange={(lines) => change({ lines })}
@@ -222,7 +287,7 @@ export function TransactionForm({
 				onChange={(event) => change({ note: event.target.value })}
 				error={errors.note}
 			/>
-			<FormAlert message={apiErrors.form} />
+			<FormAlert message={apiErrors.form ?? unshownError} />
 			<Button type="submit" disabled={mutation.isPending}>
 				{submitLabel}
 			</Button>
