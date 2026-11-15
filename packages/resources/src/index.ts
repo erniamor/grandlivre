@@ -5,6 +5,7 @@ import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
 import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
+import { createReportsResource } from "./reports/reports.resource";
 import { createTagsResource } from "./tags/tags.resource";
 import { createTransactionsResource } from "./transactions/transactions.resource";
 
@@ -29,6 +30,10 @@ export type { HouseholdsResource } from "./households/households.resource";
 export type { ApiClientConfig } from "./http/client";
 export type { InvitationsResource } from "./invitations/invitations.resource";
 export type { MeResource } from "./me/me.resource";
+export type {
+	ReportPeriod,
+	ReportsResource,
+} from "./reports/reports.resource";
 export type { TagsResource } from "./tags/tags.resource";
 export type {
 	TransactionFilters,
@@ -45,6 +50,7 @@ export function createApi(config: ApiClientConfig) {
 		households: createHouseholdsResource(client),
 		invitations: createInvitationsResource(client),
 		me: createMeResource(client),
+		reports: createReportsResource(client),
 		tags: createTagsResource(client),
 		transactions: createTransactionsResource(client),
 	};
