@@ -116,6 +116,14 @@ describe("Header", () => {
 		).toHaveAttribute("href", "/accounts");
 	});
 
+	it("links to the tags for a signed-in user only", async () => {
+		expect(
+			within(await renderHeader(aliceProfile)).getByRole("link", {
+				name: "Tags",
+			}),
+		).toHaveAttribute("href", "/tags");
+	});
+
 	it("doesn't link a visitor to the accounts, reserved to signed-in users", async () => {
 		const header = await renderHeader();
 

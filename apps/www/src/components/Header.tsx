@@ -2,7 +2,12 @@ import type { Profile } from "@repo/schemas";
 import type { ThemeName } from "@repo/themes";
 import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboardIcon, LogInIcon, WalletIcon } from "lucide-react";
+import {
+	LayoutDashboardIcon,
+	LogInIcon,
+	TagsIcon,
+	WalletIcon,
+} from "lucide-react";
 import { headerButtonClass } from "@/components/header-styles";
 import { Logo } from "@/components/Logo";
 import { AppearanceMenu } from "@/features/appearance/AppearanceMenu";
@@ -48,6 +53,16 @@ export function Header({ appearance, theme, me }: HeaderProps) {
 								)}
 							>
 								<WalletIcon aria-hidden className="size-5" />
+							</Link>
+							<Link
+								to="/tags"
+								aria-label={m.tags_title()}
+								className={cn(
+									headerButtonClass,
+									"data-[status=active]:bg-inverse-foreground/10",
+								)}
+							>
+								<TagsIcon aria-hidden className="size-5" />
 							</Link>
 						</>
 					)}

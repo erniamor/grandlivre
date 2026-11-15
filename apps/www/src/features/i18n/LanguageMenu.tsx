@@ -7,16 +7,9 @@ import {
 	DropdownMenuTrigger,
 } from "@repo/ui";
 import { headerButtonClass } from "@/components/header-styles";
+import { localeNames } from "@/features/i18n/locale-names";
 import { m } from "@/paraglide/messages";
 import { isLocale, type Locale, locales } from "@/paraglide/runtime";
-
-// Each language is named in itself, so anyone can find theirs whatever the
-// current language: these names are the same in every locale
-const localeNames: Record<Locale, string> = {
-	en: "English",
-	fr: "Français",
-	es: "Español",
-};
 
 interface LanguageMenuProps {
 	locale: Locale;
