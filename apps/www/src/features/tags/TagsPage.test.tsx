@@ -1,6 +1,5 @@
 import type { Tag } from "@repo/schemas";
 import { screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TagsPage } from "@/features/tags/TagsPage";
 import {
@@ -17,20 +16,13 @@ import { renderWithRouter } from "@/test/render-with-router";
 
 vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
 
-function setUp(initial: Tag[] = tags) {
-	let current = initial;
-	const requests = mockApi((request) => {
-		if (request.method === "GET" && request.path === base) {
-			return tagsPage(current);
-		}
-		if (request.method === "POST" && request.path === `${base}/suggested`) {
-			current = tags;
-			return { status: 204 };
-		}
-		return undefined;
-	});
+function setUp(items: Tag[] = tags) {
+	mockApi((request) =>
+		request.method === "GET" && request.path === base
+			? tagsPage(items)
+			: undefined,
+	);
 	renderWithRouter(<TagsPage household={household} />);
-	return { user: userEvent.setup(), requests };
 }
 
 /** The names shown directly in a list, without those of nested lists. */
@@ -92,23 +84,13 @@ describe("TagsPage", () => {
 		);
 	});
 
-	it("offers the suggested tags to a household without tags, then shows them", async () => {
-		const { user, requests } = setUp([]);
+	it("offers a household without tags to start from the suggested ones", async () => {
+		setUp([]);
 
 		expect(await screen.findByText("No tag yet.")).toBeVisible();
-		await user.click(
-			screen.getByRole("button", { name: "Add the suggested tags" }),
-		);
-
-		expect(await screen.findByText("Home")).toBeVisible();
-		expect(requests).toContainEqual({
-			method: "POST",
-			path: `${base}/suggested`,
-			body: undefined,
-		});
 		expect(
-			screen.queryByRole("button", { name: "Add the suggested tags" }),
-		).not.toBeInTheDocument();
+			screen.getByRole("link", { name: "Start from the suggested tags" }),
+		).toHaveAttribute("href", "/tags/suggested");
 	});
 
 	it("doesn't offer the suggested tags once the household has tags", async () => {
@@ -116,7 +98,7 @@ describe("TagsPage", () => {
 
 		await screen.findByText("Home");
 		expect(
-			screen.queryByRole("button", { name: "Add the suggested tags" }),
+			screen.queryByRole("link", { name: "Start from the suggested tags" }),
 		).not.toBeInTheDocument();
 	});
 });

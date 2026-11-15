@@ -26,6 +26,8 @@ const messagesByCode: Record<string, () => string> = {
 	tag_name_taken: m.error_tag_name_taken,
 	tag_parent_invalid: m.error_tag_parent_invalid,
 	tag_has_children: m.error_tag_has_children,
+	suggested_tags_required: m.error_suggested_tags_required,
+	suggested_tags_invalid: m.error_suggested_tags_invalid,
 	tag_limit_reached: m.error_tag_limit_reached,
 	last_owner: m.error_last_owner,
 	already_member: m.error_already_member,

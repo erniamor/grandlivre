@@ -16,7 +16,8 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/accounts` | The household's accounts with their balance, grouped: the user's own, those shared with other members, the other accounts of the household; with the household's consolidated balance (assets, debts, net) |
 | `/accounts/new` | Creates an account: name, type, opening balance (or the amount owed, for a credit card or a loan), holders among the household's members, and what the other members see of it |
 | `/accounts/:accountId` | Changes or deletes an account, for its holders (and for an owner of the household when the account has no holder left); a 404 for an unknown account |
-| `/tags` | The household's tags as a tree, named in the user's language (or else in another one), sorted by name. A household without tags is offered a suggested set |
+| `/tags` | The household's tags as a tree, named in the user's language (or else in another one), sorted by name. A household without tags is offered to start from the suggested ones |
+| `/tags/suggested` | The suggested tags as a tree of checkboxes, all checked: the user unchecks what doesn't concern the household (a branch goes with its parent), then adds the rest in one go |
 | `/tags/new` | Creates a tag: its name in one language or more, and its parent (`?parent=<id>` proposes one) |
 | `/tags/:tagId` | Changes a tag (names, parent) or deletes it; a 404 for an unknown tag |
 | `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance: the starting point of the product's own pages |

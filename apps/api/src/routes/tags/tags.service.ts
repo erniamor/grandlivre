@@ -4,6 +4,7 @@ import {
 	type Locale,
 	MAX_TAGS_PER_HOUSEHOLD,
 	type Paginated,
+	type SuggestedTag,
 	type Tag,
 	type TagNames,
 	type UpdateTag,
@@ -24,7 +25,7 @@ import { db, type Transaction } from "@/db/client";
 import { households, tagNames, tags } from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
-import { type SuggestedTag, suggestedTags } from "@/routes/tags/suggested-tags";
+import { suggestedTags } from "@/routes/tags/suggested-tags";
 
 type TagRow = InferSelectModel<typeof tags>;
 
@@ -336,12 +337,41 @@ export async function deleteTag(
 	});
 }
 
+/** Every key of the suggested tree. */
+function keysOf(suggestions: SuggestedTag[]): string[] {
+	return suggestions.flatMap(({ key, children }) => [key, ...keysOf(children)]);
+}
+
 /**
- * Adds the suggested tags the household doesn't have yet. A suggestion
- * whose name a tag already has at the same place, in any language, is left
- * out; its children go under the existing tag.
+ * The keys chosen, with those of the suggestions above them: a tag can't be
+ * added without its parent. A key starts with its parent's ("car/gas").
  */
-export async function addSuggestedTags(householdId: string): Promise<void> {
+function withAncestors(keys: string[]): Set<string> {
+	const selected = new Set<string>();
+	for (const key of keys) {
+		const parts = key.split("/");
+		for (let depth = 1; depth <= parts.length; depth += 1) {
+			selected.add(parts.slice(0, depth).join("/"));
+		}
+	}
+	return selected;
+}
+
+/**
+ * Adds the suggested tags chosen that the household doesn't have yet. A
+ * suggestion whose name a tag already has at the same place, in any
+ * language, isn't added again; its children go under the existing tag.
+ */
+export async function addSuggestedTags(
+	householdId: string,
+	keys: string[],
+): Promise<void> {
+	const known = new Set(keysOf(suggestedTags));
+	if (keys.some((key) => !known.has(key))) {
+		throw invalid("keys", "suggested_tags_invalid");
+	}
+	const selected = withAncestors(keys);
+
 	await db.transaction(async (tx) => {
 		await lockTags(tx, householdId);
 		const existing = await tx
@@ -368,18 +398,22 @@ export async function addSuggestedTags(householdId: string): Promise<void> {
 			suggestions: SuggestedTag[],
 			parentId: string | null,
 		) => {
-			for (const { names, children = [] } of suggestions) {
-				const keys = entriesOf(names).map(([locale, name]) =>
+			for (const { key, names, children } of suggestions) {
+				// Not chosen: neither is anything under it
+				if (!selected.has(key)) {
+					continue;
+				}
+				const nameKeys = entriesOf(names).map(([locale, name]) =>
 					keyOf(parentId, locale, name),
 				);
-				let tagId = keys
-					.map((key) => tagByName.get(key))
+				let tagId = nameKeys
+					.map((nameKey) => tagByName.get(nameKey))
 					.find((id) => id !== undefined);
 				if (tagId === undefined) {
 					await assertUnderLimit(tx, householdId);
 					tagId = (await insertTag(tx, householdId, names, parentId)).id;
-					for (const key of keys) {
-						tagByName.set(key, tagId);
+					for (const nameKey of nameKeys) {
+						tagByName.set(nameKey, tagId);
 					}
 				}
 				await add(children, tagId);

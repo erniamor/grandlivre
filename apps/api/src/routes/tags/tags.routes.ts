@@ -1,7 +1,12 @@
-import { createTagSchema, updateTagSchema } from "@repo/schemas";
+import {
+	addSuggestedTagsSchema,
+	createTagSchema,
+	updateTagSchema,
+} from "@repo/schemas";
 import { Hono } from "hono";
 import { validate } from "@/lib/validator";
 import type { HouseholdVariables } from "@/middlewares/require-household";
+import { suggestedTags } from "@/routes/tags/suggested-tags";
 import { tagParamSchema, tagsQuerySchema } from "@/routes/tags/tags.schemas";
 import {
 	addSuggestedTags,
@@ -28,8 +33,12 @@ export const tagRoutes = new Hono<{ Variables: HouseholdVariables }>()
 		),
 	)
 	// Before "/:tagId", which would otherwise read "suggested" as an id
-	.post("/suggested", async (c) => {
-		await addSuggestedTags(c.get("membership").household.id);
+	.get("/suggested", (c) => c.json({ tags: suggestedTags }))
+	.post("/suggested", validate("json", addSuggestedTagsSchema), async (c) => {
+		await addSuggestedTags(
+			c.get("membership").household.id,
+			c.req.valid("json").keys,
+		);
 		return c.body(null, 204);
 	})
 	.patch(

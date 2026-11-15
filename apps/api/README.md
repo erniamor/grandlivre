@@ -109,7 +109,8 @@ The categories of a household's transactions: a tree (a tag has at most one pare
 | --- | --- | --- |
 | `GET /v1/households/:householdId/tags` | member | Lists the household's tags, oldest first, each with its `parentId` (the whole tree fits in one page) |
 | `POST /v1/households/:householdId/tags` `{ names, parentId? }` | member | Creates a tag (201), at the root without `parentId` |
-| `POST /v1/households/:householdId/tags/suggested` | member | Adds a starting set of tags, named in every language (204). A suggestion whose name a tag already has at the same place is left out (its children go under that tag), so it adds nothing twice |
+| `GET /v1/households/:householdId/tags/suggested` | member | The tags the product suggests to a household starting out: `{ tags }`, a tree where each tag has its `key` (the path leading to it, e.g. `transport/car/gas`), its `names` in every language and its `children` |
+| `POST /v1/households/:householdId/tags/suggested` `{ keys }` | member | Adds the suggestions chosen, with the ones above them: a tag comes with its parents (204). A suggestion whose name a tag already has at the same place isn't added again (its children go under that tag), so it adds nothing twice. An unknown key answers 422 with `suggested_tags_invalid` on `keys`, and adds nothing |
 | `PATCH /v1/households/:householdId/tags/:tagId` `{ names?, parentId? }` | member | `names` replaces every name of the tag; `parentId` moves it with its child tags (`null`: to the root) |
 | `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags (204) |
 

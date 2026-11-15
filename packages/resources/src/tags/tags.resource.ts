@@ -1,8 +1,12 @@
 import {
+	type AddSuggestedTags,
+	addSuggestedTagsSchema,
 	type CreateTag,
 	createTagSchema,
 	MAX_TAGS_PER_HOUSEHOLD,
 	paginatedSchema,
+	type SuggestedTag,
+	suggestedTagsSchema,
 	type Tag,
 	tagSchema,
 	type UpdateTag,
@@ -56,13 +60,33 @@ export function createTagsResource(client: ApiClient) {
 		},
 
 		/**
-		 * Adds the suggested tags the household doesn't have yet, named in
-		 * every language.
+		 * The tags the product suggests to a household starting out: a tree,
+		 * each tag named in every language and identified by its `key`.
 		 */
-		async addSuggested(householdId: string): Promise<void> {
+		async suggested(
+			householdId: string,
+			options: { signal?: AbortSignal } = {},
+		): Promise<SuggestedTag[]> {
+			const { tags } = await client.request({
+				path: `${tagsPath(householdId)}/suggested`,
+				response: suggestedTagsSchema,
+				signal: options.signal,
+			});
+			return tags;
+		},
+
+		/**
+		 * Adds the suggestions chosen, by their keys, that the household
+		 * doesn't have yet. A suggestion comes with the ones above it.
+		 */
+		async addSuggested(
+			householdId: string,
+			input: AddSuggestedTags,
+		): Promise<void> {
 			await client.request({
 				method: "POST",
 				path: `${tagsPath(householdId)}/suggested`,
+				body: parseInput(addSuggestedTagsSchema, input),
 			});
 		},
 

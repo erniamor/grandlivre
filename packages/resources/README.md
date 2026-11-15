@@ -34,7 +34,7 @@ During server rendering, pass the incoming request's cookie in `headers` instead
 | `households.members` | `list(householdId)`, `update(householdId, userId, { role })`, `remove(householdId, userId)` (also how a member leaves) |
 | `households.invitations` | `list(householdId)`, `create(householdId, { email })`, `remove(householdId, invitationId)` |
 | `accounts` | The accounts of a household: `list(householdId)`, `get(householdId, id)`, `summary(householdId)` (assets, liabilities, net balance), `create(householdId, { name, type, visibility, openingBalance, holderIds? })`, `update(householdId, id, { ... })`, `remove(householdId, id)`. Amounts are integers in minor units (cents) |
-| `tags` | The tags of a household, a tree named in each language: `list(householdId)` (every tag, as an array), `create(householdId, { names, parentId? })`, `addSuggested(householdId)`, `update(householdId, id, { names?, parentId? })`, `remove(householdId, id)` |
+| `tags` | The tags of a household, a tree named in each language: `list(householdId)` (every tag, as an array), `create(householdId, { names, parentId? })`, `suggested(householdId)` (the tree of suggested tags), `addSuggested(householdId, { keys })` (adds the ones chosen), `update(householdId, id, { names?, parentId? })`, `remove(householdId, id)` |
 | `invitations` | The invitations received by the user: `list()`, `accept(id)` (returns the household joined), `decline(id)` |
 
 Add a resource per domain of the API: a `src/<resource>/<resource>.resource.ts` exporting `create<Resource>Resource(client)`, registered in `createApi()` (`src/index.ts`).

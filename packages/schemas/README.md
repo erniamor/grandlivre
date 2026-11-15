@@ -23,7 +23,7 @@ Add it to a project with `"@repo/schemas": "workspace:*"`. It is consumed as Typ
 | Sign-in | `sendMagicLinkSchema` / `SendMagicLink`, `sendSignInCodeSchema` / `SendSignInCode`, `signInWithCodeSchema` / `SignInWithCode` | `SIGN_IN_CODE_LENGTH` (6) |
 | Profile | `profileSchema` / `Profile`, `updateProfileSchema` / `UpdateProfile`, `profileNameSchema` | `PROFILE_NAME_MAX_LENGTH` (60) |
 | Accounts | `accountSchema` / `Account`, `createAccountSchema` / `CreateAccount`, `updateAccountSchema` / `UpdateAccount`, `accountHolderSchema` / `AccountHolder`, `accountsSummarySchema` / `AccountsSummary`, `accountNameSchema`, `accountTypeSchema` / `AccountType`, `accountVisibilitySchema` / `AccountVisibility`, `accountHolderIdsSchema` | `ACCOUNT_NAME_MAX_LENGTH` (60), `ACCOUNT_TYPES`, `ACCOUNT_DEBT_TYPES`, `ACCOUNT_VISIBILITIES`, `ACCOUNT_MAX_HOLDERS` (20) |
-| Tags | `tagSchema` / `Tag`, `createTagSchema` / `CreateTag`, `updateTagSchema` / `UpdateTag`, `tagNamesSchema` / `TagNames`, `tagNameSchema`, `tagDisplayName(names, locale)` (the name in a language, or else in the first language that has one) | `TAG_NAME_MAX_LENGTH` (40), `MAX_TAGS_PER_HOUSEHOLD` (500) |
+| Tags | `tagSchema` / `Tag`, `createTagSchema` / `CreateTag`, `updateTagSchema` / `UpdateTag`, `tagNamesSchema` / `TagNames`, `tagNameSchema`, `tagDisplayName(names, locale)` (the name in a language, or else in the first language that has one), `suggestedTagSchema` / `SuggestedTag`, `suggestedTagsSchema` / `SuggestedTags`, `addSuggestedTagsSchema` / `AddSuggestedTags` | `TAG_NAME_MAX_LENGTH` (40), `MAX_TAGS_PER_HOUSEHOLD` (500) |
 | Households | `householdSchema` / `Household`, `createHouseholdSchema` / `CreateHousehold`, `updateHouseholdSchema` / `UpdateHousehold`, `householdMemberSchema` / `HouseholdMember`, `updateHouseholdMemberSchema` / `UpdateHouseholdMember`, `inviteHouseholdMemberSchema` / `InviteHouseholdMember`, `householdInvitationSchema` / `HouseholdInvitation`, `receivedInvitationSchema` / `ReceivedInvitation`, `householdNameSchema`, `householdCurrencySchema` / `HouseholdCurrency`, `householdRoleSchema` / `HouseholdRole` | `HOUSEHOLD_NAME_MAX_LENGTH` (60), `HOUSEHOLD_CURRENCIES`, `HOUSEHOLD_ROLES`, `HOUSEHOLD_INVITATION_EXPIRES_IN_DAYS` (7) |
 
 In responses, dates are ISO 8601 strings. Amounts of money are integers in minor units of the household's currency (cents), never decimals.
@@ -49,6 +49,8 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `tag_name_required` | The tag has no name, or a blank one (on `names` or `names.<locale>`) |
 | `tag_name_too_long` | A name of the tag is over `TAG_NAME_MAX_LENGTH` characters |
 | `tag_name_taken` | Answered by the API: another tag under the same parent has this name in this language |
+| `suggested_tags_required` | No suggested tag is chosen |
+| `suggested_tags_invalid` | The suggested tags chosen aren't a list of known keys |
 | `tag_parent_invalid` | The parent isn't a tag of the household, or is the tag itself or one of its descendants |
 | `household_name_required` | The household's name is empty or blank |
 | `household_name_too_long` | The household's name is over `HOUSEHOLD_NAME_MAX_LENGTH` characters |

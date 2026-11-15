@@ -71,6 +71,49 @@ export const tagSchema = z.object({
 export type Tag = z.infer<typeof tagSchema>;
 
 /**
+ * A tag the product suggests to a household starting out, named in every
+ * language, with the tags suggested under it.
+ */
+export interface SuggestedTag {
+	/**
+	 * Identifies the suggestion: the path leading to it ("transport/car/gas").
+	 * It starts with the key of its parent.
+	 */
+	key: string;
+	names: { en: string; fr: string; es: string };
+	children: SuggestedTag[];
+}
+
+export const suggestedTagSchema: z.ZodType<SuggestedTag> = z.object({
+	key: z.string(),
+	names: z.object({ en: z.string(), fr: z.string(), es: z.string() }),
+	// A getter: the schema refers to itself
+	get children() {
+		return z.array(suggestedTagSchema);
+	},
+});
+
+/** The tree of suggested tags. */
+export const suggestedTagsSchema = z.object({
+	tags: z.array(suggestedTagSchema),
+});
+
+export type SuggestedTags = z.infer<typeof suggestedTagsSchema>;
+
+/**
+ * The suggestions a household keeps, by their keys. A suggestion comes with
+ * the ones above it: a tag can't be added without its parent.
+ */
+export const addSuggestedTagsSchema = z.strictObject({
+	keys: z
+		.array(z.string("suggested_tags_invalid"), "suggested_tags_invalid")
+		.min(1, "suggested_tags_required")
+		.max(MAX_TAGS_PER_HOUSEHOLD, "suggested_tags_invalid"),
+});
+
+export type AddSuggestedTags = z.infer<typeof addSuggestedTagsSchema>;
+
+/**
  * The name of a tag for a user: in their language, or else in the first
  * language that has one.
  */

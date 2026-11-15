@@ -1,12 +1,11 @@
 import type { Household } from "@repo/schemas";
 import { buttonVariants } from "@repo/ui";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { PlusIcon } from "lucide-react";
-import { SuggestedTagsButton } from "@/features/tags/SuggestedTagsButton";
+import { PlusIcon, SparklesIcon } from "lucide-react";
 import { TagTree } from "@/features/tags/TagTree";
 import { buildTagTree } from "@/features/tags/tag-tree";
-import { tagsQueryKey, tagsQueryOptions } from "@/features/tags/tags-query";
+import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -16,7 +15,6 @@ interface TagsPageProps {
 
 /** The household's tags as a tree, named in the user's language. */
 export function TagsPage({ household }: TagsPageProps) {
-	const queryClient = useQueryClient();
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
 	const tree = buildTagTree(tags, getLocale());
 
@@ -35,14 +33,13 @@ export function TagsPage({ household }: TagsPageProps) {
 				</Link>
 				{/* A starting point: offered only to a household without tags */}
 				{tags.length === 0 && (
-					<SuggestedTagsButton
-						householdId={household.id}
-						onAdded={() =>
-							queryClient.invalidateQueries({
-								queryKey: tagsQueryKey(household.id),
-							})
-						}
-					/>
+					<Link
+						to="/tags/suggested"
+						className={buttonVariants({ variant: "outline" })}
+					>
+						<SparklesIcon aria-hidden />
+						{m.tags_suggested_link()}
+					</Link>
 				)}
 			</div>
 			{tags.length === 0 ? (

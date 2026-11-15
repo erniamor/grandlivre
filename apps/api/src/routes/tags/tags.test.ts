@@ -1,4 +1,9 @@
-import type { Paginated, Tag } from "@repo/schemas";
+import type {
+	Paginated,
+	SuggestedTag,
+	SuggestedTags,
+	Tag,
+} from "@repo/schemas";
 import { api, json } from "@test/helpers/api";
 import {
 	addTestMember,
@@ -7,13 +12,16 @@ import {
 	type TestUser,
 } from "@test/helpers/households";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type SuggestedTag, suggestedTags } from "@/routes/tags/suggested-tags";
+import { suggestedTags } from "@/routes/tags/suggested-tags";
 
 afterEach(() => {
 	vi.restoreAllMocks();
 });
 
 const UNKNOWN_ID = "00000000-0000-4000-8000-000000000000";
+
+const allKeys = (suggestions: SuggestedTag[]): string[] =>
+	suggestions.flatMap(({ key, children }) => [key, ...allKeys(children)]);
 
 /** A household owned by Alice, with Bob as a plain member; Carol is outside it. */
 async function setUp() {
@@ -34,8 +42,12 @@ async function setUp() {
 		api(`${base}/${tagId}`, { method: "DELETE", cookie: user.cookie });
 	const list = async (user: TestUser) =>
 		json<Paginated<Tag>>(await api(base, { cookie: user.cookie }));
-	const addSuggested = (user: TestUser) =>
-		api(`${base}/suggested`, { method: "POST", cookie: user.cookie });
+	const addSuggested = (user: TestUser, keys: string[]) =>
+		api(`${base}/suggested`, {
+			method: "POST",
+			cookie: user.cookie,
+			body: { keys },
+		});
 
 	return {
 		alice,
@@ -400,41 +412,102 @@ describe("DELETE /v1/households/:householdId/tags/:tagId", () => {
 	});
 });
 
+describe("GET /v1/households/:householdId/tags/suggested", () => {
+	it("returns the tree of suggested tags, each with its key and its names", async () => {
+		const { bob, base } = await setUp();
+
+		const response = await api(`${base}/suggested`, { cookie: bob.cookie });
+
+		expect(response.status).toBe(200);
+		const { tags } = await json<SuggestedTags>(response);
+		const home = tags.find((tag) => tag.key === "home");
+		expect(home?.names).toEqual({ en: "Home", fr: "Maison", es: "Hogar" });
+		expect(home?.children).toContainEqual({
+			key: "home/mortgage",
+			names: { en: "Mortgage", fr: "Hypothèque", es: "Hipoteca" },
+			children: [],
+		});
+	});
+
+	it("hides the household from outsiders and requires a session", async () => {
+		const { carol, base } = await setUp();
+
+		expect(
+			(await api(`${base}/suggested`, { cookie: carol.cookie })).status,
+		).toBe(404);
+		expect((await api(`${base}/suggested`)).status).toBe(401);
+	});
+});
+
 describe("POST /v1/households/:householdId/tags/suggested", () => {
-	it("adds a tree of tags named in every language", async () => {
+	it("adds the suggestions chosen, and only those, named in every language", async () => {
 		const { bob, addSuggested, list } = await setUp();
 
-		const response = await addSuggested(bob);
+		const response = await addSuggested(bob, [
+			"home",
+			"home/mortgage",
+			"leisure",
+		]);
 
 		expect(response.status).toBe(204);
 		const tags = (await list(bob)).data;
 		const home = tags.find((tag) => tag.names.en === "Home");
-		const mortgage = tags.find((tag) => tag.names.en === "Mortgage");
+		expect(tags.map((tag) => tag.names.en).sort()).toEqual([
+			"Home",
+			"Leisure",
+			"Mortgage",
+		]);
 		expect(home).toMatchObject({
 			names: { en: "Home", fr: "Maison", es: "Hogar" },
 			parentId: null,
 		});
-		expect(mortgage).toMatchObject({
+		expect(tags.find((tag) => tag.names.en === "Mortgage")).toMatchObject({
 			names: { en: "Mortgage", fr: "Hypothèque", es: "Hipoteca" },
 			parentId: home?.id,
 		});
-		expect(tags.length).toBeGreaterThan(10);
+	});
+
+	it("adds the suggestions above a chosen one: a tag comes with its parents", async () => {
+		const { alice, addSuggested, list } = await setUp();
+
+		await addSuggested(alice, ["transport/car/gas"]);
+
+		const tags = (await list(alice)).data;
+		const transport = tags.find((tag) => tag.names.en === "Transport");
+		const car = tags.find((tag) => tag.names.en === "Car");
+		expect(tags).toHaveLength(3);
+		expect(car).toMatchObject({ parentId: transport?.id });
+		expect(tags.find((tag) => tag.names.en === "Gas")).toMatchObject({
+			parentId: car?.id,
+		});
+	});
+
+	it("adds every suggestion when they are all chosen, same names under different parents included", async () => {
+		const { alice, addSuggested, list } = await setUp();
+		const keys = allKeys(suggestedTags);
+
+		await addSuggested(alice, keys);
+
+		const tags = (await list(alice)).data;
+		expect(tags).toHaveLength(keys.length);
+		expect(
+			tags.filter((tag) => tag.names.en === "Maintenance").length,
+		).toBeGreaterThan(1);
 	});
 
 	it("adds nothing twice", async () => {
 		const { alice, addSuggested, list } = await setUp();
-		await addSuggested(alice);
-		const { total } = (await list(alice)).pagination;
+		await addSuggested(alice, ["home", "home/rent"]);
 
-		expect((await addSuggested(alice)).status).toBe(204);
-		expect((await list(alice)).pagination.total).toBe(total);
+		expect((await addSuggested(alice, ["home", "home/rent"])).status).toBe(204);
+		expect((await list(alice)).pagination.total).toBe(2);
 	});
 
 	it("keeps the household's own tags, and puts the suggested children under them", async () => {
 		const { alice, created, addSuggested, list } = await setUp();
 		const mine = await created(alice, { names: { fr: "maison" } });
 
-		await addSuggested(alice);
+		await addSuggested(alice, ["home/mortgage"]);
 
 		const tags = (await list(alice)).data;
 		expect(tags.filter((tag) => tag.names.en === "Home")).toEqual([]);
@@ -444,25 +517,44 @@ describe("POST /v1/households/:householdId/tags/suggested", () => {
 		});
 	});
 
-	it("only keeps siblings from sharing a name: every suggestion is added", async () => {
+	it("refuses an unknown suggestion, and adds nothing", async () => {
 		const { alice, addSuggested, list } = await setUp();
-		const countOf = (suggestions: SuggestedTag[]): number =>
-			suggestions.reduce(
-				(total, { children = [] }) => total + 1 + countOf(children),
-				0,
-			);
 
-		await addSuggested(alice);
+		const response = await addSuggested(alice, ["home", "home/castle"]);
 
-		expect((await list(alice)).pagination.total).toBe(countOf(suggestedTags));
+		expect(response.status).toBe(422);
+		expect(await response.json()).toMatchObject({
+			error: {
+				details: [{ field: "keys", message: "suggested_tags_invalid" }],
+			},
+		});
+		expect((await list(alice)).data).toEqual([]);
+	});
+
+	it("refuses an empty choice", async () => {
+		const { alice, addSuggested } = await setUp();
+
+		const response = await addSuggested(alice, []);
+
+		expect(response.status).toBe(422);
+		expect(await response.json()).toMatchObject({
+			error: {
+				details: [{ field: "keys", message: "suggested_tags_required" }],
+			},
+		});
 	});
 
 	it("hides the household from outsiders and requires a session", async () => {
 		const { carol, base, addSuggested } = await setUp();
 
-		expect((await addSuggested(carol)).status).toBe(404);
-		expect((await api(`${base}/suggested`, { method: "POST" })).status).toBe(
-			401,
-		);
+		expect((await addSuggested(carol, ["home"])).status).toBe(404);
+		expect(
+			(
+				await api(`${base}/suggested`, {
+					method: "POST",
+					body: { keys: ["home"] },
+				})
+			).status,
+		).toBe(401);
 	});
 });

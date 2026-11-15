@@ -180,7 +180,6 @@
 	"tags_title": "Tags",
 	"tags_intro": "Les catégories des revenus et des dépenses du foyer. Un tag peut contenir d'autres tags, plus précis.",
 	"tags_empty": "Aucun tag pour l'instant.",
-	"tags_add_suggested_button": "Ajouter les tags suggérés",
 	"tag_add_button": "Ajouter un tag",
 	"tag_add_child_tooltip": "Ajouter un sous-tag",
 	"tag_add_child_label": "Ajouter un sous-tag à {name}",
@@ -205,5 +204,14 @@
 	"error_tag_name_taken": "Un autre tag du même niveau porte déjà ce nom.",
 	"error_tag_parent_invalid": "Un tag ne peut pas être placé sous lui-même ni sous l'un de ses sous-tags.",
 	"error_tag_has_children": "Ce tag a des sous-tags : déplacez-les ou supprimez-les d'abord.",
-	"error_tag_limit_reached": "Le foyer a atteint son nombre maximal de tags."
+	"error_tag_limit_reached": "Le foyer a atteint son nombre maximal de tags.",
+	"tags_suggested_link": "Partir des tags suggérés",
+	"suggested_tags_title": "Tags suggérés",
+	"suggested_tags_intro": "Décochez ce qui ne concerne pas votre foyer. Vous pourrez ensuite renommer, déplacer ou supprimer ces tags.",
+	"suggested_tags_select_all": "Tout cocher",
+	"suggested_tags_select_none": "Tout décocher",
+	"suggested_tags_add_button": "Ajouter les tags cochés ({count})",
+	"toast_suggested_tags_added": "Les tags ont été ajoutés.",
+	"error_suggested_tags_required": "Cochez au moins un tag.",
+	"error_suggested_tags_invalid": "Cette liste de tags n'est plus à jour. Rechargez la page."
 }

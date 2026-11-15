@@ -180,7 +180,6 @@
 	"tags_title": "Etiquetas",
 	"tags_intro": "Las categorías de los ingresos y gastos del hogar. Una etiqueta puede contener otras, más precisas.",
 	"tags_empty": "Todavía no hay etiquetas.",
-	"tags_add_suggested_button": "Añadir las etiquetas sugeridas",
 	"tag_add_button": "Añadir una etiqueta",
 	"tag_add_child_tooltip": "Añadir una subetiqueta",
 	"tag_add_child_label": "Añadir una subetiqueta a {name}",
@@ -205,5 +204,14 @@
 	"error_tag_name_taken": "Otra etiqueta del mismo nivel ya tiene este nombre.",
 	"error_tag_parent_invalid": "Una etiqueta no puede colocarse bajo sí misma ni bajo una de sus subetiquetas.",
 	"error_tag_has_children": "Esta etiqueta tiene subetiquetas: muévelas o elimínalas primero.",
-	"error_tag_limit_reached": "El hogar ha alcanzado su número máximo de etiquetas."
+	"error_tag_limit_reached": "El hogar ha alcanzado su número máximo de etiquetas.",
+	"tags_suggested_link": "Empezar con las etiquetas sugeridas",
+	"suggested_tags_title": "Etiquetas sugeridas",
+	"suggested_tags_intro": "Desmarca lo que no concierne a tu hogar. Después podrás renombrar, mover o eliminar estas etiquetas.",
+	"suggested_tags_select_all": "Marcar todo",
+	"suggested_tags_select_none": "Desmarcar todo",
+	"suggested_tags_add_button": "Añadir las etiquetas marcadas ({count})",
+	"toast_suggested_tags_added": "Las etiquetas se han añadido.",
+	"error_suggested_tags_required": "Marca al menos una etiqueta.",
+	"error_suggested_tags_invalid": "Esta lista de etiquetas ya no está actualizada. Recarga la página."
 }

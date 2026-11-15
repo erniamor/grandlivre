@@ -99,15 +99,58 @@ describe("tags", () => {
 		]);
 	});
 
-	it("adds the suggested tags", async () => {
+	it("gets the tree of suggested tags, without the envelope", async () => {
+		const suggested = [
+			{
+				key: "car",
+				names: { en: "Car", fr: "Voiture", es: "Coche" },
+				children: [
+					{
+						key: "car/gas",
+						names: { en: "Gas", fr: "Essence", es: "Gasolina" },
+						children: [],
+					},
+				],
+			},
+		];
+		const { api, requests } = fakeApi(200, { tags: suggested });
+
+		expect(await api.tags.suggested(HOUSEHOLD_ID)).toEqual(suggested);
+		expect(requests[0]).toMatchObject({
+			url: `${base}/suggested`,
+			method: "GET",
+		});
+	});
+
+	it("rejects suggested tags that don't match the contract", async () => {
+		const { api } = fakeApi(200, {
+			tags: [{ key: "car", names: { en: "Car" }, children: [] }],
+		});
+
+		await expect(api.tags.suggested(HOUSEHOLD_ID)).rejects.toBeInstanceOf(
+			ServerError,
+		);
+	});
+
+	it("adds the suggested tags chosen", async () => {
 		const { api, requests } = fakeApi(204);
 
-		await api.tags.addSuggested(HOUSEHOLD_ID);
+		await api.tags.addSuggested(HOUSEHOLD_ID, { keys: ["car", "car/gas"] });
 
 		expect(requests[0]).toMatchObject({
 			url: `${base}/suggested`,
 			method: "POST",
+			body: { keys: ["car", "car/gas"] },
 		});
+	});
+
+	it("rejects an empty choice of suggested tags before sending", async () => {
+		const { api, fetch } = fakeApi(204);
+
+		await expect(
+			api.tags.addSuggested(HOUSEHOLD_ID, { keys: [] }),
+		).rejects.toBeInstanceOf(ValidationError);
+		expect(fetch).not.toHaveBeenCalled();
 	});
 
 	it("updates the fields given", async () => {

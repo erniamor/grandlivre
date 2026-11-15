@@ -180,7 +180,6 @@
 	"tags_title": "Tags",
 	"tags_intro": "The categories of the household's income and expenses. A tag can hold other, more precise tags.",
 	"tags_empty": "No tag yet.",
-	"tags_add_suggested_button": "Add the suggested tags",
 	"tag_add_button": "Add a tag",
 	"tag_add_child_tooltip": "Add a sub-tag",
 	"tag_add_child_label": "Add a sub-tag to {name}",
@@ -205,5 +204,14 @@
 	"error_tag_name_taken": "Another tag at the same level already has this name.",
 	"error_tag_parent_invalid": "A tag can't be placed under itself or one of its sub-tags.",
 	"error_tag_has_children": "This tag has sub-tags: move or delete them first.",
-	"error_tag_limit_reached": "The household has reached its maximum number of tags."
+	"error_tag_limit_reached": "The household has reached its maximum number of tags.",
+	"tags_suggested_link": "Start from the suggested tags",
+	"suggested_tags_title": "Suggested tags",
+	"suggested_tags_intro": "Uncheck what doesn't concern your household. You can rename, move or delete these tags afterwards.",
+	"suggested_tags_select_all": "Check all",
+	"suggested_tags_select_none": "Uncheck all",
+	"suggested_tags_add_button": "Add the checked tags ({count})",
+	"toast_suggested_tags_added": "The tags were added.",
+	"error_suggested_tags_required": "Check at least one tag.",
+	"error_suggested_tags_invalid": "This list of tags is out of date. Reload the page."
 }
