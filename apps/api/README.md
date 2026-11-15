@@ -73,10 +73,10 @@ A household is visible to its members only: anyone else gets a 404, as for a hou
 
 | Route | Who | Effect |
 | --- | --- | --- |
-| `POST /v1/households` `{ name, currency }` | signed-in user | Creates a household owned by the user (201) |
+| `POST /v1/households` `{ name, currency, timeZone? }` | signed-in user | Creates a household owned by the user (201). `timeZone` is an IANA name (`America/Toronto` when missing; the front end sends the browser's), where the household's days start and end for its recurring transactions; an unknown one answers 422 `household_time_zone_invalid` |
 | `GET /v1/households` | signed-in user | Lists the user's households, with their role in each |
 | `GET /v1/households/:householdId` | member | The household |
-| `PATCH /v1/households/:householdId` `{ name?, currency? }` | owner | Changes the fields sent |
+| `PATCH /v1/households/:householdId` `{ name?, currency?, timeZone? }` | owner | Changes the fields sent |
 | `GET /v1/households/:householdId/members` | member | Lists the members, in the order they joined |
 | `PATCH /v1/households/:householdId/members/:userId` `{ role }` | owner | Changes a member's role (204) |
 | `DELETE /v1/households/:householdId/members/:userId` | owner, or the member themselves | Removes the member, or leaves the household (204) |
@@ -115,7 +115,7 @@ The categories of a household's transactions: a tree (a tag has at most one pare
 | `GET /v1/households/:householdId/tags/suggested` | member | The tags the product suggests to a household starting out: `{ tags }`, a tree where each tag has its `key` (the path leading to it, e.g. `transport/car/gas`), its `names` in every language and its `children` |
 | `POST /v1/households/:householdId/tags/suggested` `{ keys }` | member | Adds the suggestions chosen, with the ones above them: a tag comes with its parents (204). A suggestion whose name a tag already has at the same place isn't added again (its children go under that tag), so it adds nothing twice. An unknown key answers 422 with `suggested_tags_invalid` on `keys`, and adds nothing |
 | `PATCH /v1/households/:householdId/tags/:tagId` `{ names?, parentId? }` | member | `names` replaces every name of the tag; `parentId` moves it with its child tags (`null`: to the root) |
-| `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags nor transactions (204); otherwise 409 `tag_has_children` or `tag_in_use` |
+| `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags, transactions nor recurring transactions recording on it (204); otherwise 409 `tag_has_children` or `tag_in_use` |
 
 A name a sibling already has, when creating, renaming or moving a tag, answers 422 with `tag_name_taken` on `names.<locale>`; a parent from outside the household, or the tag itself or one of its descendants, answers 422 with `tag_parent_invalid` on `parentId`.
 
@@ -128,7 +128,7 @@ An expense or an income is split into `lines`, each with an `amount` and at most
 | Route | Who | Effect |
 | --- | --- | --- |
 | `GET /v1/households/:householdId/transactions` | member | Lists the transactions the user may see, the most recent day first. Filters: `accountId` (transfers received included), `tagId` (the tags under it included), `type`, `from` and `to` (days, included) |
-| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
+| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`; `recurring` is the API's own) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
 | `GET /v1/households/:householdId/transactions/:transactionId` | member who may see it | The transaction, with its lines and who recorded it |
 | `PUT /v1/households/:householdId/transactions/:transactionId` | holder of its account | Replaces the transaction with the one sent, of any type and on any account the user holds; where it comes from is kept |
 | `DELETE /v1/households/:householdId/transactions/:transactionId` | holder of its account | Deletes the transaction (204) |
@@ -179,6 +179,23 @@ What the household earns and spends over a period, from the lines of its expense
 
 An invalid period answers 422: `report_period_invalid` on `to` when it comes before `from`, `report_period_too_long` on `from` beyond 60 months. An account or a tag outside the household answers 422 (`transaction_account_invalid`, `transaction_tag_invalid`).
 
+### Recurring transactions
+
+A transaction that repeats: a rent, a subscription, a pay. It holds what it records (`transaction`: a transaction without its `date`, checked like one) and when (`schedule`): from `startDate`, its first day, every `interval` (1 to 99) `unit`s (`week`, `month`, `year`), until `endDate` included, or forever when `null`. A monthly day past the end of a shorter month falls on its last day (the 31st on April 30th, on February 28th or 29th) and is back on the 31st the month after.
+
+`mode`: `automatic`, recorded on its own when its day comes (a fixed amount), or `confirm` (default), which waits for a member to confirm it, its amount open to change. `nextDate` is its next day not yet recorded or waiting; `null` once it has ended.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/recurring-transactions` | member | Lists the recurring transactions the user may see, the next due first, the ended ones last |
+| `POST /v1/households/:householdId/recurring-transactions` `{ transaction, schedule, mode? }` | holder of `transaction.accountId` | Creates one (201) |
+| `GET /v1/households/:householdId/recurring-transactions/:recurringId` | member who may see it | The recurring transaction |
+| `PUT /v1/households/:householdId/recurring-transactions/:recurringId` | holder of its account | Replaces it with the one sent. The transactions it already recorded stay as they are. An unchanged schedule keeps its next day; a new one (`unit`, `interval` or `startDate`) starts on its first day |
+| `DELETE /v1/households/:householdId/recurring-transactions/:recurringId` | holder of its account | Deletes it (204); the transactions it recorded stay |
+
+- Who sees and writes: as for transactions, from its account (and, for a transfer, its destination). An archived account takes none (409 `account_archived`). A tag it records on can't be deleted (409 `tag_in_use`); deleting its account (one without transactions) deletes it.
+- A first day before today, in the household's time zone, answers 422 `recurrence_start_in_past` on `schedule.startDate`: what already happened is entered by hand. Other codes: `recurrence_unit_invalid`, `recurrence_interval_invalid`, `recurrence_mode_invalid`, `recurrence_end_before_start` (on `schedule.endDate`). The errors about what it records point into it: `transaction.accountId`, `transaction.lines.<n>.tagId`.
+
 ### Events (real time)
 
 `GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:
@@ -187,7 +204,7 @@ An invalid period answers 422: `report_period_invalid` on `to` when it comes bef
 data: {"topic":"transactions"}
 ```
 
-Topics: `household` (name, currency), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances). On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
+Topics: `household` (name, currency, time zone), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances), `recurring`. On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
 
 - An event is sent only once the change is saved: a refused change sends nothing.
 - The stream starts with a `ready` event (`event: ready`), sent once events are listened to: reload the data then, not on `EventSource`'s `open`, which comes a moment earlier. A `: ping` comment follows every 25 seconds so proxies keep the stream open.

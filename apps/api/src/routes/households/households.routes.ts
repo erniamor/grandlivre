@@ -28,6 +28,7 @@ import {
 	updateMemberRole,
 } from "@/routes/households/households.service";
 import { householdInvitationRoutes } from "@/routes/invitations/invitations.routes";
+import { recurringRoutes } from "@/routes/recurring/recurring.routes";
 import { reportRoutes } from "@/routes/reports/reports.routes";
 import { tagRoutes } from "@/routes/tags/tags.routes";
 import { transactionRoutes } from "@/routes/transactions/transactions.routes";
@@ -46,6 +47,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.route("/:householdId/accounts", accountRoutes)
 	.route("/:householdId/events", eventRoutes)
 	.route("/:householdId/invitations", householdInvitationRoutes)
+	.route("/:householdId/recurring-transactions", recurringRoutes)
 	.route("/:householdId/reports", reportRoutes)
 	.route("/:householdId/tags", tagRoutes)
 	.route("/:householdId/transactions", transactionRoutes)

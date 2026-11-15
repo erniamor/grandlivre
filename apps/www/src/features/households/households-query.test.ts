@@ -6,6 +6,7 @@ const household = (name: string): Household => ({
 	id: "5f1b7c2e-8d4a-4e6b-9c3f-1a2b3c4d5e6f",
 	name,
 	currency: "CAD",
+	timeZone: "America/Toronto",
 	role: "owner",
 	createdAt: "2026-11-14T12:00:00.000Z",
 });

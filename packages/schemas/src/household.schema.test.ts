@@ -44,6 +44,23 @@ describe("createHouseholdSchema", () => {
 		}
 	});
 
+	it("accepts a time zone the runtime knows, and only that", () => {
+		const household = { name: "Home", currency: "CAD" };
+
+		expect(
+			createHouseholdSchema.parse({ ...household, timeZone: "America/Toronto" })
+				.timeZone,
+		).toBe("America/Toronto");
+		expect(
+			messages(
+				createHouseholdSchema.safeParse({
+					...household,
+					timeZone: "Mars/Olympus_Mons",
+				}),
+			),
+		).toEqual(["household_time_zone_invalid"]);
+	});
+
 	it("rejects an unknown field", () => {
 		expect(
 			createHouseholdSchema.safeParse({

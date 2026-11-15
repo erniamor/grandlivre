@@ -17,6 +17,7 @@ const household = {
 	id: HOUSEHOLD_ID,
 	name: "The Tremblays",
 	currency: "CAD",
+	timeZone: "America/Toronto",
 	role: "owner",
 	createdAt: NOW,
 };

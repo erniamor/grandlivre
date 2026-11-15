@@ -46,11 +46,36 @@ describe("POST /v1/households", () => {
 			id: expect.any(String),
 			name: "The Tremblays",
 			currency: "CAD",
+			// Unless the browser sends its own
+			timeZone: "America/Toronto",
 			role: "owner",
 			createdAt: expect.any(String),
 		});
 		const members = await membersOf(household.id, alice.cookie);
 		expect(members.data).toMatchObject([{ userId: alice.id, role: "owner" }]);
+	});
+
+	it("lives in the time zone it is given, and refuses one that doesn't exist", async () => {
+		const alice = await signInUser("alice@example.com");
+		const create = (timeZone: string) =>
+			api("/v1/households", {
+				method: "POST",
+				cookie: alice.cookie,
+				body: { name: "The Tremblays", currency: "EUR", timeZone },
+			});
+
+		const paris = await create("Europe/Paris");
+		const nowhere = await create("Mars/Olympus_Mons");
+
+		expect(await paris.json()).toMatchObject({ timeZone: "Europe/Paris" });
+		expect(nowhere.status).toBe(422);
+		expect(await nowhere.json()).toMatchObject({
+			error: {
+				details: [
+					{ field: "timeZone", message: "household_time_zone_invalid" },
+				],
+			},
+		});
 	});
 
 	it("rejects an invalid name or currency with error codes", async () => {
@@ -171,6 +196,21 @@ describe("PATCH /v1/households/:householdId", () => {
 			...household,
 			name: "The Tremblay-Roys",
 			currency: "EUR",
+		});
+	});
+
+	it("lets an owner change the time zone", async () => {
+		const { alice, household } = await setUp();
+
+		const response = await api(`/v1/households/${household.id}`, {
+			method: "PATCH",
+			cookie: alice.cookie,
+			body: { timeZone: "America/Vancouver" },
+		});
+
+		expect(await response.json()).toEqual({
+			...household,
+			timeZone: "America/Vancouver",
 		});
 	});
 

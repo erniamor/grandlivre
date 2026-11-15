@@ -16,6 +16,8 @@ export const TRANSACTION_ORIGINS = [
 	"voice",
 	"receipt",
 	"import",
+	/** Recorded by a recurring transaction: never sent by a client. */
+	"recurring",
 ] as const;
 
 export const TRANSACTION_PAYEE_MAX_LENGTH = 80;
@@ -127,10 +129,32 @@ export const updateTransactionSchema = z
 
 export type UpdateTransaction = z.infer<typeof updateTransactionSchema>;
 
+/**
+ * A transaction without its day: what a recurring transaction records at
+ * each of its dates.
+ */
+export const transactionTemplateSchema = z
+	.discriminatedUnion(
+		"type",
+		[
+			expenseInputSchema.omit({ date: true }),
+			incomeInputSchema.omit({ date: true }),
+			transferInputSchema.omit({ date: true }),
+		],
+		"transaction_type_invalid",
+	)
+	.refine(
+		(input) =>
+			input.type !== "transfer" || input.accountId !== input.toAccountId,
+		{ message: "transfer_same_account", path: ["toAccountId"] },
+	);
+
+export type TransactionTemplate = z.infer<typeof transactionTemplateSchema>;
+
 /** Where the transaction comes from; a plain form sends neither field. */
 const originFields = {
-	/** "manual" when missing. */
-	origin: transactionOriginSchema.optional(),
+	/** "manual" when missing; "recurring" is the API's own. */
+	origin: transactionOriginSchema.exclude(["recurring"]).optional(),
 	/**
 	 * Identifier of the transaction in the statement it was imported from:
 	 * the same one is never imported twice into an account.

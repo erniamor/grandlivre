@@ -15,6 +15,8 @@ export const HOUSEHOLD_EVENT_TOPICS = [
 	"tags",
 	/** Its transactions, and so the balances of its accounts. */
 	"transactions",
+	/** Its recurring transactions. */
+	"recurring",
 ] as const;
 
 export const householdEventTopicSchema = z.enum(HOUSEHOLD_EVENT_TOPICS);

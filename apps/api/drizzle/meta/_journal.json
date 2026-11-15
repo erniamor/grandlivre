@@ -57,6 +57,13 @@
 			"when": 1794772814882,
 			"tag": "0007_transaction_receipt",
 			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1794780823144,
+			"tag": "0008_recurring_transactions",
+			"breakpoints": true
 		}
 	]
 }

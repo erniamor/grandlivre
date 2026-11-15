@@ -5,6 +5,8 @@ export { householdMembers } from "@/db/schema/household-members";
 export { households } from "@/db/schema/households";
 export { ledgerAccountHolders } from "@/db/schema/ledger-account-holders";
 export { ledgerAccounts } from "@/db/schema/ledger-accounts";
+export { recurringTransactionLines } from "@/db/schema/recurring-transaction-lines";
+export { recurringTransactions } from "@/db/schema/recurring-transactions";
 export { sessions } from "@/db/schema/sessions";
 export { tagNames } from "@/db/schema/tag-names";
 export { tags } from "@/db/schema/tags";

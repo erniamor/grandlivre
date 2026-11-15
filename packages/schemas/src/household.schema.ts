@@ -34,6 +34,29 @@ export const householdNameSchema = z
 	.min(1, "household_name_required")
 	.max(HOUSEHOLD_NAME_MAX_LENGTH, "household_name_too_long");
 
+/**
+ * The time zone a household lives in (IANA name, "America/Toronto"): its
+ * days start and end there, for the recurring transactions it records.
+ */
+export const DEFAULT_HOUSEHOLD_TIME_ZONE = "America/Toronto";
+
+export const HOUSEHOLD_TIME_ZONE_MAX_LENGTH = 64;
+
+/** Whether the runtime knows `timeZone`, the browser as the server. */
+function isTimeZone(timeZone: string): boolean {
+	try {
+		new Intl.DateTimeFormat("en", { timeZone });
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export const householdTimeZoneSchema = z
+	.string("household_time_zone_invalid")
+	.max(HOUSEHOLD_TIME_ZONE_MAX_LENGTH, "household_time_zone_invalid")
+	.refine(isTimeZone, "household_time_zone_invalid");
+
 export const householdCurrencySchema = z.enum(
 	HOUSEHOLD_CURRENCIES,
 	"household_currency_invalid",
@@ -48,6 +71,8 @@ export type HouseholdRole = z.infer<typeof householdRoleSchema>;
 export const createHouseholdSchema = z.strictObject({
 	name: householdNameSchema,
 	currency: householdCurrencySchema,
+	/** DEFAULT_HOUSEHOLD_TIME_ZONE when missing; the front ends send the browser's. */
+	timeZone: householdTimeZoneSchema.optional(),
 });
 
 export type CreateHousehold = z.infer<typeof createHouseholdSchema>;
@@ -62,6 +87,7 @@ export const householdSchema = z.object({
 	id: z.uuid(),
 	name: z.string(),
 	currency: householdCurrencySchema,
+	timeZone: z.string(),
 	/** Role of the signed-in user in this household. */
 	role: householdRoleSchema,
 	createdAt: dateTimeSchema,

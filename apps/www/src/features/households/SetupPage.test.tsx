@@ -14,6 +14,7 @@ const household = {
 	id: "5f1b7c2e-8d4a-4e6b-9c3f-1a2b3c4d5e6f",
 	name: "The Tremblays",
 	currency: "CAD",
+	timeZone: "America/Toronto",
 	role: "owner",
 	createdAt: NOW,
 };

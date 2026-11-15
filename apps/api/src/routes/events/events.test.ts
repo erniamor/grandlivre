@@ -132,6 +132,37 @@ describe("GET /v1/households/:householdId/events", () => {
 		expect(await topicsOf(() => h.remove(alice, transactionId))).toEqual([
 			"transactions",
 		]);
+		// Recurring transactions, on a day that is never past
+		const recurring = {
+			transaction: { ...expense, date: undefined },
+			schedule: {
+				unit: "month",
+				interval: 1,
+				startDate: "2999-01-01",
+				endDate: null,
+			},
+		};
+		let recurringId = "";
+		expect(
+			await topicsOf(async () => {
+				const response = await call(
+					"POST",
+					"/recurring-transactions",
+					recurring,
+				);
+				recurringId = ((await response.json()) as { id: string }).id;
+			}),
+		).toEqual(["recurring"]);
+		expect(
+			await topicsOf(() =>
+				call("PUT", `/recurring-transactions/${recurringId}`, recurring),
+			),
+		).toEqual(["recurring"]);
+		expect(
+			await topicsOf(() =>
+				call("DELETE", `/recurring-transactions/${recurringId}`),
+			),
+		).toEqual(["recurring"]);
 		expect(await topicsOf(() => call("DELETE", `/tags/${tag.id}`))).toEqual([
 			"tags",
 		]);

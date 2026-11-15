@@ -22,7 +22,13 @@ import {
 	sql,
 } from "drizzle-orm";
 import { db, type Transaction } from "@/db/client";
-import { households, tagNames, tags, transactionLines } from "@/db/schema";
+import {
+	households,
+	recurringTransactionLines,
+	tagNames,
+	tags,
+	transactionLines,
+} from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
@@ -339,13 +345,21 @@ export async function deleteTag(
 				"A tag that has child tags can't be deleted",
 			);
 		}
-		// Its transactions would lose their category
-		const [line] = await tx
-			.select({ id: transactionLines.id })
-			.from(transactionLines)
-			.where(eq(transactionLines.tagId, tagId))
-			.limit(1);
-		if (line) {
+		// Its transactions would lose their category, and its recurring
+		// transactions would record on a tag that no longer exists
+		const [[line], [recurringLine]] = await Promise.all([
+			tx
+				.select({ id: transactionLines.id })
+				.from(transactionLines)
+				.where(eq(transactionLines.tagId, tagId))
+				.limit(1),
+			tx
+				.select({ id: recurringTransactionLines.id })
+				.from(recurringTransactionLines)
+				.where(eq(recurringTransactionLines.tagId, tagId))
+				.limit(1),
+		]);
+		if (line || recurringLine) {
 			throw new AppError(
 				409,
 				"tag_in_use",

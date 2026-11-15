@@ -36,7 +36,7 @@ import type { TransactionsQuery } from "@/routes/transactions/transactions.schem
 
 type TransactionRow = InferSelectModel<typeof transactions>;
 type LineRow = InferSelectModel<typeof transactionLines>;
-type Database = typeof db | Tx;
+export type Database = typeof db | Tx;
 
 function notFound(): AppError {
 	return new AppError(404, "not_found", "Transaction not found");
@@ -49,7 +49,7 @@ function invalid(field: string, message: string): AppError {
 }
 
 /** What the viewer may do with an account of their household. */
-interface AccountAccess {
+export interface AccountAccess {
 	/** Holders write the account's transactions. */
 	isHolder: boolean;
 	/** Holders, and everyone when the account shows its details. */
@@ -58,7 +58,7 @@ interface AccountAccess {
 }
 
 /** The viewer's access to each account of the household. */
-async function accountAccess(
+export async function accountAccess(
 	database: Database,
 	{ userId, membership }: Viewer,
 ): Promise<Map<string, AccountAccess>> {
@@ -102,7 +102,7 @@ async function accountAccess(
  * A transaction shows to those who see the details of its account. A
  * transfer belongs to two accounts: seeing the details of either is enough.
  */
-function isVisible(
+export function isVisible(
 	row: Pick<TransactionRow, "accountId" | "toAccountId">,
 	access: Map<string, AccountAccess>,
 ): boolean {
@@ -317,7 +317,7 @@ export async function getTransaction(
  * Checks an account can take the transaction: it is in the household, the
  * viewer holds it when it is the one they write to, and it isn't archived.
  */
-function assertAccount(
+export function assertAccount(
 	access: Map<string, AccountAccess>,
 	accountId: string,
 	field: "accountId" | "toAccountId",
@@ -372,7 +372,7 @@ async function assertTags(
 }
 
 /** The columns of a transaction from what the client sent, once checked. */
-async function toValues(
+export async function toValues(
 	tx: Tx,
 	viewer: Viewer,
 	access: Map<string, AccountAccess>,

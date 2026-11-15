@@ -54,6 +54,11 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `transaction_payee_too_long` | The payee is over `TRANSACTION_PAYEE_MAX_LENGTH` characters |
 | `transaction_note_too_long` | The note is over `TRANSACTION_NOTE_MAX_LENGTH` characters |
 | `transfer_same_account` | A transfer goes to the account it leaves |
+| `recurrence_unit_invalid` | The unit of a schedule isn't one of `RECURRENCE_UNITS` |
+| `recurrence_interval_invalid` | The interval isn't a whole number from 1 to `RECURRENCE_MAX_INTERVAL` |
+| `recurrence_mode_invalid` | The mode isn't one of `RECURRENCE_MODES` |
+| `recurrence_end_before_start` | The schedule's last day comes before its first |
+| `recurrence_start_in_past` | Answered by the API: the schedule's first day is past, in the household's time zone |
 | `report_period_invalid` | Answered by the API: the period ends before it starts |
 | `report_period_too_long` | Answered by the API: a monthly report covers more than `REPORT_MAX_MONTHS` months |
 | `draft_text_required` | The note to turn into a draft is empty |
@@ -81,6 +86,7 @@ A draft also carries `warnings`, codes the front ends translate as well (`DRAFT_
 | `household_name_required` | The household's name is empty or blank |
 | `household_name_too_long` | The household's name is over `HOUSEHOLD_NAME_MAX_LENGTH` characters |
 | `household_currency_invalid` | The currency isn't one of `HOUSEHOLD_CURRENCIES` |
+| `household_time_zone_invalid` | The time zone isn't an IANA name the runtime knows ("America/Toronto") |
 
 Other failures (wrong type, unknown field) keep Zod's default English message: they come from a bug, not from user input.
 

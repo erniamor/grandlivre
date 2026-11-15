@@ -47,6 +47,8 @@ export function staleQueries(
 				{ queryKey: accountsQueryKey(householdId) },
 				{ queryKey: reportsQueryKey(householdId) },
 			];
+		case "recurring":
+			return [{ queryKey: ["households", householdId, "recurring"] }];
 	}
 }
 

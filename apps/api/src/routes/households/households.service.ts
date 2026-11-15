@@ -27,6 +27,7 @@ export function toHousehold({ household, role }: Membership): Household {
 		id: household.id,
 		name: household.name,
 		currency: household.currency,
+		timeZone: household.timeZone,
 		role,
 		createdAt: household.createdAt.toISOString(),
 	};
@@ -95,7 +96,11 @@ export async function updateHousehold(
 	input: UpdateHousehold,
 ): Promise<Household> {
 	// Nothing to change: Drizzle rejects an empty update
-	if (input.name === undefined && input.currency === undefined) {
+	if (
+		input.name === undefined &&
+		input.currency === undefined &&
+		input.timeZone === undefined
+	) {
 		return toHousehold(membership);
 	}
 	// Balances are amounts in the household's currency: changing it would
