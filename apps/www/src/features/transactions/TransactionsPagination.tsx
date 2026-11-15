@@ -1,12 +1,16 @@
 import { buttonVariants } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import {
+	type TransactionListFilters,
+	toSearch,
+} from "@/features/transactions/transaction-filters";
 import { m } from "@/paraglide/messages";
 
 interface TransactionsPaginationProps {
 	page: number;
 	pageCount: number;
-	/** The account the list is filtered on, kept from page to page. */
-	accountId?: string;
+	/** The filters of the list, kept from page to page. */
+	filters: TransactionListFilters;
 }
 
 const linkClass = buttonVariants({ variant: "outline", size: "sm" });
@@ -15,7 +19,7 @@ const linkClass = buttonVariants({ variant: "outline", size: "sm" });
 export function TransactionsPagination({
 	page,
 	pageCount,
-	accountId,
+	filters,
 }: TransactionsPaginationProps) {
 	if (pageCount <= 1) {
 		return null;
@@ -28,7 +32,7 @@ export function TransactionsPagination({
 			{page > 1 ? (
 				<Link
 					to="/transactions"
-					search={{ account: accountId, page: page - 1 }}
+					search={toSearch(filters, page - 1)}
 					className={linkClass}
 				>
 					{m.pagination_previous()}
@@ -42,7 +46,7 @@ export function TransactionsPagination({
 			{page < pageCount ? (
 				<Link
 					to="/transactions"
-					search={{ account: accountId, page: page + 1 }}
+					search={toSearch(filters, page + 1)}
 					className={linkClass}
 				>
 					{m.pagination_next()}

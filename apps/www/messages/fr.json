@@ -220,7 +220,6 @@
 	"transactions_account_filter_label": "Compte",
 	"transactions_all_accounts": "Tous les comptes",
 	"transactions_empty": "Aucune transaction pour l'instant.",
-	"transactions_empty_account": "Aucune transaction sur ce compte.",
 	"transaction_type_expense": "Dépense",
 	"transaction_type_income": "Revenu",
 	"transaction_type_transfer": "Transfert",
@@ -313,5 +312,11 @@
 	"report_trend_incomes": "Revenus par mois",
 	"report_trend_empty": "Rien sur ces douze mois.",
 	"report_trend_table_toggle": "Voir les chiffres",
-	"report_trend_month": "Mois"
+	"report_trend_month": "Mois",
+	"transactions_filters_label": "Filtres",
+	"transactions_clear_filters": "Effacer les filtres",
+	"transactions_empty_filtered": "Aucune transaction ne correspond à ces filtres.",
+	"transactions_hidden_note": "Les transactions des comptes dont vous ne voyez que le solde ne sont pas listées ici, mais comptent dans les rapports : le total d'un rapport peut être supérieur à ce qui est listé.",
+	"report_tag_transactions_label": "Voir les transactions de {name} sur cette période",
+	"report_tag_transactions_tooltip": "Voir les transactions"
 }

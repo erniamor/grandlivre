@@ -218,6 +218,35 @@ describe("ReportsPage", () => {
 		expect(incomes.queryByText("Food")).not.toBeInTheDocument();
 	});
 
+	it("links each tag to its transactions over the period, but not the uncategorized lines", async () => {
+		const { user } = setUp();
+
+		const expenses = await section("Expenses");
+		// Opening the tag, on its name, doesn't follow the link
+		await user.click(expenses.getByText("Food"));
+		expect(expenses.getByText("Groceries")).toBeVisible();
+
+		expect(
+			expenses.getByRole("link", {
+				name: "See the transactions of Food over this period",
+			}),
+		).toHaveAttribute(
+			"href",
+			`/transactions?tag=${food.id}&from=2026-11-01&to=2026-11-30`,
+		);
+		expect(
+			expenses.getByRole("link", {
+				name: "See the transactions of Groceries over this period",
+			}),
+		).toHaveAttribute(
+			"href",
+			`/transactions?tag=${groceries.id}&from=2026-11-01&to=2026-11-30`,
+		);
+		expect(
+			expenses.queryByRole("link", { name: /Uncategorized/ }),
+		).not.toBeInTheDocument();
+	});
+
 	it("says when a section has nothing", async () => {
 		setUp({
 			...novemberReport,

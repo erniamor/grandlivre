@@ -1,13 +1,21 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { calendarDateSchema } from "@repo/schemas";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
+import {
+	fromSearch,
+	toSearch,
+} from "@/features/transactions/transaction-filters";
 import { transactionsQueryOptions } from "@/features/transactions/transactions-query";
 
-// The account filtered on and the page shown; anything invalid is dropped
+// The filters and the page shown; anything invalid is dropped
 const searchSchema = z.object({
 	account: z.uuid().optional().catch(undefined),
+	tag: z.uuid().optional().catch(undefined),
+	from: calendarDateSchema.optional().catch(undefined),
+	to: calendarDateSchema.optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
 });
 
@@ -15,8 +23,17 @@ export const Route = createFileRoute(
 	"/_authenticated/_household/transactions/",
 )({
 	validateSearch: searchSchema,
+	beforeLoad: ({ search }) => {
+		// A period that ends before it starts: dropped, the rest kept
+		if (search.from && search.to && search.from > search.to) {
+			throw redirect({
+				to: "/transactions",
+				search: { ...search, from: undefined, to: undefined },
+			});
+		}
+	},
 	loaderDeps: ({ search }) => ({
-		accountId: search.account,
+		...fromSearch(search),
 		page: search.page ?? 1,
 	}),
 	loader: ({ context, deps }) => {
@@ -32,17 +49,16 @@ export const Route = createFileRoute(
 
 function TransactionsRoute() {
 	const { household } = Route.useRouteContext();
-	const { accountId, page } = Route.useLoaderDeps();
+	const { page, ...filters } = Route.useLoaderDeps();
 	const navigate = useNavigate();
 
 	return (
 		<TransactionsPage
 			household={household}
-			accountId={accountId}
+			filters={filters}
 			page={page}
-			// Another account: back to its first page
-			onAccountChange={(account) =>
-				navigate({ to: "/transactions", search: { account } })
+			onFiltersChange={(next) =>
+				navigate({ to: "/transactions", search: toSearch(next) })
 			}
 		/>
 	);

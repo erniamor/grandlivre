@@ -1,11 +1,13 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
+import type { TransactionListFilters } from "@/features/transactions/transaction-filters";
 import {
 	base,
 	chequing,
 	fillUp,
+	food,
 	household,
 	respondWith,
 	savings,
@@ -19,28 +21,32 @@ vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
 
 interface Setup {
 	respond?: ReturnType<typeof respondWith>;
-	accountId?: string;
+	filters?: TransactionListFilters;
 	page?: number;
 }
 
-function setUp({ respond = respondWith(), accountId, page = 1 }: Setup = {}) {
+function setUp({
+	respond = respondWith(),
+	filters = {},
+	page = 1,
+}: Setup = {}) {
 	const urls: URL[] = [];
 	mockApi((request, url) => {
 		urls.push(url);
 		return respond(request);
 	});
-	const onAccountChange = vi.fn();
+	const onFiltersChange = vi.fn();
 	renderWithRouter(
 		<TransactionsPage
 			household={household}
-			accountId={accountId}
+			filters={filters}
 			page={page}
-			onAccountChange={onAccountChange}
+			onFiltersChange={onFiltersChange}
 		/>,
 	);
 	return {
 		user: userEvent.setup(),
-		onAccountChange,
+		onFiltersChange,
 		/** The query string of the request for the transactions. */
 		transactionsQuery: () =>
 			urls.find((url) => url.pathname.endsWith(`${base}/transactions`))?.search,
@@ -132,14 +138,14 @@ describe("TransactionsPage", () => {
 	});
 
 	describe("filtered on an account", () => {
-		it("asks for the transactions of that account, and says when it has none", async () => {
+		it("asks for the transactions of that account, and says when none matches", async () => {
 			const { transactionsQuery } = setUp({
 				respond: respondWith([]),
-				accountId: savings.id,
+				filters: { accountId: savings.id },
 			});
 
 			expect(
-				await screen.findByText("No transaction on this account."),
+				await screen.findByText("No transaction matches these filters."),
 			).toBeVisible();
 			expect(screen.getByLabelText("Account")).toHaveValue(savings.id);
 			expect(transactionsQuery()).toBe(
@@ -148,38 +154,118 @@ describe("TransactionsPage", () => {
 		});
 
 		it("shows a transfer as money entering the account, or leaving it", async () => {
-			setUp({ respond: respondWith([toSavings]), accountId: savings.id });
+			setUp({
+				respond: respondWith([toSavings]),
+				filters: { accountId: savings.id },
+			});
 
 			expect(await screen.findByText("+$300.00")).toBeVisible();
 		});
 
 		it("shows the same transfer as money leaving the other account", async () => {
-			setUp({ respond: respondWith([toSavings]), accountId: chequing.id });
+			setUp({
+				respond: respondWith([toSavings]),
+				filters: { accountId: chequing.id },
+			});
 
 			expect(await screen.findByText("-$300.00")).toBeVisible();
 		});
 	});
 
-	it("offers the accounts whose transactions the user may see, and reports the one chosen", async () => {
-		const { user, onAccountChange } = setUp({ accountId: chequing.id });
+	describe("the filters", () => {
+		it("offer the accounts whose transactions the user may see, and the tags", async () => {
+			setUp();
 
-		const filter = await screen.findByLabelText("Account");
-		expect(
-			within(filter)
-				.getAllByRole("option")
-				.map((option) => option.textContent),
-		).toEqual(["All accounts", "Everyday", "Savings"]);
+			const account = await screen.findByLabelText("Account");
+			expect(
+				within(account)
+					.getAllByRole("option")
+					.map((option) => option.textContent),
+			).toEqual(["All accounts", "Everyday", "Savings"]);
+			expect(
+				within(screen.getByLabelText("Tag"))
+					.getAllByRole("option")
+					.map((option) => option.textContent),
+			).toEqual(["All tags", "Food", "Gas"]);
+		});
 
-		await user.selectOptions(filter, "Savings");
-		expect(onAccountChange).toHaveBeenLastCalledWith(savings.id);
-		await user.selectOptions(filter, "All accounts");
-		expect(onAccountChange).toHaveBeenLastCalledWith(undefined);
+		it("apply each choice at once, keeping the others", async () => {
+			const { user, onFiltersChange } = setUp({
+				filters: { accountId: chequing.id },
+			});
+
+			await user.selectOptions(await screen.findByLabelText("Tag"), "Food");
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				accountId: chequing.id,
+				tagId: food.id,
+			});
+			fireEvent.change(screen.getByLabelText("From"), {
+				target: { value: "2026-11-01" },
+			});
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				accountId: chequing.id,
+				from: "2026-11-01",
+			});
+			await user.selectOptions(
+				screen.getByLabelText("Account"),
+				"All accounts",
+			);
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				accountId: undefined,
+			});
+		});
+
+		it("ask for the transactions of a tag over a period", async () => {
+			const { transactionsQuery } = setUp({
+				filters: { tagId: food.id, from: "2026-11-01", to: "2026-11-30" },
+			});
+
+			await screen.findByText("Shell");
+			expect(screen.getByLabelText("Tag")).toHaveValue(food.id);
+			expect(screen.getByLabelText("From")).toHaveValue("2026-11-01");
+			expect(screen.getByLabelText("To")).toHaveValue("2026-11-30");
+			expect(transactionsQuery()).toBe(
+				`?tagId=${food.id}&from=2026-11-01&to=2026-11-30&page=1&pageSize=50`,
+			);
+		});
+
+		it("refuse a period that ends before it starts", async () => {
+			const { onFiltersChange } = setUp({ filters: { from: "2026-11-20" } });
+
+			fireEvent.change(await screen.findByLabelText("To"), {
+				target: { value: "2026-11-03" },
+			});
+
+			expect(
+				screen.getByText("Choose a first day that comes before the last."),
+			).toBeVisible();
+			expect(onFiltersChange).not.toHaveBeenCalled();
+		});
+
+		it("are cleared in one go, once there is one", async () => {
+			const { user, onFiltersChange } = setUp({ filters: { tagId: food.id } });
+
+			await user.click(
+				await screen.findByRole("button", { name: "Clear the filters" }),
+			);
+
+			expect(onFiltersChange).toHaveBeenLastCalledWith({});
+		});
+
+		it("offer nothing to clear without a filter", async () => {
+			setUp();
+
+			await screen.findByText("Shell");
+			expect(
+				screen.queryByRole("button", { name: "Clear the filters" }),
+			).not.toBeInTheDocument();
+		});
 	});
 
-	it("asks for the page shown, and links to the pages around it, keeping the account", async () => {
+	it("asks for the page shown, and links to the pages around it, keeping the filters", async () => {
 		const { transactionsQuery } = setUp({
 			respond: respondWith(undefined, { page: 2, pageSize: 50, total: 120 }),
-			accountId: chequing.id,
+			filters: { accountId: chequing.id, tagId: food.id },
 			page: 2,
 		});
 
@@ -190,19 +276,29 @@ describe("TransactionsPage", () => {
 		expect(pages.getByText("Page 2 of 3")).toBeVisible();
 		expect(pages.getByRole("link", { name: "Previous" })).toHaveAttribute(
 			"href",
-			`/transactions?account=${chequing.id}&page=1`,
+			`/transactions?account=${chequing.id}&tag=${food.id}&page=1`,
 		);
 		expect(pages.getByRole("link", { name: "Next" })).toHaveAttribute(
 			"href",
-			`/transactions?account=${chequing.id}&page=3`,
+			`/transactions?account=${chequing.id}&tag=${food.id}&page=3`,
 		);
 		expect(transactionsQuery()).toBe(
-			`?accountId=${chequing.id}&page=2&pageSize=50`,
+			`?accountId=${chequing.id}&tagId=${food.id}&page=2&pageSize=50`,
 		);
 	});
 
+	it("says the transactions of the accounts whose balance only the user sees aren't listed", async () => {
+		setUp();
+
+		expect(
+			await screen.findByText(
+				/^The transactions of the accounts whose balance only you see/,
+			),
+		).toBeVisible();
+	});
+
 	it("offers to add a transaction, on the account the list is filtered on", async () => {
-		setUp({ accountId: savings.id });
+		setUp({ filters: { accountId: savings.id } });
 
 		expect(
 			await screen.findByRole("link", { name: "Add a transaction" }),

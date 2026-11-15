@@ -220,7 +220,6 @@
 	"transactions_account_filter_label": "Cuenta",
 	"transactions_all_accounts": "Todas las cuentas",
 	"transactions_empty": "Todavía no hay transacciones.",
-	"transactions_empty_account": "No hay transacciones en esta cuenta.",
 	"transaction_type_expense": "Gasto",
 	"transaction_type_income": "Ingreso",
 	"transaction_type_transfer": "Transferencia",
@@ -313,5 +312,11 @@
 	"report_trend_incomes": "Ingresos por mes",
 	"report_trend_empty": "Nada en estos doce meses.",
 	"report_trend_table_toggle": "Ver las cifras",
-	"report_trend_month": "Mes"
+	"report_trend_month": "Mes",
+	"transactions_filters_label": "Filtros",
+	"transactions_clear_filters": "Borrar los filtros",
+	"transactions_empty_filtered": "Ninguna transacción coincide con estos filtros.",
+	"transactions_hidden_note": "Las transacciones de las cuentas de las que solo ves el saldo no aparecen aquí, pero cuentan en los informes: el total de un informe puede ser mayor que lo que aparece.",
+	"report_tag_transactions_label": "Ver las transacciones de {name} en este periodo",
+	"report_tag_transactions_tooltip": "Ver las transacciones"
 }

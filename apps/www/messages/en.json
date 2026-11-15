@@ -220,7 +220,6 @@
 	"transactions_account_filter_label": "Account",
 	"transactions_all_accounts": "All accounts",
 	"transactions_empty": "No transaction yet.",
-	"transactions_empty_account": "No transaction on this account.",
 	"transaction_type_expense": "Expense",
 	"transaction_type_income": "Income",
 	"transaction_type_transfer": "Transfer",
@@ -313,5 +312,11 @@
 	"report_trend_incomes": "Income per month",
 	"report_trend_empty": "Nothing over these twelve months.",
 	"report_trend_table_toggle": "See the figures",
-	"report_trend_month": "Month"
+	"report_trend_month": "Month",
+	"transactions_filters_label": "Filters",
+	"transactions_clear_filters": "Clear the filters",
+	"transactions_empty_filtered": "No transaction matches these filters.",
+	"transactions_hidden_note": "The transactions of the accounts whose balance only you see aren't listed here, but count in the reports: a report's total can be higher than what is listed.",
+	"report_tag_transactions_label": "See the transactions of {name} over this period",
+	"report_tag_transactions_tooltip": "See the transactions"
 }

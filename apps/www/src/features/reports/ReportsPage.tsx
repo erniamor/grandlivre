@@ -54,12 +54,14 @@ export function ReportsPage({
 						title={m.report_expenses_title()}
 						section={view.expenses}
 						currency={currency}
+						period={period}
 						emptyText={m.report_no_expense()}
 					/>
 					<ReportSectionView
 						title={m.report_incomes_title()}
 						section={view.incomes}
 						currency={currency}
+						period={period}
 						emptyText={m.report_no_income()}
 					/>
 				</>

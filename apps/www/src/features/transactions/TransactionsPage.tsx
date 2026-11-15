@@ -3,47 +3,41 @@ import { buttonVariants, cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
-import { SelectField, type SelectOption } from "@/components/SelectField";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
+import { TransactionFilters } from "@/features/transactions/TransactionFilters";
 import { TransactionList } from "@/features/transactions/TransactionList";
 import { TransactionsPagination } from "@/features/transactions/TransactionsPagination";
-import { accountsWithDetails } from "@/features/transactions/transaction-view";
+import {
+	hasFilters,
+	hidesTransactions,
+	type TransactionListFilters,
+} from "@/features/transactions/transaction-filters";
 import { transactionsQueryOptions } from "@/features/transactions/transactions-query";
 import { m } from "@/paraglide/messages";
 
 interface TransactionsPageProps {
 	household: Household;
-	/** The account whose transactions are shown; all of them without it. */
-	accountId?: string;
+	filters: TransactionListFilters;
 	page: number;
-	onAccountChange: (accountId: string | undefined) => void;
+	/** New filters: back to their first page. */
+	onFiltersChange: (filters: TransactionListFilters) => void;
 }
-
-// A select's value is a string: this one stands for "every account"
-const ALL = "";
 
 /** The household's transactions the user may see, most recent first. */
 export function TransactionsPage({
 	household,
-	accountId,
+	filters,
 	page,
-	onAccountChange,
+	onFiltersChange,
 }: TransactionsPageProps) {
 	const { data: transactions } = useSuspenseQuery(
-		transactionsQueryOptions(household.id, { accountId, page }),
+		transactionsQueryOptions(household.id, { ...filters, page }),
 	);
 	const { data: accounts } = useSuspenseQuery(
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
-	const accountOptions: SelectOption<string>[] = [
-		{ value: ALL, label: m.transactions_all_accounts() },
-		...accountsWithDetails(accounts.items).map((account) => ({
-			value: account.id,
-			label: account.name,
-		})),
-	];
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-6 px-4 py-12">
@@ -55,23 +49,23 @@ export function TransactionsPage({
 			</header>
 			<Link
 				to="/transactions/new"
-				search={{ account: accountId }}
+				search={{ account: filters.accountId }}
 				className={cn(buttonVariants(), "justify-self-start")}
 			>
 				<PlusIcon aria-hidden />
 				{m.transaction_add_button()}
 			</Link>
-			<SelectField
-				label={m.transactions_account_filter_label()}
-				value={accountId ?? ALL}
-				options={accountOptions}
-				onChange={(value) => onAccountChange(value === ALL ? undefined : value)}
-				tone="default"
-				className="grid items-stretch font-medium"
+			<TransactionFilters
+				filters={filters}
+				accounts={accounts.items}
+				tags={tags}
+				onChange={onFiltersChange}
 			/>
 			{transactions.items.length === 0 ? (
 				<p className="text-muted-foreground">
-					{accountId ? m.transactions_empty_account() : m.transactions_empty()}
+					{hasFilters(filters)
+						? m.transactions_empty_filtered()
+						: m.transactions_empty()}
 				</p>
 			) : (
 				<TransactionList
@@ -79,15 +73,20 @@ export function TransactionsPage({
 					accounts={accounts.items}
 					tags={tags}
 					currency={household.currency}
-					accountId={accountId}
+					accountId={filters.accountId}
 					linked
 				/>
 			)}
 			<TransactionsPagination
 				page={transactions.page}
 				pageCount={Math.ceil(transactions.total / transactions.pageSize)}
-				accountId={accountId}
+				filters={filters}
 			/>
+			{hidesTransactions(accounts.items) && (
+				<p className="text-muted-foreground text-sm">
+					{m.transactions_hidden_note()}
+				</p>
+			)}
 		</section>
 	);
 }

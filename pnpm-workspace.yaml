@@ -14,6 +14,8 @@ catalog:
   lucide-react: ^1.66.0
   react: ^19.3.1
   react-dom: ^19.3.1
+  # Recharts reads React elements with react-is: it must match React's version
+  react-is: ^19.3.1
   tailwindcss: ^4.3.3
   typescript: ^6.0.3
   vitest: ^5.0.5
