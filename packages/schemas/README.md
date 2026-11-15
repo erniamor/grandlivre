@@ -27,6 +27,7 @@ Add it to a project with `"@repo/schemas": "workspace:*"`. It is consumed as Typ
 | Transactions | `transactionSchema` / `Transaction`, `createTransactionSchema` / `CreateTransaction`, `updateTransactionSchema` / `UpdateTransaction` (the whole transaction, which replaces the previous one), `transactionLineSchema` / `TransactionLine`, `transactionLineInputSchema` / `TransactionLineInput`, `transactionAmountSchema`, `transactionTypeSchema` / `TransactionType`, `transactionOriginSchema` / `TransactionOrigin` | `TRANSACTION_TYPES`, `TRANSACTION_ORIGINS`, `TRANSACTION_MAX_LINES` (50), `TRANSACTION_PAYEE_MAX_LENGTH` (80), `TRANSACTION_NOTE_MAX_LENGTH` (500), `TRANSACTION_EXTERNAL_ID_MAX_LENGTH` (200) |
 | Events | `householdEventSchema` / `HouseholdEvent` (`{ topic }`), `householdEventTopicSchema` / `HouseholdEventTopic` | `HOUSEHOLD_EVENT_TOPICS` |
 | Reports | `tagReportSchema` / `TagReport`, `tagTotalSchema` / `TagTotal`, `monthlyReportSchema` / `MonthlyReport`, `monthTotalSchema` / `MonthTotal` | `REPORT_MAX_MONTHS` (60) |
+| Drafts | `createDraftSchema` / `CreateDraft`, `transactionDraftSchema` / `TransactionDraft`, `draftLineSchema` / `DraftLine`, `proposedTagSchema` / `ProposedTag`, `similarTagReasonSchema` / `SimilarTagReason` | `DRAFT_TEXT_MAX_LENGTH` (500), `SIMILAR_TAG_REASONS` |
 | Households | `householdSchema` / `Household`, `createHouseholdSchema` / `CreateHousehold`, `updateHouseholdSchema` / `UpdateHousehold`, `householdMemberSchema` / `HouseholdMember`, `updateHouseholdMemberSchema` / `UpdateHouseholdMember`, `inviteHouseholdMemberSchema` / `InviteHouseholdMember`, `householdInvitationSchema` / `HouseholdInvitation`, `receivedInvitationSchema` / `ReceivedInvitation`, `householdNameSchema`, `householdCurrencySchema` / `HouseholdCurrency`, `householdRoleSchema` / `HouseholdRole` | `HOUSEHOLD_NAME_MAX_LENGTH` (60), `HOUSEHOLD_CURRENCIES`, `HOUSEHOLD_ROLES`, `HOUSEHOLD_INVITATION_EXPIRES_IN_DAYS` (7) |
 
 In responses, dates are ISO 8601 strings; the day of a transaction is a calendar day without time (`2026-11-14`). Amounts of money are integers in minor units of the household's currency (cents), never decimals.
@@ -55,6 +56,10 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `transfer_same_account` | A transfer goes to the account it leaves |
 | `report_period_invalid` | Answered by the API: the period ends before it starts |
 | `report_period_too_long` | Answered by the API: a monthly report covers more than `REPORT_MAX_MONTHS` months |
+| `draft_text_required` | The note to turn into a draft is empty |
+| `draft_text_too_long` | The note is over `DRAFT_TEXT_MAX_LENGTH` characters |
+| `draft_not_understood` | Answered by the API (422): the note couldn't be turned into a transaction |
+| `assistant_unavailable` | Answered by the API (503): the assistant can't be reached; enter by hand |
 | `account_name_required` | The account's name is empty or blank |
 | `account_name_too_long` | The account's name is over `ACCOUNT_NAME_MAX_LENGTH` characters |
 | `account_type_invalid` | The type isn't one of `ACCOUNT_TYPES` |

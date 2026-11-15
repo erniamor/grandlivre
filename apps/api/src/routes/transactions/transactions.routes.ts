@@ -1,11 +1,14 @@
 import {
+	createDraftSchema,
 	createTransactionSchema,
 	updateTransactionSchema,
 } from "@repo/schemas";
 import { type Context, Hono } from "hono";
+import { resolveLocale } from "@/lib/locale";
 import { validate } from "@/lib/validator";
 import type { HouseholdVariables } from "@/middlewares/require-household";
 import type { Viewer } from "@/routes/accounts/accounts.service";
+import { draftTransaction } from "@/routes/drafts/drafts.service";
 import {
 	transactionParamSchema,
 	transactionsQuerySchema,
@@ -35,6 +38,16 @@ export const transactionRoutes = new Hono<Env>()
 	)
 	.post("/", validate("json", createTransactionSchema), async (c) =>
 		c.json(await createTransaction(viewerOf(c), c.req.valid("json")), 201),
+	)
+	// A note turned into a draft to review: nothing is saved
+	.post("/draft", validate("json", createDraftSchema), async (c) =>
+		c.json(
+			await draftTransaction(
+				viewerOf(c),
+				c.req.valid("json"),
+				resolveLocale(c.req.header("accept-language")),
+			),
+		),
 	)
 	.get(
 		"/:transactionId",

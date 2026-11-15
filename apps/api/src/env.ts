@@ -18,6 +18,9 @@ const envSchema = z
 		BETTER_AUTH_SECRET: z
 			.string()
 			.min(32, "BETTER_AUTH_SECRET must be at least 32 characters long"),
+		// Claude API: turns notes into draft transactions; without it, the
+		// assistant answers that it is unavailable and members enter by hand
+		ANTHROPIC_API_KEY: z.string().min(1).optional(),
 		// Resend: sends the emails; required in production, optional elsewhere
 		// (without it, emails are printed to the console)
 		RESEND_API_KEY: z.string().startsWith("re_").optional(),

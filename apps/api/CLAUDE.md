@@ -36,14 +36,14 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 - `src/index.ts`: entry point; starts the Node server with the app built in `app.ts`
 - `src/app.ts`: builds the Hono app (global middlewares, mounting of route modules, error handler), with no side effect, so tests can import it
 - `src/env.ts`: environment variables validated with Zod at startup; the only place that reads `process.env`
-- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `events`, `reports`...)
+- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `drafts`, `events`, `reports`...)
   - `<domain>.routes.ts`: the domain's Hono sub-app (routes, validators, call to the service)
   - `<domain>.service.ts`: business logic, independent of Hono
   - `<domain>.schemas.ts`: Zod schemas used only by this API (shared ones are in `@repo/schemas`)
   - `<domain>.test.ts`: tests
 - `src/middlewares/`: cross-cutting middlewares (`require-auth.ts`; `require-household.ts`: `requireHouseholdMember` loads the household of `:householdId` for its members and answers 404 to anyone else, `requireHouseholdOwner` restricts a route to owners)
 - `src/db/`: Drizzle client (`client.ts`), schema (`schema/<table>.ts`, re-exported by `schema/index.ts`) and migration script (`migrate.ts`)
-- `src/lib/`: utilities specific to the app (`auth.ts`: Better Auth instance; `errors.ts`: `AppError` and the error body; `error-handler.ts`: global error and not-found handlers; `mailer.ts`: email sending; `locale.ts`: locale resolution from `Accept-Language`; `validator.ts`: `validate()`, the `zValidator` answering 422 in the API's error format; `pagination.ts`: pagination query schema and offset; `events.ts`: `publishHouseholdEvent()` and `subscribeToHousehold()`, the real-time events of a household, through PostgreSQL)
+- `src/lib/`: utilities specific to the app (`auth.ts`: Better Auth instance; `errors.ts`: `AppError` and the error body; `error-handler.ts`: global error and not-found handlers; `mailer.ts`: email sending; `locale.ts`: locale resolution from `Accept-Language`; `validator.ts`: `validate()`, the `zValidator` answering 422 in the API's error format; `pagination.ts`: pagination query schema and offset; `assistant.ts`: the Claude API client that turns notes into drafts (`assistant`, replaced in tests with `vi.spyOn(assistant, "draftTransaction")`); `rate-limit.ts`: an in-memory sliding-window limiter; `events.ts`: `publishHouseholdEvent()` and `subscribeToHousehold()`, the real-time events of a household, through PostgreSQL)
 - `src/emails/`: email contents, in every supported locale
 - `src/routes/tags/suggested-tags.ts`: the tags suggested to a household starting out, named in every language; add one with `tag(en, fr, es, [children])`, its key is derived from its English names (`suggested-tags.test.ts` checks the list)
 - `test/`: Vitest global setup (checks the test database and applies the migrations), database reset before each test, and helpers (`helpers/auth.ts`: `signIn()`, `captureEmails()`; `helpers/api.ts`: `api()`, `json()`; `helpers/households.ts`: `signInUser()`, `createTestHousehold()`, `addTestMember()`; `helpers/transactions.ts`: `householdApi()`, shortcuts to the accounts, tags and transactions of a household; `helpers/events.ts`: `openEvents()`, reads a household's event stream), imported through the `@test/` alias
@@ -74,6 +74,14 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 
 - Every service that changes a household's data publishes the matching event with `publishHouseholdEvent(tx, householdId, topic)`, inside the same transaction as the change, after it: PostgreSQL delivers it on commit, never on rollback. A new kind of change publishes its event too, and the events test checks its topic.
 - An event names a topic (`HOUSEHOLD_EVENT_TOPICS` in `@repo/schemas`) and carries no data: the clients reload through the REST routes, which apply who may see what. Never put data in an event.
+
+## Claude API
+
+- Only `src/lib/assistant.ts` talks to the Claude API, through the official SDK (`@anthropic-ai/sdk`); its key comes from `env.ANTHROPIC_API_KEY`, never from `process.env` elsewhere.
+- Tests never call the Claude API: they replace `assistant.draftTransaction` with a spy, or build `createClaudeAssistant()` on a fake client.
+- What the assistant answers is data to check, like any outside input: references, amounts and dates are validated against the household before anything leaves the API; a member's note is never treated as instructions.
+- Send the Claude API only what the member may see: no data of an account that hides its transactions from them.
+- Keep the stable part of a request first (system prompt, then the household's context, cached) and the volatile part last (the note, the day), so the cache holds.
 
 ## Data and migrations
 

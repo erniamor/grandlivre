@@ -28,6 +28,7 @@ Validated at startup by [`src/env.ts`](src/env.ts): the API refuses to start wit
 | `DATABASE_URL` | yes | PostgreSQL connection URL |
 | `CORS_ORIGINS` | yes | Comma-separated front-end origins allowed to call the API (with cookies) |
 | `BETTER_AUTH_SECRET` | yes | At least 32 characters; signs sessions and tokens |
+| `ANTHROPIC_API_KEY` | no | Key of the Claude API, which turns notes into draft transactions (`POST …/transactions/draft`). Without it, that route answers 503 `assistant_unavailable` and members enter by hand |
 | `RESEND_API_KEY`, `EMAIL_FROM` | in production | Send the emails with [Resend](https://resend.com); both or none. `EMAIL_FROM` is `Name <address>` or `address`, on a domain verified in Resend. Without them (development, tests), emails are printed to the console |
 | `COOKIE_DOMAIN` | in production | Parent domain of the API and the front end (e.g. `grandlivre.example.com` for `api.grandlivre.example.com` and `grandlivre.example.com`): the session cookie is shared with the front end's server. `API_URL` and `APP_URL` must be under it. Unset in development |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no | Enable Google sign-in; both or none. Redirect URI: `<API_URL>/v1/auth/callback/google` |
@@ -137,6 +138,21 @@ Who writes: the holders of `accountId`, the account the money leaves (expense, t
 Who sees: the holders of an account, and every member when the account's `visibility` is `details`. The transactions of a `balance` account are hidden from the members who don't hold it (404, and absent from the list), but still count in the balances. A transfer shows to those who see the details of either of its accounts.
 
 An account or a tag from outside the household answers 422 (`transaction_account_invalid` on `accountId` or `toAccountId`, `transaction_tag_invalid` on `lines.<n>.tagId`).
+
+### Drafts (quick entry)
+
+`POST /v1/households/:householdId/transactions/draft` `{ text, today }` (members) turns a note typed or dictated by the member ("gas 72 $", "restaurant 85.40 yesterday") into a draft transaction, with the Claude API. Nothing is saved and no tag is created: the front end shows the draft in the transaction form, and the member records it, or not, through the routes above. `today` is the member's day, to read "yesterday".
+
+The draft: `{ type, date, accountId, toAccountId, payee, note, lines: [{ amount, tagId, usesProposedTag }], proposedTag, remark }`. What the assistant couldn't tell is `null`. Only accounts the member may record on (and, for a transfer, any other account of the household) and tags of the household come back; anything else is dropped. `remark` is a word from the assistant in the member's language when something is uncertain.
+
+When no tag fits, the assistant may propose one: `proposedTag: { names: { en, fr, es }, parentId, similarTags: [{ tagId, reason }] }`, with the lines on it marked `usesProposedTag`. It is never created here. `similarTags` lists the household's tags that look like it, in any language (`same_name`: the same name but for case, accents and plural; `similar_name`: a typo away; `contains`: one name holds the other), the closest first. A proposal of the same name as an existing tag under the same parent is replaced by that tag.
+
+What the Claude API receives: the note, the member's day, the household's currency, the member's language, the accounts (marked when the member may record on them), the tags with their paths, and the recent payees with their usual tag, from the accounts whose details the member may see. The note is data: the assistant is told never to follow instructions it holds.
+
+- 60 notes per hour and per member, counted by each instance of the API: beyond, 429 `too_many_requests`.
+- 422 `draft_not_understood`: no amount could be read, or every model declined the note.
+- 503 `assistant_unavailable`: no `ANTHROPIC_API_KEY`, or the Claude API failed or gave an unusable answer (logged without the note).
+- Model: `claude-opus-5-5` at low effort, the household's context cached between notes, and a server-side fallback to another model when one declines a note.
 
 ### Reports
 
