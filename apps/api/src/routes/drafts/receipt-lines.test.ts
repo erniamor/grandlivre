@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shareTotal } from "@/routes/drafts/receipt-lines";
+import { shareTaxes, shareTotal } from "@/routes/drafts/receipt-lines";
 
 const sum = (groups: { amount: number }[]) =>
 	groups.reduce((total, group) => total + group.amount, 0);
@@ -96,5 +96,81 @@ describe("shareTotal", () => {
 			{ key: "a", amount: 7500 },
 			{ key: "b", amount: 2500 },
 		]);
+	});
+});
+
+describe("shareTaxes", () => {
+	it("puts the taxes on the taxed items only, the lines adding up to the total", () => {
+		// A Quebec grocery receipt: 142.85 of food, 62.94 of it taxed (water,
+		// soft drinks, a sweet), and 14.48 of kitchen tools, all taxed;
+		// 11.59 of taxes and deposits on top
+		const lines = shareTaxes(
+			16_892,
+			[
+				{ key: "groceries", amount: 14_285, taxable: 6294 },
+				{ key: "home", amount: 1448, taxable: 1448 },
+			],
+			null,
+		);
+
+		expect(lines).toEqual([
+			{ key: "groceries", amount: 15_227 },
+			{ key: "home", amount: 1665 },
+		]);
+		expect(sum(lines)).toBe(16_892);
+	});
+
+	it("leaves an untaxed group at its items' amount", () => {
+		expect(
+			shareTaxes(
+				2650,
+				[
+					{ key: "groceries", amount: 1500, taxable: 0 },
+					{ key: "home", amount: 1000, taxable: 1000 },
+				],
+				null,
+			),
+		).toEqual([
+			{ key: "groceries", amount: 1500 },
+			{ key: "home", amount: 1150 },
+		]);
+	});
+
+	it("shares out in proportion to every amount when nothing is taxed, or the total is below the items", () => {
+		const groups = [
+			{ key: "a", amount: 3000, taxable: 0 },
+			{ key: "b", amount: 1000, taxable: 0 },
+		];
+
+		expect(shareTaxes(4400, groups, null)).toEqual(
+			shareTotal(4400, groups, null),
+		);
+		expect(
+			shareTaxes(
+				3600,
+				[
+					{ key: "a", amount: 3000, taxable: 3000 },
+					{ key: "b", amount: 1000, taxable: 0 },
+				],
+				null,
+			),
+		).toEqual([
+			{ key: "a", amount: 2700 },
+			{ key: "b", amount: 900 },
+		]);
+	});
+
+	it("shares out in proportion when a group would end up at zero or below", () => {
+		// A coupon tagged on its own, with nothing taxed under its tag
+		const lines = shareTaxes(
+			1150,
+			[
+				{ key: "toys", amount: 1500, taxable: 1500 },
+				{ key: "coupons", amount: -500, taxable: 0 },
+			],
+			null,
+		);
+
+		expect(lines).toEqual([{ key: "toys", amount: 1150 }]);
 	});
 });

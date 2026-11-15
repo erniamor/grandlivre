@@ -45,12 +45,16 @@ export const assistantReceiptSchema = z.object({
 	date: z.string().nullable(),
 	account: z.string().nullable(),
 	note: z.string().nullable(),
-	/** `amount`: as printed, negative for a discount ("-2.00"). */
+	/**
+	 * `amount`: as printed, negative for a discount ("-2.00"). `taxable`:
+	 * whether the receipt marks the item as taxed; null when it marks none.
+	 */
 	items: z.array(
 		z.object({
 			name: z.string(),
 			amount: z.string(),
 			tag: z.string().nullable(),
+			taxable: z.boolean().nullable(),
 		}),
 	),
 	subtotal: z.string().nullable(),
@@ -89,7 +93,7 @@ export interface Assistant {
 	readReceipt(request: ReceiptRequest): Promise<AssistantReceipt>;
 }
 
-const TAG_RULES = `- tag: the most specific existing tag that fits, helped by the payee's usual tag. Only when no existing tag fits, propose new_tag and use "new" as the tag: short names in English, French and Spanish, written like the existing tags, under the parent that fits best (or null at the top). One new tag at most. Never propose a tag that exists under another spelling or in another language. When unsure, null.`;
+const TAG_RULES = `- tag: the most specific existing tag that fits, helped by the payee's usual tag. Once you can tell what was bought or paid for, always give it a tag: the closest existing tag, a broader one (a parent) if no specific one fits. Only when no existing tag fits, even loosely, propose new_tag and use "new" as the tag: short names in English, French and Spanish, written like the existing tags, under the parent that fits best (or null at the top). One new tag at most. Never propose a tag that exists under another spelling or in another language. Null only when you can't tell what it is.`;
 
 // Stable from one request to the next: written once, cached with the context
 const NOTE_PROMPT = `You turn a short note about money, typed or dictated by a member of a household, into a draft transaction. The member reviews the draft before anything is saved, so leave out what you can't tell rather than guess.
@@ -116,7 +120,11 @@ The context lists the household's accounts and tags by short references (a1, t1.
 - merchant: the store's name, capitalized as usual; null if unreadable.
 - date: the date printed, "YYYY-MM-DD"; null if unreadable. The member's day is given, to tell an ambiguous date.
 - items: every line bought, in the order printed, with its name as printed (expanded when abbreviated past understanding) and its price as printed, a decimal with a dot and no symbol ("12.99"); a discount or a coupon is a negative amount ("-2.00"), on its own line. Each item gets a tag: items of a same kind share it.
+  Charges printed apart from the items, such as a bottle deposit or an environmental fee, are items too, under the tag of what they go with.
 ${TAG_RULES}
+- On a receipt, every item gets a tag: decode an abbreviated name the way stores shorten them ("LIQ VAISS" is dish soap) and take the most likely tag, naming the item you hesitated on in the remark.
+- On a restaurant, bar or café bill, everything consumed there, drinks and alcohol included, shares the tag for eating out.
+- taxable, for each item: true when the receipt marks it as taxed (a code beside its price such as "FP", "T", "TX", or a tax letter), false when other items carry such a mark and this one doesn't; null for every item when the receipt marks none.
 - subtotal: before taxes, as printed; null if the receipt shows none.
 - taxes: each tax line as printed, with its name ("TPS", "TVQ", "GST", "HST"...).
 - total: what was paid, as printed. When the photo isn't a receipt or can't be read, "0" and no items.

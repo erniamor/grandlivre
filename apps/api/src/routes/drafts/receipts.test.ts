@@ -30,18 +30,26 @@ const JPEG = new Uint8Array([
 	0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1,
 ]);
 
-const reading = (fields: Partial<AssistantReceipt> = {}): AssistantReceipt => ({
+type ReadItem = AssistantReceipt["items"][number];
+
+/** What the assistant read; an item says nothing of its taxes unless given. */
+const reading = ({
+	items = [],
+	...fields
+}: Partial<Omit<AssistantReceipt, "items">> & {
+	items?: (Omit<ReadItem, "taxable"> & Partial<Pick<ReadItem, "taxable">>)[];
+} = {}): AssistantReceipt => ({
 	merchant: "Costco",
 	date: "2026-11-14",
 	account: null,
 	note: null,
-	items: [],
 	subtotal: null,
 	taxes: [],
 	total: "0",
 	new_tag: null,
 	remark: null,
 	...fields,
+	items: items.map((item) => ({ taxable: null, ...item })),
 });
 
 /**
@@ -185,6 +193,67 @@ describe("POST /v1/households/:householdId/transactions/draft/receipt", () => {
 			Buffer.from(JPEG),
 		);
 		expect(request?.today).toBe("2026-11-15");
+	});
+
+	it("puts the taxes on the items the receipt marks as taxed", async () => {
+		const { alice, groceries, supplies, scan } = await setUp();
+		assistantReads((context) =>
+			reading({
+				items: [
+					{
+						name: "Bread",
+						amount: "15.00",
+						tag: referenceOf(context, "Food › Groceries"),
+						taxable: false,
+					},
+					{
+						name: "Dish soap",
+						amount: "10.00",
+						tag: referenceOf(context, "Home › Household supplies"),
+						taxable: true,
+					},
+				],
+				taxes: [
+					{ name: "TPS", amount: "0.50" },
+					{ name: "TVQ", amount: "1.00" },
+				],
+				total: "26.50",
+			}),
+		);
+
+		expect((await json<TransactionDraft>(await scan(alice))).lines).toEqual([
+			{ amount: 1500, tagId: groceries.id, usesProposedTag: false },
+			{ amount: 1150, tagId: supplies.id, usesProposedTag: false },
+		]);
+	});
+
+	it("shares the taxes over every item when the receipt doesn't mark them all", async () => {
+		const { alice, groceries, supplies, scan } = await setUp();
+		assistantReads((context) =>
+			reading({
+				items: [
+					{
+						name: "Bread",
+						amount: "15.00",
+						tag: referenceOf(context, "Food › Groceries"),
+						taxable: null,
+					},
+					{
+						name: "Dish soap",
+						amount: "10.00",
+						tag: referenceOf(context, "Home › Household supplies"),
+						taxable: true,
+					},
+				],
+				taxes: [{ name: "TPS", amount: "1.50" }],
+				total: "26.50",
+			}),
+		);
+
+		expect((await json<TransactionDraft>(await scan(alice))).lines).toEqual([
+			{ amount: 1590, tagId: groceries.id, usesProposedTag: false },
+			{ amount: 1060, tagId: supplies.id, usesProposedTag: false },
+		]);
 	});
 
 	it("lets a discount lower its tag, and keeps it in the receipt", async () => {

@@ -94,7 +94,7 @@ describe("the Claude assistant", () => {
 			date: null,
 			account: null,
 			note: null,
-			items: [{ name: "Apples", amount: "5.00", tag: null }],
+			items: [{ name: "Apples", amount: "5.00", tag: null, taxable: null }],
 			subtotal: null,
 			taxes: [],
 			total: "5.00",

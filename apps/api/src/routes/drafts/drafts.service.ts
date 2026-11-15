@@ -39,7 +39,7 @@ import {
 	type ContextPayee,
 	type References,
 } from "@/routes/drafts/draft-context";
-import { shareTotal } from "@/routes/drafts/receipt-lines";
+import { shareTaxes, shareTotal } from "@/routes/drafts/receipt-lines";
 import { detectImageType } from "@/routes/drafts/receipt-photo";
 import { findSimilarTags } from "@/routes/tags/similar-tags";
 
@@ -408,12 +408,12 @@ export function toReceiptDraft(
 		return (tag && references.tags.get(tag)) || UNCATEGORIZED;
 	};
 
-	const items = answer.items.flatMap(({ name, amount, tag }) => {
+	const items = answer.items.flatMap(({ name, amount, tag, taxable }) => {
 		const parsed = parsePrintedAmount(amount, currency);
 		const label = text(name, RECEIPT_ITEM_NAME_MAX_LENGTH);
 		return parsed === null || label === null
 			? []
-			: [{ name: label, amount: parsed, key: keyOf(tag) }];
+			: [{ name: label, amount: parsed, key: keyOf(tag), taxable }];
 	});
 	const taxes = answer.taxes.flatMap(({ name, amount }) => {
 		const parsed = parsePrintedAmount(amount, currency);
@@ -427,26 +427,37 @@ export function toReceiptDraft(
 			? null
 			: parsePrintedAmount(answer.subtotal, currency);
 
-	const groups = new Map<string, number>();
-	for (const { key, amount } of items) {
-		groups.set(key, (groups.get(key) ?? 0) + amount);
-	}
-	const lines = shareTotal(
-		total,
-		[...groups].map(([key, amount]) => ({ key, amount })),
-		UNCATEGORIZED,
-	).map(({ key, amount }) => ({
-		amount,
-		tagId: key === UNCATEGORIZED || key === PROPOSED ? null : key,
-		usesProposedTag: key === PROPOSED,
-	}));
-
 	// The lines follow the total, what was paid: say when the receipt's own
 	// figures don't add up to it. Not the subtotal: some receipts leave
 	// things out of it, such as a bottle deposit, and still add up.
 	const itemsSum = items.reduce((sum, item) => sum + item.amount, 0);
 	const taxesSum = taxes.reduce((sum, tax) => sum + tax.amount, 0);
 	const mismatch = items.length > 0 && itemsSum + taxesSum !== total;
+
+	const groups = new Map<string, { amount: number; taxable: number }>();
+	for (const { key, amount, taxable } of items) {
+		const group = groups.get(key) ?? { amount: 0, taxable: 0 };
+		groups.set(key, {
+			amount: group.amount + amount,
+			taxable: group.taxable + (taxable ? amount : 0),
+		});
+	}
+	const grouped = [...groups].map(([key, group]) => ({ key, ...group }));
+	// The taxes go to the taxed items when the receipt marks every item and
+	// its figures add up; otherwise they are shared out over every item
+	const marksTaxes =
+		!mismatch &&
+		items.every((item) => item.taxable !== null) &&
+		items.some((item) => item.taxable);
+	const lines = (
+		marksTaxes
+			? shareTaxes(total, grouped, UNCATEGORIZED)
+			: shareTotal(total, grouped, UNCATEGORIZED)
+	).map(({ key, amount }) => ({
+		amount,
+		tagId: key === UNCATEGORIZED || key === PROPOSED ? null : key,
+		usesProposedTag: key === PROPOSED,
+	}));
 
 	const account = accounts.find(
 		(candidate) =>
