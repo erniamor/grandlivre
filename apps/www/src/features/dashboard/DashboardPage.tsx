@@ -2,6 +2,7 @@ import type { Household, Profile } from "@repo/schemas";
 import { Link } from "@tanstack/react-router";
 import { HouseholdBalance } from "@/features/accounts/HouseholdBalance";
 import { InstallCard } from "@/features/pwa/InstallCard";
+import { RecentTransactions } from "@/features/transactions/RecentTransactions";
 import { m } from "@/paraglide/messages";
 
 interface DashboardPageProps {
@@ -30,6 +31,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 					{m.summary_accounts_link()}
 				</Link>
 			</HouseholdBalance>
+			<RecentTransactions household={household} />
 			<InstallCard />
 		</section>
 	);

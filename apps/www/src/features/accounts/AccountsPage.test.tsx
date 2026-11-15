@@ -182,6 +182,27 @@ describe("AccountsPage", () => {
 		).toBeVisible();
 	});
 
+	it("links an account to its transactions when the user may see them", async () => {
+		setUp();
+
+		const others = await group("Other accounts of the household");
+
+		expect(
+			screen.getByRole("link", { name: "See the transactions of Everyday" }),
+		).toHaveAttribute("href", `/transactions?account=${accounts[0]?.id}`);
+		// Shows its details to everyone
+		expect(
+			others.getByRole("link", { name: "See the transactions of Old account" }),
+		).toBeVisible();
+		// Bob's card only shows its balance
+		expect(
+			others.queryByRole("link", {
+				name: "See the transactions of Bob's Visa",
+			}),
+		).not.toBeInTheDocument();
+		expect(others.getByText("Bob's Visa")).toBeVisible();
+	});
+
 	it("doesn't let a plain member change an account without a holder", async () => {
 		setUp(accounts, "member");
 

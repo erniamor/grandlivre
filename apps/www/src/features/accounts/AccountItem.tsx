@@ -37,7 +37,20 @@ export function AccountItem({
 	return (
 		<li className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card p-4 text-card-foreground">
 			<div className="grid min-w-40 flex-1 gap-0.5">
-				<p className="break-words font-medium">{account.name}</p>
+				<p className="break-words font-medium">
+					{account.isHolder || account.visibility === "details" ? (
+						<Link
+							to="/transactions"
+							search={{ account: account.id }}
+							aria-label={m.account_transactions_label({ name: account.name })}
+							className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+						>
+							{account.name}
+						</Link>
+					) : (
+						account.name
+					)}
+				</p>
 				<p className="text-muted-foreground text-sm">
 					{accountTypeLabels[account.type]()}
 					{showHolders && ` · ${holdersText(account)}`}

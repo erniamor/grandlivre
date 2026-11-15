@@ -116,6 +116,31 @@ describe("Header", () => {
 		).toHaveAttribute("href", "/accounts");
 	});
 
+	it("gathers the links to the app's pages in a navigation, each with its name", async () => {
+		const header = await renderHeader(aliceProfile);
+
+		const nav = within(header).getByRole("navigation", { name: "Main" });
+
+		expect(
+			within(nav)
+				.getAllByRole("link")
+				.map((link) => [link.textContent, link.getAttribute("href")]),
+		).toEqual([
+			["Dashboard", "/dashboard"],
+			["Transactions", "/transactions"],
+			["Accounts", "/accounts"],
+			["Tags", "/tags"],
+		]);
+	});
+
+	it("shows no navigation to a visitor", async () => {
+		const header = await renderHeader();
+
+		expect(
+			within(header).queryByRole("navigation", { name: "Main" }),
+		).not.toBeInTheDocument();
+	});
+
 	it("links to the tags for a signed-in user only", async () => {
 		expect(
 			within(await renderHeader(aliceProfile)).getByRole("link", {

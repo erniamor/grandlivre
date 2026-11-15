@@ -27,6 +27,7 @@ import { Route as AuthenticatedHouseholdTagsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedHouseholdTagsTagIdRouteImport } from './routes/_authenticated/_household/tags/$tagId'
 import { Route as AuthenticatedHouseholdTagsNewRouteImport } from './routes/_authenticated/_household/tags/new'
 import { Route as AuthenticatedHouseholdTagsSuggestedRouteImport } from './routes/_authenticated/_household/tags/suggested'
+import { Route as AuthenticatedHouseholdTransactionsIndexRouteImport } from './routes/_authenticated/_household/transactions/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,6 +126,12 @@ const AuthenticatedHouseholdTagsSuggestedRoute =
     path: '/tags/suggested',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdTransactionsIndexRoute =
+  AuthenticatedHouseholdTransactionsIndexRouteImport.update({
+    id: '/transactions/',
+    path: '/transactions/',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
+  '/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,6 +169,7 @@ export interface FileRoutesByTo {
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/tags': typeof AuthenticatedHouseholdTagsIndexRoute
+  '/transactions': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -182,6 +191,7 @@ export interface FileRoutesById {
   '/_authenticated/_household/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/_authenticated/_household/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
+  '/_authenticated/_household/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/tags/suggested'
     | '/accounts/'
     | '/tags/'
+    | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/tags/suggested'
     | '/accounts'
     | '/tags'
+    | '/transactions'
   id:
     | '__root__'
     | '/'
@@ -240,6 +252,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/tags/suggested'
     | '/_authenticated/_household/accounts/'
     | '/_authenticated/_household/tags/'
+    | '/_authenticated/_household/transactions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdTagsSuggestedRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/transactions/': {
+      id: '/_authenticated/_household/transactions/'
+      path: '/transactions'
+      fullPath: '/transactions/'
+      preLoaderRoute: typeof AuthenticatedHouseholdTransactionsIndexRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
   }
 }
 
@@ -391,6 +411,7 @@ interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdTagsSuggestedRoute: typeof AuthenticatedHouseholdTagsSuggestedRoute
   AuthenticatedHouseholdAccountsIndexRoute: typeof AuthenticatedHouseholdAccountsIndexRoute
   AuthenticatedHouseholdTagsIndexRoute: typeof AuthenticatedHouseholdTagsIndexRoute
+  AuthenticatedHouseholdTransactionsIndexRoute: typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
 
 const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
@@ -408,6 +429,8 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
     AuthenticatedHouseholdAccountsIndexRoute:
       AuthenticatedHouseholdAccountsIndexRoute,
     AuthenticatedHouseholdTagsIndexRoute: AuthenticatedHouseholdTagsIndexRoute,
+    AuthenticatedHouseholdTransactionsIndexRoute:
+      AuthenticatedHouseholdTransactionsIndexRoute,
   }
 
 const AuthenticatedHouseholdRouteWithChildren =

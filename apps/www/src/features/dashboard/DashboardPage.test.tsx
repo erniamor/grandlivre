@@ -1,25 +1,25 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import {
+	base,
+	household,
+	respondWith,
+	transactions,
+} from "@/features/transactions/transaction-test-data";
 import { setTestLocale } from "@/test/locale";
 import { aliceProfile, mockApi } from "@/test/mock-api";
 import { renderWithRouter } from "@/test/render-with-router";
 
 vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
 
-const household = {
-	id: "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
-	name: "The Tremblays",
-	currency: "CAD",
-	role: "owner",
-	createdAt: "2026-11-14T12:00:00.000Z",
-} as const;
-
-function mockSummary() {
-	mockApi(() => ({
-		status: 200,
-		body: { assets: 1_125_050, liabilities: -45_000, balance: 1_080_050 },
-	}));
+function mockSummary(items = transactions) {
+	const urls: URL[] = [];
+	mockApi((request, url) => {
+		urls.push(url);
+		return respondWith(items)(request);
+	});
+	return urls;
 }
 
 describe("DashboardPage", () => {
@@ -72,5 +72,31 @@ describe("DashboardPage", () => {
 		expect(
 			balance.getByRole("link", { name: "See the accounts" }),
 		).toHaveAttribute("href", "/accounts");
+	});
+
+	it("shows the latest transactions, with a link to all of them", async () => {
+		const urls = mockSummary();
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		const latest = within(
+			await screen.findByRole("region", { name: "Latest transactions" }),
+		);
+		expect(latest.getByText("Shell")).toBeVisible();
+		expect(latest.getByText("-$72.00")).toBeVisible();
+		expect(
+			latest.getByRole("link", { name: "See all transactions" }),
+		).toHaveAttribute("href", "/transactions");
+		expect(
+			urls.find((url) => url.pathname.endsWith(`${base}/transactions`))?.search,
+		).toBe("?page=1&pageSize=5");
+	});
+
+	it("says when the household has no transaction yet", async () => {
+		mockSummary([]);
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		expect(await screen.findByText("No transaction yet.")).toBeVisible();
 	});
 });

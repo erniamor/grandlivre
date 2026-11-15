@@ -19,6 +19,17 @@ describe("formatAmount", () => {
 	it("follows the currency's own minor unit", () => {
 		expect(formatAmount(1250, "JPY", "en")).toBe("¥1,250");
 	});
+
+	it("writes the sign of money coming in when asked", () => {
+		const signed = { signed: true };
+
+		expect(formatAmount(7200, "CAD", "en", signed)).toBe("+$72.00");
+		expect(formatAmount(-7200, "CAD", "en", signed)).toBe("-$72.00");
+		expect(formatAmount(0, "CAD", "en", signed)).toBe("$0.00");
+		expect(plainSpaces(formatAmount(7200, "CAD", "fr", signed))).toBe(
+			"+72,00 $",
+		);
+	});
 });
 
 describe("formatAmountInput", () => {

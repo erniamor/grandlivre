@@ -17,11 +17,14 @@ export function formatAmount(
 	amount: number,
 	currency: string,
 	locale: string,
+	/** Writes the sign of a positive amount too: "+$72.00". */
+	{ signed = false }: { signed?: boolean } = {},
 ): string {
 	return new Intl.NumberFormat(locale, {
 		style: "currency",
 		currency,
 		currencyDisplay: "narrowSymbol",
+		signDisplay: signed ? "exceptZero" : "auto",
 	}).format(amount / 10 ** minorUnitDigits(currency));
 }
 

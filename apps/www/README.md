@@ -2,7 +2,7 @@
 
 Grand Livre's web app: for now the screens that come before the product's own (sign-in, profile, language, appearance), ready to receive its features. Built with React and TanStack Start, TanStack Query, Paraglide JS for translations, Tailwind CSS and the components of [`@repo/ui`](../../packages/ui).
 
-What's in place: a header (logo, then menus for the language, the appearance and the account: profile and sign-out), sign-in by magic link or code, the name asked at the first sign-in, a home page for visitors, creating or joining a household, the dashboard of signed-in users, the installable app (PWA), and the 404 and error pages.
+What's in place: a header (logo, then menus for the language, the appearance and the account: profile and sign-out; for signed-in users, a navigation to the app's pages), sign-in by magic link or code, the name asked at the first sign-in, a home page for visitors, creating or joining a household, the dashboard of signed-in users, the installable app (PWA), and the 404 and error pages.
 
 ## Screens
 
@@ -20,7 +20,8 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/tags/suggested` | The suggested tags as a tree of checkboxes, all checked: the user unchecks what doesn't concern the household (a branch goes with its parent), then adds the rest in one go |
 | `/tags/new` | Creates a tag: its name in one language or more, and its parent (`?parent=<id>` proposes one) |
 | `/tags/:tagId` | Changes a tag (names, parent) or deletes it; a 404 for an unknown tag |
-| `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance: the starting point of the product's own pages |
+| `/transactions` | The transactions the user may see, grouped by day, most recent first: who was paid, the tags, the account, and the amount as money going out or coming in. `?account=<id>` keeps those of one account (a transfer then leaves it or enters it), `?page=<n>` shows another page |
+| `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance and its latest transactions: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 
 The app calls the API through [`@repo/resources`](../../packages/resources): it needs the API running (see [apps/api/README.md](../api/README.md)).

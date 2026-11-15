@@ -1,12 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { accountsSummaryQueryOptions } from "@/features/accounts/accounts-query";
+import {
+	accountsQueryOptions,
+	accountsSummaryQueryOptions,
+} from "@/features/accounts/accounts-query";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { tagsQueryOptions } from "@/features/tags/tags-query";
+import { RECENT_TRANSACTIONS_COUNT } from "@/features/transactions/RecentTransactions";
+import { transactionsQueryOptions } from "@/features/transactions/transactions-query";
 
 export const Route = createFileRoute("/_authenticated/_household/dashboard")({
-	loader: ({ context }) =>
-		context.queryClient.ensureQueryData(
-			accountsSummaryQueryOptions(context.household.id),
-		),
+	loader: ({ context }) => {
+		const { household, queryClient } = context;
+		return Promise.all([
+			queryClient.ensureQueryData(accountsSummaryQueryOptions(household.id)),
+			queryClient.ensureQueryData(
+				transactionsQueryOptions(household.id, {
+					pageSize: RECENT_TRANSACTIONS_COUNT,
+				}),
+			),
+			queryClient.ensureQueryData(accountsQueryOptions(household.id)),
+			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
+		]);
+	},
 	component: DashboardRoute,
 });
 
