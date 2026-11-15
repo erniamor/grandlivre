@@ -118,6 +118,25 @@ describe("households", () => {
 		});
 	});
 
+	it("sends the time zone it lives in, and checks it before sending", async () => {
+		const { api, requests, fetch } = fakeApi(201, household);
+
+		await api.households.create({
+			name: "The Tremblays",
+			currency: "CAD",
+			timeZone: "America/Vancouver",
+		});
+		const error = await api.households
+			.create({ name: "Home", currency: "CAD", timeZone: "Nowhere/Land" })
+			.catch((reason: unknown) => reason);
+
+		expect(requests[0]?.body).toMatchObject({ timeZone: "America/Vancouver" });
+		expect((error as ValidationError).issues).toEqual([
+			{ field: "timeZone", message: "household_time_zone_invalid" },
+		]);
+		expect(fetch).toHaveBeenCalledOnce();
+	});
+
 	it("rejects an invalid household before sending", async () => {
 		const { api, fetch } = fakeApi(201, household);
 
