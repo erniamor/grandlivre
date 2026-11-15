@@ -61,6 +61,7 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `draft_not_understood` | Answered by the API (422): the note couldn't be turned into a transaction |
 | `assistant_unavailable` | Answered by the API (503): the assistant can't be reached; enter by hand |
 | `receipt_photo_required` | Answered by the API (422, field `photo`): no photo was sent |
+| `receipt_photo_too_large` | Checked by `@repo/resources` before sending: the photo is over `RECEIPT_PHOTO_MAX_BYTES` (the API answers 413 `payload_too_large`) |
 | `receipt_photo_invalid` | Answered by the API (422, field `photo`): the file isn't a JPEG, PNG, WebP or GIF image |
 
 A draft also carries `warnings`, codes the front ends translate as well (`DRAFT_WARNINGS`): `receipt_total_mismatch`, the items and taxes read on a receipt don't add up to its total, so the lines follow the total and the member should check them.

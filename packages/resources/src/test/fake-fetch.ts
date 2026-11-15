@@ -5,7 +5,7 @@ export interface SentRequest {
 	url: string;
 	method: string;
 	headers: Record<string, string>;
-	/** Parsed JSON. */
+	/** Parsed JSON, or the FormData sent as is. */
 	body: unknown;
 	credentials: RequestCredentials | undefined;
 }
@@ -20,7 +20,11 @@ export function fakeFetch(status: number, body?: unknown) {
 				method: init?.method ?? "GET",
 				headers: Object.fromEntries(new Headers(init?.headers).entries()),
 				body:
-					typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
+					typeof init?.body === "string"
+						? JSON.parse(init.body)
+						: init?.body instanceof FormData
+							? init.body
+							: undefined,
 				credentials: init?.credentials,
 			});
 			return new Response(

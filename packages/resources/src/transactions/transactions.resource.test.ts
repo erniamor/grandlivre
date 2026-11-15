@@ -1,3 +1,4 @@
+import { RECEIPT_PHOTO_MAX_BYTES } from "@repo/schemas";
 import { describe, expect, it } from "vitest";
 import {
 	ApiError,
@@ -318,6 +319,105 @@ describe("transactions", () => {
 				{ field: "text", message: "draft_text_required" },
 			]);
 			expect(fetch).not.toHaveBeenCalled();
+		});
+
+		describe("from a receipt", () => {
+			const receiptDraft = {
+				...draft,
+				lines: [{ amount: 2299, tagId: TAG_ID, usesProposedTag: false }],
+				proposedTag: null,
+				receipt: {
+					merchant: "IGA",
+					items: [{ name: "Apples", amount: 2000 }],
+					subtotal: 2000,
+					taxes: [{ name: "TPS", amount: 299 }],
+					total: 2299,
+				},
+				warnings: ["receipt_total_mismatch"],
+			};
+			const photo = new Blob([new Uint8Array([0xff, 0xd8, 0xff])], {
+				type: "image/jpeg",
+			});
+
+			it("sends the photo and the day as a multipart form, and gives the draft", async () => {
+				const { api, requests } = fakeApi(200, receiptDraft);
+
+				expect(
+					await api.transactions.draftFromReceipt(HOUSEHOLD_ID, {
+						photo,
+						today: "2026-11-15",
+					}),
+				).toEqual(receiptDraft);
+				const [request] = requests;
+				expect(request).toMatchObject({
+					url: `${base}/draft/receipt`,
+					method: "POST",
+					headers: { "accept-language": "fr" },
+				});
+				// fetch sets the multipart type, with its boundary
+				expect(request?.headers["content-type"]).toBeUndefined();
+				const form = request?.body as FormData;
+				expect(form.get("today")).toBe("2026-11-15");
+				const sent = form.get("photo") as File;
+				expect(sent.name).toBe("receipt");
+				expect(new Uint8Array(await sent.arrayBuffer())).toEqual(
+					new Uint8Array([0xff, 0xd8, 0xff]),
+				);
+			});
+
+			it("checks the photo and the day before sending", async () => {
+				const { api, fetch } = fakeApi(200, receiptDraft);
+				const issuesOf = (input: { photo: Blob; today: string }) =>
+					api.transactions
+						.draftFromReceipt(HOUSEHOLD_ID, input)
+						.catch((error: unknown) => (error as ValidationError).issues);
+
+				expect(
+					await issuesOf({ photo: new Blob([]), today: "2026-11-15" }),
+				).toEqual([{ field: "photo", message: "receipt_photo_required" }]);
+				expect(
+					await issuesOf({
+						photo: new Blob([new Uint8Array(RECEIPT_PHOTO_MAX_BYTES + 1)]),
+						today: "2026-11-15",
+					}),
+				).toEqual([{ field: "photo", message: "receipt_photo_too_large" }]);
+				expect(await issuesOf({ photo, today: "15/11/2026" })).toEqual([
+					{ field: "today", message: "date_invalid" },
+				]);
+				expect(fetch).not.toHaveBeenCalled();
+			});
+
+			it("reports a file the API doesn't take for an image, on the photo", async () => {
+				const { api } = fakeApi(422, {
+					error: {
+						code: "validation_error",
+						message: "Invalid request",
+						details: [{ field: "photo", message: "receipt_photo_invalid" }],
+					},
+				});
+
+				const error = await api.transactions
+					.draftFromReceipt(HOUSEHOLD_ID, { photo, today: "2026-11-15" })
+					.catch((reason: unknown) => reason);
+
+				expect(error).toBeInstanceOf(ValidationError);
+				expect((error as ValidationError).issues).toEqual([
+					{ field: "photo", message: "receipt_photo_invalid" },
+				]);
+			});
+
+			it("reports the receipts allowed per hour as used up", async () => {
+				const { api } = fakeApi(429, {
+					error: { code: "too_many_requests", message: "Too many" },
+				});
+
+				await expect(
+					api.transactions.draftFromReceipt(HOUSEHOLD_ID, {
+						photo,
+						today: "2026-11-15",
+					}),
+				).rejects.toBeInstanceOf(RateLimitError);
+			});
 		});
 
 		it("reports a note it couldn't read, and an unavailable assistant, with their codes", async () => {

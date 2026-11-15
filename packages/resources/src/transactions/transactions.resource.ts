@@ -4,6 +4,7 @@ import {
 	createDraftSchema,
 	createTransactionSchema,
 	paginatedSchema,
+	RECEIPT_PHOTO_MAX_BYTES,
 	type Transaction,
 	type TransactionDraft,
 	type TransactionType,
@@ -19,12 +20,38 @@ import {
 	toPage,
 	withQuery,
 } from "../api/page";
+import { ValidationError } from "../errors";
 import { type ApiClient, parseInput } from "../http/client";
 
 const transactionsPageSchema = paginatedSchema(transactionSchema);
 
 const transactionsPath = (householdId: string) =>
 	`/households/${segment(householdId)}/transactions`;
+
+/** The photo of a receipt, with the member's day. */
+export interface CreateReceiptDraft {
+	/** The image, at most RECEIPT_PHOTO_MAX_BYTES: a JPEG, PNG, WebP or GIF. */
+	photo: Blob;
+	/** Today on the member's device ("2026-11-15"). */
+	today: string;
+}
+
+const receiptDaySchema = createDraftSchema.pick({ today: true });
+
+/** The photo's checks the API also makes, before sending megabytes for nothing. */
+function checkPhoto(photo: Blob): void {
+	const message =
+		photo.size === 0
+			? "receipt_photo_required"
+			: photo.size > RECEIPT_PHOTO_MAX_BYTES
+				? "receipt_photo_too_large"
+				: null;
+	if (message) {
+		throw new ValidationError(422, "validation_error", "Invalid request", [
+			{ field: "photo", message },
+		]);
+	}
+}
 
 const transactionPath = (householdId: string, transactionId: string) =>
 	`${transactionsPath(householdId)}/${segment(transactionId)}`;
@@ -138,6 +165,36 @@ export function createTransactionsResource(client: ApiClient) {
 				method: "POST",
 				path: `${transactionsPath(householdId)}/draft`,
 				body: parseInput(createDraftSchema, input),
+				response: transactionDraftSchema,
+			});
+		},
+
+		/**
+		 * Turns the photo of a receipt into a draft expense, with the
+		 * household's assistant: one line per tag, the taxes shared out, and
+		 * the receipt's details (`receipt`) to record with it. Nothing is
+		 * saved, the photo isn't kept. `warnings` holds
+		 * `receipt_total_mismatch` when the receipt's figures don't add up to
+		 * its total. Rejects with a ValidationError on `photo`
+		 * (`receipt_photo_required`, `receipt_photo_too_large` before sending,
+		 * `receipt_photo_invalid` from the API for a file that isn't an image),
+		 * an ApiError `draft_not_understood` (422) for a photo it couldn't
+		 * read, `assistant_unavailable` (503), and a RateLimitError beyond the
+		 * receipts allowed per hour.
+		 */
+		async draftFromReceipt(
+			householdId: string,
+			{ photo, today }: CreateReceiptDraft,
+		): Promise<TransactionDraft> {
+			checkPhoto(photo);
+			const form = new FormData();
+			// A name makes it a file for the API, whatever the Blob
+			form.set("photo", photo, "receipt");
+			form.set("today", parseInput(receiptDaySchema, { today }).today);
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/draft/receipt`,
+				body: form,
 				response: transactionDraftSchema,
 			});
 		},

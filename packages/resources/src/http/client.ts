@@ -22,7 +22,10 @@ interface RequestOptions<Output> {
 	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	/** Path under /v1, e.g. "/me". */
 	path: string;
-	/** Sent as JSON. */
+	/**
+	 * Sent as JSON; a FormData is sent as a multipart form, with the
+	 * Content-Type (and its boundary) set by fetch.
+	 */
 	body?: unknown;
 	/** Schema of the response; omit for responses with no useful body. */
 	response?: z.ZodType<Output>;
@@ -71,7 +74,8 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 					headers[name] = value;
 				}
 			}
-			if (body !== undefined) {
+			const isForm = body instanceof FormData;
+			if (body !== undefined && !isForm) {
 				headers["Content-Type"] = "application/json";
 			}
 
@@ -80,7 +84,11 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 				response = await doFetch(`${config.baseUrl}/v1${path}`, {
 					method,
 					headers,
-					body: body === undefined ? undefined : JSON.stringify(body),
+					body: isForm
+						? body
+						: body === undefined
+							? undefined
+							: JSON.stringify(body),
 					credentials: config.credentials,
 					signal,
 				});

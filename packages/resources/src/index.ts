@@ -36,6 +36,7 @@ export type {
 } from "./reports/reports.resource";
 export type { TagsResource } from "./tags/tags.resource";
 export type {
+	CreateReceiptDraft,
 	TransactionFilters,
 	TransactionsResource,
 } from "./transactions/transactions.resource";
