@@ -4,6 +4,7 @@ import {
 	ArrowLeftRightIcon,
 	ChartPieIcon,
 	LayoutDashboardIcon,
+	RepeatIcon,
 	TagsIcon,
 	WalletIcon,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const items = [
 		label: m.transactions_title,
 		icon: ArrowLeftRightIcon,
 	},
+	{ to: "/recurring", label: m.recurring_title, icon: RepeatIcon },
 	{ to: "/reports", label: m.reports_title, icon: ChartPieIcon },
 	{ to: "/accounts", label: m.accounts_title, icon: WalletIcon },
 	{ to: "/tags", label: m.tags_title, icon: TagsIcon },

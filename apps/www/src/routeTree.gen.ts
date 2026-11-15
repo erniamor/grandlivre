@@ -24,6 +24,9 @@ import { Route as AuthenticatedHouseholdReportsRouteImport } from './routes/_aut
 import { Route as AuthenticatedHouseholdAccountsIndexRouteImport } from './routes/_authenticated/_household/accounts/index'
 import { Route as AuthenticatedHouseholdAccountsAccountIdRouteImport } from './routes/_authenticated/_household/accounts/$accountId'
 import { Route as AuthenticatedHouseholdAccountsNewRouteImport } from './routes/_authenticated/_household/accounts/new'
+import { Route as AuthenticatedHouseholdRecurringIndexRouteImport } from './routes/_authenticated/_household/recurring/index'
+import { Route as AuthenticatedHouseholdRecurringRecurringIdRouteImport } from './routes/_authenticated/_household/recurring/$recurringId'
+import { Route as AuthenticatedHouseholdRecurringNewRouteImport } from './routes/_authenticated/_household/recurring/new'
 import { Route as AuthenticatedHouseholdTagsIndexRouteImport } from './routes/_authenticated/_household/tags/index'
 import { Route as AuthenticatedHouseholdTagsTagIdRouteImport } from './routes/_authenticated/_household/tags/$tagId'
 import { Route as AuthenticatedHouseholdTagsNewRouteImport } from './routes/_authenticated/_household/tags/new'
@@ -111,6 +114,24 @@ const AuthenticatedHouseholdAccountsNewRoute =
     path: '/accounts/new',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdRecurringIndexRoute =
+  AuthenticatedHouseholdRecurringIndexRouteImport.update({
+    id: '/recurring/',
+    path: '/recurring/',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdRecurringRecurringIdRoute =
+  AuthenticatedHouseholdRecurringRecurringIdRouteImport.update({
+    id: '/recurring/$recurringId',
+    path: '/recurring/$recurringId',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdRecurringNewRoute =
+  AuthenticatedHouseholdRecurringNewRouteImport.update({
+    id: '/recurring/new',
+    path: '/recurring/new',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 const AuthenticatedHouseholdTagsIndexRoute =
   AuthenticatedHouseholdTagsIndexRouteImport.update({
     id: '/tags/',
@@ -167,12 +188,15 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
+  '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
+  '/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
@@ -189,12 +213,15 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
+  '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
+  '/recurring': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/tags': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
@@ -214,12 +241,15 @@ export interface FileRoutesById {
   '/_authenticated/_household/reports': typeof AuthenticatedHouseholdReportsRoute
   '/_authenticated/_household/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/_authenticated/_household/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/_authenticated/_household/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
+  '/_authenticated/_household/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/_authenticated/_household/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/_authenticated/_household/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/_authenticated/_household/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
   '/_authenticated/_household/transactions/$transactionId': typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
   '/_authenticated/_household/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
+  '/_authenticated/_household/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/_authenticated/_household/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/_authenticated/_household/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
@@ -238,12 +268,15 @@ export interface FileRouteTypes {
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
+    | '/recurring/$recurringId'
+    | '/recurring/new'
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
     | '/transactions/$transactionId'
     | '/transactions/new'
     | '/accounts/'
+    | '/recurring/'
     | '/tags/'
     | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
@@ -260,12 +293,15 @@ export interface FileRouteTypes {
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
+    | '/recurring/$recurringId'
+    | '/recurring/new'
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
     | '/transactions/$transactionId'
     | '/transactions/new'
     | '/accounts'
+    | '/recurring'
     | '/tags'
     | '/transactions'
   id:
@@ -284,12 +320,15 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/reports'
     | '/_authenticated/_household/accounts/$accountId'
     | '/_authenticated/_household/accounts/new'
+    | '/_authenticated/_household/recurring/$recurringId'
+    | '/_authenticated/_household/recurring/new'
     | '/_authenticated/_household/tags/$tagId'
     | '/_authenticated/_household/tags/new'
     | '/_authenticated/_household/tags/suggested'
     | '/_authenticated/_household/transactions/$transactionId'
     | '/_authenticated/_household/transactions/new'
     | '/_authenticated/_household/accounts/'
+    | '/_authenticated/_household/recurring/'
     | '/_authenticated/_household/tags/'
     | '/_authenticated/_household/transactions/'
   fileRoutesById: FileRoutesById
@@ -409,6 +448,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdAccountsNewRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/recurring/': {
+      id: '/_authenticated/_household/recurring/'
+      path: '/recurring'
+      fullPath: '/recurring/'
+      preLoaderRoute: typeof AuthenticatedHouseholdRecurringIndexRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/recurring/$recurringId': {
+      id: '/_authenticated/_household/recurring/$recurringId'
+      path: '/recurring/$recurringId'
+      fullPath: '/recurring/$recurringId'
+      preLoaderRoute: typeof AuthenticatedHouseholdRecurringRecurringIdRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/recurring/new': {
+      id: '/_authenticated/_household/recurring/new'
+      path: '/recurring/new'
+      fullPath: '/recurring/new'
+      preLoaderRoute: typeof AuthenticatedHouseholdRecurringNewRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
     '/_authenticated/_household/tags/': {
       id: '/_authenticated/_household/tags/'
       path: '/tags'
@@ -467,12 +527,15 @@ interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdReportsRoute: typeof AuthenticatedHouseholdReportsRoute
   AuthenticatedHouseholdAccountsAccountIdRoute: typeof AuthenticatedHouseholdAccountsAccountIdRoute
   AuthenticatedHouseholdAccountsNewRoute: typeof AuthenticatedHouseholdAccountsNewRoute
+  AuthenticatedHouseholdRecurringRecurringIdRoute: typeof AuthenticatedHouseholdRecurringRecurringIdRoute
+  AuthenticatedHouseholdRecurringNewRoute: typeof AuthenticatedHouseholdRecurringNewRoute
   AuthenticatedHouseholdTagsTagIdRoute: typeof AuthenticatedHouseholdTagsTagIdRoute
   AuthenticatedHouseholdTagsNewRoute: typeof AuthenticatedHouseholdTagsNewRoute
   AuthenticatedHouseholdTagsSuggestedRoute: typeof AuthenticatedHouseholdTagsSuggestedRoute
   AuthenticatedHouseholdTransactionsTransactionIdRoute: typeof AuthenticatedHouseholdTransactionsTransactionIdRoute
   AuthenticatedHouseholdTransactionsNewRoute: typeof AuthenticatedHouseholdTransactionsNewRoute
   AuthenticatedHouseholdAccountsIndexRoute: typeof AuthenticatedHouseholdAccountsIndexRoute
+  AuthenticatedHouseholdRecurringIndexRoute: typeof AuthenticatedHouseholdRecurringIndexRoute
   AuthenticatedHouseholdTagsIndexRoute: typeof AuthenticatedHouseholdTagsIndexRoute
   AuthenticatedHouseholdTransactionsIndexRoute: typeof AuthenticatedHouseholdTransactionsIndexRoute
 }
@@ -486,6 +549,10 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
       AuthenticatedHouseholdAccountsAccountIdRoute,
     AuthenticatedHouseholdAccountsNewRoute:
       AuthenticatedHouseholdAccountsNewRoute,
+    AuthenticatedHouseholdRecurringRecurringIdRoute:
+      AuthenticatedHouseholdRecurringRecurringIdRoute,
+    AuthenticatedHouseholdRecurringNewRoute:
+      AuthenticatedHouseholdRecurringNewRoute,
     AuthenticatedHouseholdTagsTagIdRoute: AuthenticatedHouseholdTagsTagIdRoute,
     AuthenticatedHouseholdTagsNewRoute: AuthenticatedHouseholdTagsNewRoute,
     AuthenticatedHouseholdTagsSuggestedRoute:
@@ -496,6 +563,8 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
       AuthenticatedHouseholdTransactionsNewRoute,
     AuthenticatedHouseholdAccountsIndexRoute:
       AuthenticatedHouseholdAccountsIndexRoute,
+    AuthenticatedHouseholdRecurringIndexRoute:
+      AuthenticatedHouseholdRecurringIndexRoute,
     AuthenticatedHouseholdTagsIndexRoute: AuthenticatedHouseholdTagsIndexRoute,
     AuthenticatedHouseholdTransactionsIndexRoute:
       AuthenticatedHouseholdTransactionsIndexRoute,

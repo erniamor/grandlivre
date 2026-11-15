@@ -4,6 +4,7 @@ import { accountsQueryKey } from "@/features/accounts/accounts-query";
 import { householdInvitationsQueryKey } from "@/features/households/household-invitations-query";
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
+import { recurringQueryKey } from "@/features/recurring/recurring-query";
 import { reportsQueryKey } from "@/features/reports/reports-query";
 import { tagsQueryKey } from "@/features/tags/tags-query";
 import { transactionsQueryKey } from "@/features/transactions/transactions-query";
@@ -48,7 +49,7 @@ export function staleQueries(
 				{ queryKey: reportsQueryKey(householdId) },
 			];
 		case "recurring":
-			return [{ queryKey: ["households", householdId, "recurring"] }];
+			return [{ queryKey: recurringQueryKey(householdId) }];
 	}
 }
 

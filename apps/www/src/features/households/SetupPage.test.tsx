@@ -79,7 +79,7 @@ describe("SetupPage", () => {
 		},
 	);
 
-	it("creates a household in Canadian dollars by default, then continues", async () => {
+	it("creates a household in Canadian dollars by default, in the browser's time zone, then continues", async () => {
 		const requests = mockSetupApi([], () => ({ status: 201, body: household }));
 		const onReady = vi.fn();
 		const user = userEvent.setup();
@@ -98,7 +98,11 @@ describe("SetupPage", () => {
 			{
 				method: "POST",
 				path: "/households",
-				body: { name: "The Tremblays", currency: "CAD" },
+				body: {
+					name: "The Tremblays",
+					currency: "CAD",
+					timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				},
 			},
 		]);
 	});

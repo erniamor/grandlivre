@@ -9,6 +9,7 @@ import {
 	currencyOptions,
 	DEFAULT_CURRENCY,
 } from "@/features/households/currency-options";
+import { browserTimeZone } from "@/features/households/time-zone-options";
 import { getApi } from "@/lib/api";
 import { formErrors } from "@/lib/error-messages";
 import { m } from "@/paraglide/messages";
@@ -23,7 +24,12 @@ export function CreateHouseholdForm({ onCreated }: CreateHouseholdFormProps) {
 	const [currency, setCurrency] = useState<HouseholdCurrency>(DEFAULT_CURRENCY);
 	const create = useMutation({
 		mutationFn: (name: string) =>
-			getApi().households.create({ name, currency }),
+			// Where the household lives: the browser's time zone
+			getApi().households.create({
+				name,
+				currency,
+				timeZone: browserTimeZone(),
+			}),
 		onSuccess: onCreated,
 	});
 	const errors = create.error ? formErrors(create.error) : { fields: {} };

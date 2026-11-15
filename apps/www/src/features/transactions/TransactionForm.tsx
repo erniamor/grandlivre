@@ -10,13 +10,11 @@ import { Button } from "@repo/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
-import { SelectField, type SelectOption } from "@/components/SelectField";
+import type { SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { useLastAccountId } from "@/features/transactions/last-account";
 import { ProposedTagPanel } from "@/features/transactions/ProposedTagPanel";
-import { TransactionLinesField } from "@/features/transactions/TransactionLinesField";
-import { TransactionTypeField } from "@/features/transactions/TransactionTypeField";
+import { TransactionFields } from "@/features/transactions/TransactionFields";
 import {
 	emptyLine,
 	formStateOf,
@@ -132,34 +130,14 @@ export function TransactionForm({
 	const change = (fields: Partial<TransactionFormState>) =>
 		setDraft({ ...current, ...fields });
 
-	const isTransfer = current.type === "transfer";
-	const accountOptions = mine.map((account) => ({
-		value: account.id,
-		label: account.name,
-	}));
-	const destinationOptions: SelectOption<string>[] = [
-		{ value: NONE, label: m.transaction_choose_account() },
-		...accounts
-			.filter(
-				(account) => !account.archived && account.id !== current.accountId,
-			)
-			.map((account) => ({ value: account.id, label: account.name })),
-	];
-	const tagOptions: SelectOption<string>[] = [
-		{ value: NONE, label: m.transaction_uncategorized() },
-		...(proposal
-			? [
-					{
-						value: PROPOSED_TAG,
-						label: m.proposed_tag_option({ name: proposal.names[locale] }),
-					},
-				]
-			: []),
-		...flattenTagTree(buildTagTree(tags, locale)).map(({ tag, path }) => ({
-			value: tag.id,
-			label: path,
-		})),
-	];
+	const proposedTagOption: SelectOption<string>[] = proposal
+		? [
+				{
+					value: PROPOSED_TAG,
+					label: m.proposed_tag_option({ name: proposal.names[locale] }),
+				},
+			]
+		: [];
 	/** Moves the lines on the proposed tag to `tagId` ("" leaves them uncategorized). */
 	const leaveProposal = (tagId: string) => {
 		change({
@@ -203,89 +181,35 @@ export function TransactionForm({
 				});
 			}}
 		>
-			<TransactionTypeField
-				value={current.type}
-				onChange={(type) => change({ type })}
-			/>
-			{proposal && usesProposedTag(current) && (
-				<ProposedTagPanel
-					proposal={proposal}
-					tags={tags}
-					onUseTag={leaveProposal}
-					onDismiss={() => leaveProposal(NONE)}
-				/>
-			)}
-			<TransactionLinesField
-				lines={current.lines}
-				onChange={(lines) => change({ lines })}
-				tagOptions={tagOptions}
+			<TransactionFields
+				value={current}
+				onChange={change}
+				accounts={accounts}
+				tags={tags}
 				currency={currency}
-				amountOnly={isTransfer}
 				errors={errors}
-			/>
-			<FormAlert message={errors.lines} />
-			<div className="grid gap-2">
-				<SelectField
-					label={
-						isTransfer
-							? m.transaction_from_account_label()
-							: m.transaction_account_label()
-					}
-					value={current.accountId}
-					options={accountOptions}
-					onChange={(accountId) =>
-						change({
-							accountId,
-							// A transfer can't go to the account it leaves
-							toAccountId:
-								accountId === current.toAccountId ? NONE : current.toAccountId,
-						})
-					}
-					tone="default"
-					className="grid items-stretch font-medium"
-				/>
-				<FormAlert message={errors.accountId} />
-			</div>
-			{isTransfer && (
-				<div className="grid gap-2">
-					<SelectField
-						label={m.transaction_to_account_label()}
-						value={current.toAccountId}
-						options={destinationOptions}
-						onChange={(toAccountId) => change({ toAccountId })}
-						tone="default"
-						className="grid items-stretch font-medium"
+				extraTagOptions={proposedTagOption}
+				aside={
+					proposal &&
+					usesProposedTag(current) && (
+						<ProposedTagPanel
+							proposal={proposal}
+							tags={tags}
+							onUseTag={leaveProposal}
+							onDismiss={() => leaveProposal(NONE)}
+						/>
+					)
+				}
+				when={
+					<TextField
+						label={m.transaction_date_label()}
+						type="date"
+						value={current.date}
+						onChange={(event) => change({ date: event.target.value })}
+						required
+						error={errors.date}
 					/>
-					<FormAlert message={errors.toAccountId} />
-				</div>
-			)}
-			<TextField
-				label={m.transaction_date_label()}
-				type="date"
-				value={current.date}
-				onChange={(event) => change({ date: event.target.value })}
-				required
-				error={errors.date}
-			/>
-			{!isTransfer && (
-				<TextField
-					label={
-						current.type === "income"
-							? m.transaction_payer_label()
-							: m.transaction_payee_label()
-					}
-					autoComplete="off"
-					value={current.payee}
-					onChange={(event) => change({ payee: event.target.value })}
-					error={errors.payee}
-				/>
-			)}
-			<TextField
-				label={m.transaction_note_label()}
-				autoComplete="off"
-				value={current.note}
-				onChange={(event) => change({ note: event.target.value })}
-				error={errors.note}
+				}
 			/>
 			<FormAlert message={apiErrors.form ?? unshownError} />
 			<Button type="submit" disabled={mutation.isPending}>

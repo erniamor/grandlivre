@@ -9,3 +9,17 @@ export function formatDay(day: string, locale: string): string {
 		timeZone: "UTC",
 	}).format(new Date(`${day}T00:00:00Z`));
 }
+
+/**
+ * Today, as a calendar day ("2026-11-15"), in a time zone: a household's
+ * day, which can differ from the browser's.
+ */
+export function todayIn(timeZone: string, now: Date = new Date()): string {
+	// en-CA writes dates as YYYY-MM-DD
+	return new Intl.DateTimeFormat("en-CA", {
+		timeZone,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).format(now);
+}

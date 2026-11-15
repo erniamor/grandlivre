@@ -2,6 +2,7 @@ import type { Household, Profile } from "@repo/schemas";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { HouseholdCurrencyField } from "@/features/households/HouseholdCurrencyField";
 import { HouseholdNameField } from "@/features/households/HouseholdNameField";
+import { HouseholdTimeZoneField } from "@/features/households/HouseholdTimeZoneField";
 import {
 	householdInvitationsQueryKey,
 	householdInvitationsQueryOptions,
@@ -24,7 +25,10 @@ interface HouseholdPageProps {
 	onMembershipChanged: (left: boolean) => void | Promise<void>;
 }
 
-/** The household's settings: its name, its currency, its members and invitations. */
+/**
+ * The household's settings: its name, its currency, its time zone, its
+ * members and invitations.
+ */
 export function HouseholdPage({
 	me,
 	household,
@@ -49,6 +53,7 @@ export function HouseholdPage({
 			<div className="grid gap-4">
 				<HouseholdNameField household={household} />
 				<HouseholdCurrencyField household={household} />
+				<HouseholdTimeZoneField household={household} />
 			</div>
 			<MemberList
 				household={household}

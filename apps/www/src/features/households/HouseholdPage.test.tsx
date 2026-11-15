@@ -196,6 +196,29 @@ describe("HouseholdPage", () => {
 			);
 		});
 
+		it("changes the time zone the household lives in", async () => {
+			const { user, writes } = setUp({
+				respond: () => ({
+					status: 200,
+					body: { ...household, timeZone: "America/Vancouver" },
+				}),
+			});
+
+			const field = await screen.findByLabelText("Time zone");
+			expect(field).toHaveValue("America/Toronto");
+			await user.selectOptions(field, "America/Vancouver");
+
+			await vi.waitFor(() =>
+				expect(writes()).toEqual([
+					{
+						method: "PATCH",
+						path: base,
+						body: { timeZone: "America/Vancouver" },
+					},
+				]),
+			);
+		});
+
 		it("makes another member an owner", async () => {
 			const { user, writes, onMembershipChanged } = setUp({
 				respond: () => ({ status: 204 }),
@@ -393,6 +416,7 @@ describe("HouseholdPage", () => {
 
 			expect(await screen.findByText("carol@example.com")).toBeVisible();
 			expect(screen.getByText("CAD · Canadian Dollar")).toBeVisible();
+			expect(screen.getByText("America / Toronto")).toBeVisible();
 			for (const name of [
 				"Rename the household",
 				"Remove Bob",
@@ -402,6 +426,7 @@ describe("HouseholdPage", () => {
 				expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
 			}
 			expect(screen.queryByLabelText("Currency")).not.toBeInTheDocument();
+			expect(screen.queryByLabelText("Time zone")).not.toBeInTheDocument();
 			expect(screen.queryByLabelText("Role of Bob")).not.toBeInTheDocument();
 			expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
 		});
