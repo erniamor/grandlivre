@@ -442,13 +442,11 @@ export function toReceiptDraft(
 	}));
 
 	// The lines follow the total, what was paid: say when the receipt's own
-	// figures don't add up to it
+	// figures don't add up to it. Not the subtotal: some receipts leave
+	// things out of it, such as a bottle deposit, and still add up.
 	const itemsSum = items.reduce((sum, item) => sum + item.amount, 0);
 	const taxesSum = taxes.reduce((sum, tax) => sum + tax.amount, 0);
-	const mismatch =
-		items.length > 0 &&
-		(itemsSum + taxesSum !== total ||
-			(subtotal !== null && subtotal !== itemsSum));
+	const mismatch = items.length > 0 && itemsSum + taxesSum !== total;
 
 	const account = accounts.find(
 		(candidate) =>

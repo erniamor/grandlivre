@@ -160,7 +160,7 @@ What the Claude API receives: the note, the member's day, the household's curren
 
 - The items are grouped by tag, one line per tag (an item no tag fits is uncategorized, or on the proposed tag), and the taxes are shared out among the lines in proportion to their amounts, rounded so the lines add up to the total paid exactly. A discount lowers its tag.
 - `receipt: { merchant, items: [{ name, amount }], subtotal, taxes: [{ name, amount }], total }` keeps what was read (amounts in minor units, a discount negative); send it back with the transaction (`origin: "receipt"`, `receipt`, on an expense or an income) to keep it. It stays when the transaction changes.
-- `warnings`: `receipt_total_mismatch` when the items and taxes don't add up to the total, or the items to the subtotal: the lines follow the total, the member should check them.
+- `warnings`: `receipt_total_mismatch` when the items and taxes don't add up to the total (the subtotal isn't checked: a bottle deposit, say, can be left out of it): the lines follow the total, the member should check them.
 - 30 receipts per hour and per member, apart from the notes: beyond, 429 `too_many_requests`.
 - 422 `validation_error` on `photo`: `receipt_photo_required`, or `receipt_photo_invalid` when the file isn't one of those images, told by its first bytes; 413 `payload_too_large` over 5 MB. Every other route keeps the 1 MB limit.
 - 422 `draft_not_understood`: no total could be read (not a receipt, unreadable), or every model declined the photo.

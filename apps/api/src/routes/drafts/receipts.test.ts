@@ -236,6 +236,25 @@ describe("POST /v1/households/:householdId/transactions/draft/receipt", () => {
 		expect(draft.warnings).toEqual(["receipt_total_mismatch"]);
 	});
 
+	it("doesn't warn about a deposit left out of the subtotal, when everything adds up to the total", async () => {
+		const { alice, scan } = await setUp();
+		assistantReads(
+			reading({
+				items: [
+					{ name: "Sparkling water", amount: "26.99", tag: null },
+					{ name: "Bottle deposit", amount: "2.40", tag: null },
+				],
+				subtotal: "26.99",
+				taxes: [{ name: "TPS", amount: "1.35" }],
+				total: "30.74",
+			}),
+		);
+
+		expect((await json<TransactionDraft>(await scan(alice))).warnings).toEqual(
+			[],
+		);
+	});
+
 	it("puts a receipt it couldn't detail on one uncategorized line of its total", async () => {
 		const { alice, scan } = await setUp();
 		assistantReads(

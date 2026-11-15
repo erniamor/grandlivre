@@ -45,6 +45,9 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Private local data, never pushed: real receipts tried against the assistant...
+.local/
+
 # Misc
 .cache/
 .tmp/

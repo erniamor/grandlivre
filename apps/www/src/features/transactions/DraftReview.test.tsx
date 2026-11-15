@@ -391,7 +391,8 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 			);
 
 			expect(
-				details.getByRole("img", { name: "Photo of the receipt" }),
+				// The photo's address is made once the page shows, then the image appears
+				await details.findByRole("img", { name: "Photo of the receipt" }),
 			).toHaveAttribute("src", "blob:receipt");
 			expect(details.getByText("Items read on the receipt (2)")).toBeVisible();
 			expect(details.getByText("Coupon")).toBeInTheDocument();
