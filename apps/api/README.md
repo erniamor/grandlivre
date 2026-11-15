@@ -103,17 +103,17 @@ Once a household has an account, its currency can't change: `PATCH /v1/household
 
 ### Tags
 
-The categories of a household's transactions: a tree (a tag has at most one parent), shared and managed by all the members. A tag has a name per language (`names: { en?, fr?, es? }`, at least one), since members can use different languages; in a household, a name designates a single tag in a given language, whatever its case. A household has at most 500 tags.
+The categories of a household's transactions: a tree (a tag has at most one parent), shared and managed by all the members. A tag has a name per language (`names: { en?, fr?, es? }`, at least one), since members can use different languages; under a same parent (or at the root), a name designates a single tag in a given language, whatever its case. The same name can exist under different parents ("Car › Insurance", "Home › Insurance"): they are distinct tags. A household has at most 500 tags.
 
 | Route | Who | Effect |
 | --- | --- | --- |
 | `GET /v1/households/:householdId/tags` | member | Lists the household's tags, oldest first, each with its `parentId` (the whole tree fits in one page) |
 | `POST /v1/households/:householdId/tags` `{ names, parentId? }` | member | Creates a tag (201), at the root without `parentId` |
-| `POST /v1/households/:householdId/tags/suggested` | member | Adds a starting set of tags, named in every language (204). A suggestion whose name already exists is left out, so it adds nothing twice |
+| `POST /v1/households/:householdId/tags/suggested` | member | Adds a starting set of tags, named in every language (204). A suggestion whose name a tag already has at the same place is left out (its children go under that tag), so it adds nothing twice |
 | `PATCH /v1/households/:householdId/tags/:tagId` `{ names?, parentId? }` | member | `names` replaces every name of the tag; `parentId` moves it with its child tags (`null`: to the root) |
 | `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags (204) |
 
-A name already taken answers 422 with `tag_name_taken` on `names.<locale>`; a parent from outside the household, or the tag itself or one of its descendants, answers 422 with `tag_parent_invalid` on `parentId`.
+A name a sibling already has, when creating, renaming or moving a tag, answers 422 with `tag_name_taken` on `names.<locale>`; a parent from outside the household, or the tag itself or one of its descendants, answers 422 with `tag_parent_invalid` on `parentId`.
 
 ### Invitations
 

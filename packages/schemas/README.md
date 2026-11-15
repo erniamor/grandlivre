@@ -48,7 +48,7 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `account_holders_invalid` | The holders aren't a list of distinct user ids, or are more than `ACCOUNT_MAX_HOLDERS` |
 | `tag_name_required` | The tag has no name, or a blank one (on `names` or `names.<locale>`) |
 | `tag_name_too_long` | A name of the tag is over `TAG_NAME_MAX_LENGTH` characters |
-| `tag_name_taken` | Answered by the API: another tag of the household has this name in this language |
+| `tag_name_taken` | Answered by the API: another tag under the same parent has this name in this language |
 | `tag_parent_invalid` | The parent isn't a tag of the household, or is the tag itself or one of its descendants |
 | `household_name_required` | The household's name is empty or blank |
 | `household_name_too_long` | The household's name is over `HOUSEHOLD_NAME_MAX_LENGTH` characters |

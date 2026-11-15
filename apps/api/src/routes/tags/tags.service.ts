@@ -15,12 +15,13 @@ import {
 	eq,
 	type InferSelectModel,
 	inArray,
+	isNull,
 	ne,
 	or,
 	sql,
 } from "drizzle-orm";
 import { db, type Transaction } from "@/db/client";
-import { tagNames, tags } from "@/db/schema";
+import { households, tagNames, tags } from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
 import { type SuggestedTag, suggestedTags } from "@/routes/tags/suggested-tags";
@@ -78,28 +79,45 @@ const inHousehold = (householdId: string, tagId: string) =>
 	and(eq(tags.id, tagId), eq(tags.householdId, householdId));
 
 /**
- * In a household, a name designates a single tag in a given language,
- * whatever its case: refuses the names another tag already has.
+ * Serializes the changes to a household's tags: the rule on names is checked
+ * here, not by the database, so two changes must not run at the same time.
+ */
+async function lockTags(tx: Transaction, householdId: string): Promise<void> {
+	await tx
+		.select({ id: households.id })
+		.from(households)
+		.where(eq(households.id, householdId))
+		.for("update");
+}
+
+/**
+ * Under a same parent (or at the root), a name designates a single tag in a
+ * given language, whatever its case: refuses the names a sibling already
+ * has. The same name can exist under another parent ("Car › Insurance",
+ * "Home › Insurance"). Call `lockTags()` first.
  */
 async function assertNamesFree(
 	tx: Transaction,
 	householdId: string,
+	parentId: string | null,
 	names: TagNames,
 	exceptTagId?: string,
 ): Promise<void> {
 	const sameName = entriesOf(names).map(([locale, name]) =>
 		and(
 			eq(tagNames.locale, locale),
-			// The unique index is on lower(name) too
+			// The index is on lower(name) too
 			eq(sql`lower(${tagNames.name})`, name.toLowerCase()),
 		),
 	);
 	const taken = await tx
 		.select({ locale: tagNames.locale })
 		.from(tagNames)
+		.innerJoin(tags, eq(tags.id, tagNames.tagId))
 		.where(
 			and(
 				eq(tagNames.householdId, householdId),
+				parentId === null ? isNull(tags.parentId) : eq(tags.parentId, parentId),
 				exceptTagId ? ne(tagNames.tagId, exceptTagId) : undefined,
 				or(...sameName),
 			),
@@ -196,6 +214,7 @@ export async function createTag(
 	{ names, parentId = null }: CreateTag,
 ): Promise<Tag> {
 	return db.transaction(async (tx) => {
+		await lockTags(tx, householdId);
 		await assertUnderLimit(tx, householdId);
 		if (parentId !== null) {
 			const [parent] = await tx
@@ -206,7 +225,7 @@ export async function createTag(
 				throw invalid("parentId", "tag_parent_invalid");
 			}
 		}
-		await assertNamesFree(tx, householdId, names);
+		await assertNamesFree(tx, householdId, parentId, names);
 		const row = await insertTag(tx, householdId, names, parentId);
 		return toTag(row, Object.fromEntries(entriesOf(names)));
 	});
@@ -246,33 +265,44 @@ export async function updateTag(
 	{ names, parentId }: UpdateTag,
 ): Promise<Tag> {
 	return db.transaction(async (tx) => {
-		// Locks the tag: two concurrent moves can't build a loop together
+		// Also keeps two concurrent moves from building a loop together
+		await lockTags(tx, householdId);
 		let [row] = await tx
 			.select()
 			.from(tags)
-			.where(inHousehold(householdId, tagId))
-			.for("update");
+			.where(inHousehold(householdId, tagId));
 		if (!row) {
 			throw notFound();
 		}
-		if (parentId !== undefined && parentId !== row.parentId) {
-			if (parentId !== null) {
-				await assertCanMoveUnder(tx, householdId, tagId, parentId);
-			}
+		const current = (await namesOf([tagId], tx)).get(tagId) ?? {};
+		const moves = parentId !== undefined && parentId !== row.parentId;
+		const nextParentId = moves ? parentId : row.parentId;
+		if (moves && parentId !== null) {
+			await assertCanMoveUnder(tx, householdId, tagId, parentId);
+		}
+		// New names, a new parent, or both: its future siblings must not have them
+		if (names || moves) {
+			await assertNamesFree(
+				tx,
+				householdId,
+				nextParentId,
+				names ?? current,
+				tagId,
+			);
+		}
+		if (moves) {
 			const [moved] = await tx
 				.update(tags)
-				.set({ parentId })
+				.set({ parentId: nextParentId })
 				.where(eq(tags.id, tagId))
 				.returning();
 			row = moved ?? row;
 		}
 		if (names) {
-			await assertNamesFree(tx, householdId, names, tagId);
 			await tx.delete(tagNames).where(eq(tagNames.tagId, tagId));
 			await insertNames(tx, householdId, tagId, names);
 		}
-		const current = await namesOf([tagId], tx);
-		return toTag(row, current.get(tagId) ?? {});
+		return toTag(row, names ? Object.fromEntries(entriesOf(names)) : current);
 	});
 }
 
@@ -308,18 +338,28 @@ export async function deleteTag(
 
 /**
  * Adds the suggested tags the household doesn't have yet. A suggestion
- * whose name already exists, in any language, is left out; its children go
- * under the existing tag.
+ * whose name a tag already has at the same place, in any language, is left
+ * out; its children go under the existing tag.
  */
 export async function addSuggestedTags(householdId: string): Promise<void> {
 	await db.transaction(async (tx) => {
+		await lockTags(tx, householdId);
 		const existing = await tx
-			.select()
+			.select({
+				tagId: tagNames.tagId,
+				locale: tagNames.locale,
+				name: tagNames.name,
+				parentId: tags.parentId,
+			})
 			.from(tagNames)
+			.innerJoin(tags, eq(tags.id, tagNames.tagId))
 			.where(eq(tagNames.householdId, householdId));
+		// A name designates a tag among the children of a same parent
+		const keyOf = (parentId: string | null, locale: Locale, name: string) =>
+			`${parentId ?? "root"}:${locale}:${name.toLowerCase()}`;
 		const tagByName = new Map(
 			existing.map((row) => [
-				`${row.locale}:${row.name.toLowerCase()}`,
+				keyOf(row.parentId, row.locale, row.name),
 				row.tagId,
 			]),
 		);
@@ -329,8 +369,8 @@ export async function addSuggestedTags(householdId: string): Promise<void> {
 			parentId: string | null,
 		) => {
 			for (const { names, children = [] } of suggestions) {
-				const keys = entriesOf(names).map(
-					([locale, name]) => `${locale}:${name.toLowerCase()}`,
+				const keys = entriesOf(names).map(([locale, name]) =>
+					keyOf(parentId, locale, name),
 				);
 				let tagId = keys
 					.map((key) => tagByName.get(key))

@@ -42,8 +42,9 @@ export function createTagsResource(client: ApiClient) {
 		},
 
 		/**
-		 * A name another tag already has in the same language rejects with a
-		 * ValidationError on `names.<locale>` (`tag_name_taken`).
+		 * A name another tag under the same parent already has in the same
+		 * language rejects with a ValidationError on `names.<locale>`
+		 * (`tag_name_taken`). The same name can exist under different parents.
 		 */
 		async create(householdId: string, input: CreateTag): Promise<Tag> {
 			return client.request({
@@ -67,7 +68,8 @@ export function createTagsResource(client: ApiClient) {
 
 		/**
 		 * Changes the fields given: `names` replaces every name of the tag,
-		 * `parentId` moves it with its child tags (`null`: to the root).
+		 * `parentId` moves it with its child tags (`null`: to the root). Rejects
+		 * like `create()` when a tag it would sit next to has one of its names.
 		 */
 		async update(
 			householdId: string,

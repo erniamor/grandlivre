@@ -2,10 +2,10 @@ import { LOCALES } from "@repo/schemas";
 import { sql } from "drizzle-orm";
 import {
 	foreignKey,
+	index,
 	pgTable,
 	primaryKey,
 	text,
-	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { tags } from "@/db/schema/tags";
@@ -26,10 +26,11 @@ export const tagNames = pgTable(
 			columns: [table.tagId, table.householdId],
 			foreignColumns: [tags.id, tags.householdId],
 		}).onDelete("cascade"),
-		// In a household, a name designates a single tag in a given language,
-		// whatever its case
+		// To find a tag by its name, whatever its case. Not unique: a name
+		// designates a single tag among the children of a same parent only, which
+		// the service checks (the parent is on the tag, not here).
 		// Named by hand: Drizzle can't name an index on an expression
-		uniqueIndex("tag_names_household_id_locale_name_unique").on(
+		index("tag_names_household_id_locale_name_index").on(
 			table.householdId,
 			table.locale,
 			sql`lower(${table.name})`,

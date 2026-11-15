@@ -31,23 +31,56 @@ export const suggestedTags: SuggestedTag[] = [
 		],
 	},
 	{
-		names: { en: "Car", fr: "Voiture", es: "Coche" },
+		names: { en: "Transport", fr: "Transport", es: "Transporte" },
 		children: [
-			{ names: { en: "Gas", fr: "Essence", es: "Gasolina" } },
-			{ names: { en: "Garage", fr: "Garage", es: "Garaje" } },
+			{
+				names: { en: "Car", fr: "Voiture", es: "Coche" },
+				children: [
+					{ names: { en: "Gas", fr: "Essence", es: "Gasolina" } },
+					{ names: { en: "Garage", fr: "Garage", es: "Garaje" } },
+					{
+						names: {
+							en: "Car Insurance",
+							fr: "Assurance auto",
+							es: "Seguro de coche",
+						},
+					},
+					{
+						names: { en: "Maintenance", fr: "Entretien", es: "Mantenimiento" },
+					},
+					{
+						names: {
+							en: "Parking",
+							fr: "Stationnement",
+							es: "Estacionamiento",
+						},
+					},
+					{
+						names: {
+							en: "Registration",
+							fr: "Immatriculation",
+							es: "Registro",
+						},
+					},
+					{
+						names: { en: "License", fr: "Permis de conduire", es: "Licencia" },
+					},
+					{ names: { en: "Sticker", fr: "Vignette", es: "Pegatina" } },
+					{ names: { en: "Fines", fr: "Amendes", es: "Multas" } },
+				],
+			},
 			{
 				names: {
-					en: "Car Insurance",
-					fr: "Assurance auto",
-					es: "Seguro de coche",
+					en: "Public Transport",
+					fr: "Transports en commun",
+					es: "Transporte público",
 				},
 			},
-			{ names: { en: "Maintenance", fr: "Entretien", es: "Mantenimiento" } },
-			{ names: { en: "Parking", fr: "Stationnement", es: "Estacionamiento" } },
-			{ names: { en: "Registration", fr: "Immatriculation", es: "Registro" } },
-			{ names: { en: "License", fr: "Permis de conduire", es: "Licencia" } },
-			{ names: { en: "Sticker", fr: "Vignette", es: "Pegatina" } },
-			{ names: { en: "Fines", fr: "Amendes", es: "Multas" } },
+			{ names: { en: "Bicycle", fr: "Vélo", es: "Bicicleta" } },
+			{ names: { en: "Taxi", fr: "Taxi", es: "Taxi" } },
+			{
+				names: { en: "Ride Sharing", fr: "Covoiturage", es: "Compartir coche" },
+			},
 		],
 	},
 	{

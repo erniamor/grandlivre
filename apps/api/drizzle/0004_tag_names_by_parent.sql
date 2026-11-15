@@ -1,0 +1,2 @@
+DROP INDEX "tag_names_household_id_locale_name_unique";--> statement-breakpoint
+CREATE INDEX "tag_names_household_id_locale_name_index" ON "tag_names" USING btree ("household_id","locale",lower("name"));

@@ -162,7 +162,9 @@ describe("NewTagPage", () => {
 		await user.click(screen.getByRole("button", { name: "Create the tag" }));
 
 		expect(
-			await screen.findByText("Another tag already has this name."),
+			await screen.findByText(
+				"Another tag at the same level already has this name.",
+			),
 		).toBeVisible();
 		expect(screen.getByLabelText("Français")).toBeInvalid();
 		expect(screen.getByLabelText("English")).not.toBeInvalid();

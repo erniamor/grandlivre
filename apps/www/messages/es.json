@@ -202,7 +202,7 @@
 	"tags_back_link": "Volver a las etiquetas",
 	"error_tag_name_required": "Introduce un nombre en al menos un idioma.",
 	"error_tag_name_too_long": "Este nombre es demasiado largo (40 caracteres como máximo).",
-	"error_tag_name_taken": "Otra etiqueta ya tiene este nombre.",
+	"error_tag_name_taken": "Otra etiqueta del mismo nivel ya tiene este nombre.",
 	"error_tag_parent_invalid": "Una etiqueta no puede colocarse bajo sí misma ni bajo una de sus subetiquetas.",
 	"error_tag_has_children": "Esta etiqueta tiene subetiquetas: muévelas o elimínalas primero.",
 	"error_tag_limit_reached": "El hogar ha alcanzado su número máximo de etiquetas."

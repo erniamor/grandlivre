@@ -202,7 +202,7 @@
 	"tags_back_link": "Back to the tags",
 	"error_tag_name_required": "Enter a name in at least one language.",
 	"error_tag_name_too_long": "This name is too long (40 characters at most).",
-	"error_tag_name_taken": "Another tag already has this name.",
+	"error_tag_name_taken": "Another tag at the same level already has this name.",
 	"error_tag_parent_invalid": "A tag can't be placed under itself or one of its sub-tags.",
 	"error_tag_has_children": "This tag has sub-tags: move or delete them first.",
 	"error_tag_limit_reached": "The household has reached its maximum number of tags."

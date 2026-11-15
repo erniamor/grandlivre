@@ -202,7 +202,7 @@
 	"tags_back_link": "Retour aux tags",
 	"error_tag_name_required": "Saisissez un nom dans au moins une langue.",
 	"error_tag_name_too_long": "Ce nom est trop long (40 caractères au maximum).",
-	"error_tag_name_taken": "Un autre tag porte déjà ce nom.",
+	"error_tag_name_taken": "Un autre tag du même niveau porte déjà ce nom.",
 	"error_tag_parent_invalid": "Un tag ne peut pas être placé sous lui-même ni sous l'un de ses sous-tags.",
 	"error_tag_has_children": "Ce tag a des sous-tags : déplacez-les ou supprimez-les d'abord.",
 	"error_tag_limit_reached": "Le foyer a atteint son nombre maximal de tags."

@@ -7,6 +7,7 @@ import {
 	type TestUser,
 } from "@test/helpers/households";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { type SuggestedTag, suggestedTags } from "@/routes/tags/suggested-tags";
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -89,16 +90,47 @@ describe("POST /v1/households/:householdId/tags", () => {
 		});
 	});
 
-	it("refuses a name another tag has in the same language, whatever its case", async () => {
+	it("refuses a name a sibling has in the same language, whatever its case", async () => {
 		const { alice, bob, created, create } = await setUp();
-		await created(alice, { names: { en: "Gas", fr: "Essence" } });
-
-		const response = await create(bob, {
-			names: { en: "Fuel", fr: "ESSENCE" },
+		const car = await created(alice, { names: { en: "Car" } });
+		await created(alice, {
+			names: { en: "Gas", fr: "Essence" },
+			parentId: car.id,
 		});
 
-		expect(response.status).toBe(422);
-		expect(await response.json()).toMatchObject(nameTaken("fr"));
+		const underCar = await create(bob, {
+			names: { en: "Fuel", fr: "ESSENCE" },
+			parentId: car.id,
+		});
+		const atRoot = await create(bob, { names: { en: "car" } });
+
+		expect(underCar.status).toBe(422);
+		expect(await underCar.json()).toMatchObject(nameTaken("fr"));
+		expect(atRoot.status).toBe(422);
+		expect(await atRoot.json()).toMatchObject(nameTaken("en"));
+	});
+
+	it("accepts the same name under another parent: they are distinct tags", async () => {
+		const { alice, created, list } = await setUp();
+		const car = await created(alice, { names: { fr: "Auto" } });
+		const home = await created(alice, { names: { fr: "Habitation" } });
+
+		const carInsurance = await created(alice, {
+			names: { fr: "Assurance" },
+			parentId: car.id,
+		});
+		const homeInsurance = await created(alice, {
+			names: { fr: "Assurance" },
+			parentId: home.id,
+		});
+		const atRoot = await created(alice, { names: { fr: "Assurance" } });
+
+		expect(new Set([carInsurance.id, homeInsurance.id, atRoot.id]).size).toBe(
+			3,
+		);
+		expect(carInsurance.parentId).toBe(car.id);
+		expect(homeInsurance.parentId).toBe(home.id);
+		expect((await list(alice)).pagination.total).toBe(5);
 	});
 
 	it("accepts the same name in another language, or in another household", async () => {
@@ -248,6 +280,44 @@ describe("PATCH /v1/households/:householdId/tags/:tagId", () => {
 		expect(back).toEqual(internet);
 	});
 
+	it("refuses to move a tag next to a sibling that has its name", async () => {
+		const { alice, created, update } = await setUp();
+		const car = await created(alice, { names: { fr: "Auto" } });
+		const home = await created(alice, { names: { fr: "Habitation" } });
+		await created(alice, { names: { fr: "Assurance" }, parentId: car.id });
+		const homeInsurance = await created(alice, {
+			names: { fr: "assurance" },
+			parentId: home.id,
+		});
+
+		const moved = await update(alice, homeInsurance.id, { parentId: car.id });
+		const movedAndRenamed = await update(alice, homeInsurance.id, {
+			parentId: car.id,
+			names: { fr: "Assurance habitation" },
+		});
+
+		expect(moved.status).toBe(422);
+		expect(await moved.json()).toMatchObject(nameTaken("fr"));
+		expect(movedAndRenamed.status).toBe(200);
+		expect(await movedAndRenamed.json()).toMatchObject({
+			names: { fr: "Assurance habitation" },
+			parentId: car.id,
+		});
+	});
+
+	it("lets a tag take the name of a tag under another parent", async () => {
+		const { alice, created, update } = await setUp();
+		const car = await created(alice, { names: { en: "Car" } });
+		await created(alice, { names: { en: "Insurance" }, parentId: car.id });
+		const other = await created(alice, { names: { en: "Policy" } });
+
+		const response = await update(alice, other.id, {
+			names: { en: "Insurance" },
+		});
+
+		expect(response.status).toBe(200);
+	});
+
 	it("refuses to move a tag under itself or one of its descendants", async () => {
 		const { alice, created, update, list } = await setUp();
 		const home = await created(alice, { names: { en: "Home" } });
@@ -362,16 +432,29 @@ describe("POST /v1/households/:householdId/tags/suggested", () => {
 
 	it("keeps the household's own tags, and puts the suggested children under them", async () => {
 		const { alice, created, addSuggested, list } = await setUp();
-		const mine = await created(alice, { names: { fr: "voiture" } });
+		const mine = await created(alice, { names: { fr: "maison" } });
 
 		await addSuggested(alice);
 
 		const tags = (await list(alice)).data;
-		expect(tags.filter((tag) => tag.names.en === "Car")).toEqual([]);
+		expect(tags.filter((tag) => tag.names.en === "Home")).toEqual([]);
 		expect(tags.find((tag) => tag.id === mine.id)).toEqual(mine);
-		expect(tags.find((tag) => tag.names.en === "Gas")).toMatchObject({
+		expect(tags.find((tag) => tag.names.en === "Mortgage")).toMatchObject({
 			parentId: mine.id,
 		});
+	});
+
+	it("only keeps siblings from sharing a name: every suggestion is added", async () => {
+		const { alice, addSuggested, list } = await setUp();
+		const countOf = (suggestions: SuggestedTag[]): number =>
+			suggestions.reduce(
+				(total, { children = [] }) => total + 1 + countOf(children),
+				0,
+			);
+
+		await addSuggested(alice);
+
+		expect((await list(alice)).pagination.total).toBe(countOf(suggestedTags));
 	});
 
 	it("hides the household from outsiders and requires a session", async () => {
