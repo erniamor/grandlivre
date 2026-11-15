@@ -14,6 +14,8 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/setup` | For a signed-in user without a household: accept an invitation received, or create a household (name, currency). Opened automatically; goes on to the page asked for |
 | `/household` | The household's settings, opened from the account menu: its name and currency, its members (roles, removing, leaving) and its pending invitations (inviting, sending again, cancelling). Owners change them; plain members read them and can leave |
 | `/accounts` | The household's accounts with their balance, grouped: the user's own, those shared with other members, the other accounts of the household; with the household's consolidated balance (assets, debts, net) |
+| `/accounts/new` | Creates an account: name, type, opening balance (or the amount owed, for a credit card or a loan), holders among the household's members, and what the other members see of it |
+| `/accounts/:accountId` | Changes or deletes an account, for its holders (and for an owner of the household when the account has no holder left); a 404 for an unknown account |
 | `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 

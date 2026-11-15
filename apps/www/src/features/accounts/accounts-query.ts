@@ -16,6 +16,15 @@ export function accountsQueryOptions(householdId: string) {
 	});
 }
 
+/** One account of the household. */
+export function accountQueryOptions(householdId: string, accountId: string) {
+	return queryOptions({
+		queryKey: [...accountsQueryKey(householdId), "detail", accountId] as const,
+		queryFn: ({ signal }) =>
+			getApi().accounts.get(householdId, accountId, { signal }),
+	});
+}
+
 /** The household's consolidated view: assets, liabilities, net balance. */
 export function accountsSummaryQueryOptions(householdId: string) {
 	return queryOptions({

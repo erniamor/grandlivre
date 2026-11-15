@@ -59,7 +59,7 @@ const accounts = [
 	account({ name: "Old account", holders: [], isHolder: false, balance: 100 }),
 ];
 
-function setUp(items: Account[] = accounts) {
+function setUp(items: Account[] = accounts, role: Household["role"] = "owner") {
 	mockApi((request) => {
 		if (request.path.endsWith("/accounts/summary")) {
 			return {
@@ -78,7 +78,7 @@ function setUp(items: Account[] = accounts) {
 		}
 		return undefined;
 	});
-	renderWithRouter(<AccountsPage household={household} />);
+	renderWithRouter(<AccountsPage household={{ ...household, role }} />);
 }
 
 async function group(name: string) {
@@ -151,6 +151,43 @@ describe("AccountsPage", () => {
 		expect(balance.getByText("$11,251.50")).toBeVisible();
 		expect(balance.getByText("Debts")).toBeVisible();
 		expect(balance.getByText("-$450.00")).toBeVisible();
+	});
+
+	it("offers to add an account", async () => {
+		setUp([]);
+
+		expect(
+			await screen.findByRole("link", { name: "Add an account" }),
+		).toHaveAttribute("href", "/accounts/new");
+	});
+
+	it("links to the form of the accounts the user may change, and only those", async () => {
+		setUp();
+
+		const others = await group("Other accounts of the household");
+
+		expect(screen.getByRole("link", { name: "Edit Everyday" })).toHaveAttribute(
+			"href",
+			`/accounts/${accounts[0]?.id}`,
+		);
+		expect(screen.getByRole("link", { name: "Edit Joint" })).toBeVisible();
+		expect(
+			others.queryByRole("link", { name: "Edit Bob's Visa" }),
+		).not.toBeInTheDocument();
+		// Without a holder: an owner of the household takes care of it
+		expect(
+			others.getByRole("link", { name: "Edit Old account" }),
+		).toBeVisible();
+	});
+
+	it("doesn't let a plain member change an account without a holder", async () => {
+		setUp(accounts, "member");
+
+		const others = await group("Other accounts of the household");
+
+		expect(
+			others.queryByRole("link", { name: "Edit Old account" }),
+		).not.toBeInTheDocument();
 	});
 
 	it("says when the household has no account yet", async () => {

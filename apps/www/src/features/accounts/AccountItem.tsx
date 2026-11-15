@@ -1,4 +1,8 @@
 import type { Account } from "@repo/schemas";
+import { buttonVariants } from "@repo/ui";
+import { Link } from "@tanstack/react-router";
+import { PencilIcon } from "lucide-react";
+import { WithTooltip } from "@/components/WithTooltip";
 import { Amount } from "@/features/accounts/Amount";
 import { accountTypeLabels } from "@/features/accounts/account-type-labels";
 import { m } from "@/paraglide/messages";
@@ -9,6 +13,8 @@ interface AccountItemProps {
 	currency: string;
 	/** Names the holders: useful when the account isn't the user's alone. */
 	showHolders: boolean;
+	/** The signed-in user may change the account: links to its form. */
+	editable: boolean;
 }
 
 function holdersText(account: Account): string {
@@ -26,6 +32,7 @@ export function AccountItem({
 	account,
 	currency,
 	showHolders,
+	editable,
 }: AccountItemProps) {
 	return (
 		<li className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card p-4 text-card-foreground">
@@ -41,6 +48,18 @@ export function AccountItem({
 				currency={currency}
 				className="font-medium"
 			/>
+			{editable && (
+				<WithTooltip label={m.edit_tooltip()}>
+					<Link
+						to="/accounts/$accountId"
+						params={{ accountId: account.id }}
+						aria-label={m.account_edit_label({ name: account.name })}
+						className={buttonVariants({ variant: "ghost", size: "icon" })}
+					>
+						<PencilIcon aria-hidden className="size-4" />
+					</Link>
+				</WithTooltip>
+			)}
 		</li>
 	);
 }

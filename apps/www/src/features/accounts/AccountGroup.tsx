@@ -1,12 +1,15 @@
 import type { Account } from "@repo/schemas";
 import { useId } from "react";
 import { AccountItem } from "@/features/accounts/AccountItem";
+import { canEditAccount } from "@/features/accounts/account-form";
 
 interface AccountGroupProps {
 	title: string;
 	accounts: Account[];
 	currency: string;
 	showHolders: boolean;
+	/** The signed-in user owns the household. */
+	isHouseholdOwner: boolean;
 }
 
 /** A titled list of accounts; renders nothing when it has none. */
@@ -15,6 +18,7 @@ export function AccountGroup({
 	accounts,
 	currency,
 	showHolders,
+	isHouseholdOwner,
 }: AccountGroupProps) {
 	const titleId = useId();
 
@@ -33,6 +37,7 @@ export function AccountGroup({
 						account={account}
 						currency={currency}
 						showHolders={showHolders}
+						editable={canEditAccount(account, isHouseholdOwner)}
 					/>
 				))}
 			</ul>

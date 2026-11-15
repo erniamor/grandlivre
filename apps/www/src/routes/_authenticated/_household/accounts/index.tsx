@@ -5,7 +5,7 @@ import {
 	accountsSummaryQueryOptions,
 } from "@/features/accounts/accounts-query";
 
-export const Route = createFileRoute("/_authenticated/_household/accounts")({
+export const Route = createFileRoute("/_authenticated/_household/accounts/")({
 	loader: ({ context }) =>
 		Promise.all([
 			context.queryClient.ensureQueryData(

@@ -18,9 +18,11 @@ import { Route as AuthenticatedHouseholdRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
-import { Route as AuthenticatedHouseholdAccountsRouteImport } from './routes/_authenticated/_household/accounts'
 import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
 import { Route as AuthenticatedHouseholdHouseholdRouteImport } from './routes/_authenticated/_household/household'
+import { Route as AuthenticatedHouseholdAccountsIndexRouteImport } from './routes/_authenticated/_household/accounts/index'
+import { Route as AuthenticatedHouseholdAccountsAccountIdRouteImport } from './routes/_authenticated/_household/accounts/$accountId'
+import { Route as AuthenticatedHouseholdAccountsNewRouteImport } from './routes/_authenticated/_household/accounts/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -65,12 +67,6 @@ const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedHouseholdAccountsRoute =
-  AuthenticatedHouseholdAccountsRouteImport.update({
-    id: '/accounts',
-    path: '/accounts',
-    getParentRoute: () => AuthenticatedHouseholdRoute,
-  } as any)
 const AuthenticatedHouseholdDashboardRoute =
   AuthenticatedHouseholdDashboardRouteImport.update({
     id: '/dashboard',
@@ -83,6 +79,24 @@ const AuthenticatedHouseholdHouseholdRoute =
     path: '/household',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdAccountsIndexRoute =
+  AuthenticatedHouseholdAccountsIndexRouteImport.update({
+    id: '/accounts/',
+    path: '/accounts/',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdAccountsAccountIdRoute =
+  AuthenticatedHouseholdAccountsAccountIdRouteImport.update({
+    id: '/accounts/$accountId',
+    path: '/accounts/$accountId',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdAccountsNewRoute =
+  AuthenticatedHouseholdAccountsNewRouteImport.update({
+    id: '/accounts/new',
+    path: '/accounts/new',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,9 +106,11 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
-  '/accounts': typeof AuthenticatedHouseholdAccountsRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
+  '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,9 +120,11 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
-  '/accounts': typeof AuthenticatedHouseholdAccountsRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
+  '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,9 +137,11 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
-  '/_authenticated/_household/accounts': typeof AuthenticatedHouseholdAccountsRoute
   '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/_authenticated/_household/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
+  '/_authenticated/_household/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
+  '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,9 +153,11 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/welcome'
-    | '/accounts'
     | '/dashboard'
     | '/household'
+    | '/accounts/$accountId'
+    | '/accounts/new'
+    | '/accounts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,9 +167,11 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/welcome'
-    | '/accounts'
     | '/dashboard'
     | '/household'
+    | '/accounts/$accountId'
+    | '/accounts/new'
+    | '/accounts'
   id:
     | '__root__'
     | '/'
@@ -159,9 +183,11 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/setup'
     | '/_authenticated/welcome'
-    | '/_authenticated/_household/accounts'
     | '/_authenticated/_household/dashboard'
     | '/_authenticated/_household/household'
+    | '/_authenticated/_household/accounts/$accountId'
+    | '/_authenticated/_household/accounts/new'
+    | '/_authenticated/_household/accounts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,13 +263,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/_household/accounts': {
-      id: '/_authenticated/_household/accounts'
-      path: '/accounts'
-      fullPath: '/accounts'
-      preLoaderRoute: typeof AuthenticatedHouseholdAccountsRouteImport
-      parentRoute: typeof AuthenticatedHouseholdRoute
-    }
     '/_authenticated/_household/dashboard': {
       id: '/_authenticated/_household/dashboard'
       path: '/dashboard'
@@ -258,20 +277,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdHouseholdRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/accounts/': {
+      id: '/_authenticated/_household/accounts/'
+      path: '/accounts'
+      fullPath: '/accounts/'
+      preLoaderRoute: typeof AuthenticatedHouseholdAccountsIndexRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/accounts/$accountId': {
+      id: '/_authenticated/_household/accounts/$accountId'
+      path: '/accounts/$accountId'
+      fullPath: '/accounts/$accountId'
+      preLoaderRoute: typeof AuthenticatedHouseholdAccountsAccountIdRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/accounts/new': {
+      id: '/_authenticated/_household/accounts/new'
+      path: '/accounts/new'
+      fullPath: '/accounts/new'
+      preLoaderRoute: typeof AuthenticatedHouseholdAccountsNewRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
   }
 }
 
 interface AuthenticatedHouseholdRouteChildren {
-  AuthenticatedHouseholdAccountsRoute: typeof AuthenticatedHouseholdAccountsRoute
   AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
   AuthenticatedHouseholdHouseholdRoute: typeof AuthenticatedHouseholdHouseholdRoute
+  AuthenticatedHouseholdAccountsAccountIdRoute: typeof AuthenticatedHouseholdAccountsAccountIdRoute
+  AuthenticatedHouseholdAccountsNewRoute: typeof AuthenticatedHouseholdAccountsNewRoute
+  AuthenticatedHouseholdAccountsIndexRoute: typeof AuthenticatedHouseholdAccountsIndexRoute
 }
 
 const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
   {
-    AuthenticatedHouseholdAccountsRoute: AuthenticatedHouseholdAccountsRoute,
     AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
     AuthenticatedHouseholdHouseholdRoute: AuthenticatedHouseholdHouseholdRoute,
+    AuthenticatedHouseholdAccountsAccountIdRoute:
+      AuthenticatedHouseholdAccountsAccountIdRoute,
+    AuthenticatedHouseholdAccountsNewRoute:
+      AuthenticatedHouseholdAccountsNewRoute,
+    AuthenticatedHouseholdAccountsIndexRoute:
+      AuthenticatedHouseholdAccountsIndexRoute,
   }
 
 const AuthenticatedHouseholdRouteWithChildren =
