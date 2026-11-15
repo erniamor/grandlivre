@@ -11,6 +11,7 @@ The monorepo's shared design system: shadcn/ui components and reusable composed 
 - shadcn/ui, style `radix-nova` (components copied into the code, based on Radix UI through the `radix-ui` package) and Tailwind CSS v4
 - `class-variance-authority` for variants, `cn()` from the official `cn` package (replaces clsx + tailwind-merge) to merge classes
 - Icons: `lucide-react`
+- Charts: shadcn's chart component, on Recharts (`recharts`, pinned). Apps import the Recharts pieces from this package's index, never from `recharts` directly. A chart's colors are the theme's tokens, never new hues: a series pair taken from a theme must pass a color-blindness check, which most themes' tokens don't, so prefer single-series charts
 - Animations: `tw-animate-css`, imported by `src/styles/globals.css`
 - Tests: Vitest + Testing Library
 - Documentation: Storybook, hosted in a dedicated app (`apps/storybook`). Stories (`*.stories.tsx`) live next to their components in this package; the app only holds the Storybook configuration and loads the themes.

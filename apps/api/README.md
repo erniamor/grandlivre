@@ -145,7 +145,7 @@ What the household earns and spends over a period, from the lines of its expense
 | Route | Who | Effect |
 | --- | --- | --- |
 | `GET /v1/households/:householdId/reports/tags?from&to&accountId?` | member | `{ from, to, tags: [{ tagId, expense, income }] }`: each tag that had a line in the period, with its own amounts (the tags under it aren't added), and `tagId: null` for the uncategorized lines |
-| `GET /v1/households/:householdId/reports/monthly?from&to&tagId?&accountId?` | member | `{ months: [{ month, expense, income }] }`: every month the period touches (`"2026-11"`), empty ones included; with `tagId`, only the lines on that tag or on a tag under it. At most 60 months |
+| `GET /v1/households/:householdId/reports/monthly?from&to&tagId?&accountId?` | member | `{ months: [{ month, expense, income, tags }] }`: every month the period touches (`"2026-11"`), empty ones included, with its amounts tag by tag in `tags` as in the report by tag; with `tagId`, only the lines on that tag or on a tag under it. At most 60 months |
 
 `from` and `to` are days, both included. The reports count every account of the household, those that only show their balance included. `accountId` narrows a report to one account, if the user may see its details: otherwise 403, since the report would show, tag by tag, what the account hides.
 

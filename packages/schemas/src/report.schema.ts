@@ -41,8 +41,15 @@ export type TagReport = z.infer<typeof tagReportSchema>;
 export const monthTotalSchema = z.object({
 	/** "2026-11". */
 	month: z.string().regex(/^\d{4}-\d{2}$/),
+	/** All the month's expense lines. */
 	expense: z.number().int(),
+	/** All the month's income lines. */
 	income: z.number().int(),
+	/**
+	 * The same, tag by tag, as in a report by tag: to show a month the way
+	 * the report shows the period (a refund lowering its tag's expenses).
+	 */
+	tags: z.array(tagTotalSchema),
 });
 
 export type MonthTotal = z.infer<typeof monthTotalSchema>;

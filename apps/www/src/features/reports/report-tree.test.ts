@@ -1,6 +1,10 @@
 import type { Tag, TagReport } from "@repo/schemas";
 import { describe, expect, it } from "vitest";
-import { buildReport, type ReportNode } from "@/features/reports/report-tree";
+import {
+	buildReport,
+	monthTotals,
+	type ReportNode,
+} from "@/features/reports/report-tree";
 
 function tag(id: string, en: string, parentId: string | null = null): Tag {
 	return {
@@ -216,5 +220,41 @@ describe("buildReport", () => {
 
 		expect(view.isEmpty).toBe(true);
 		expect(view.balance).toBe(0);
+	});
+});
+
+describe("monthTotals", () => {
+	const month = {
+		month: "2026-11",
+		expense: 46_500,
+		income: 253_000,
+		tags: [
+			{ tagId: "groceries", expense: 40_000, income: 3000 },
+			{ tagId: "restaurant", expense: 5000, income: 0 },
+			{ tagId: "salary", expense: 0, income: 250_000 },
+			{ tagId: null, expense: 1500, income: 0 },
+		],
+	};
+
+	it("counts a month as a report counts a period: refunds lower their tag", () => {
+		expect(monthTotals(month, tags, "en")).toEqual({
+			expense: 43_500,
+			income: 250_000,
+		});
+	});
+
+	it("keeps to a tag and the tags under it", () => {
+		expect(monthTotals(month, tags, "en", "food")).toEqual({
+			expense: 42_000,
+			income: 0,
+		});
+		expect(monthTotals(month, tags, "en", "groceries")).toEqual({
+			expense: 37_000,
+			income: 0,
+		});
+		expect(monthTotals(month, tags, "en", "car")).toEqual({
+			expense: 0,
+			income: 0,
+		});
 	});
 });

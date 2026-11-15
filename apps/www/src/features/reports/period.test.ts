@@ -6,6 +6,7 @@ import {
 	periodKind,
 	periodLabel,
 	shiftPeriod,
+	twelveMonthsEnding,
 	yearOf,
 	yearPeriod,
 } from "@/features/reports/period";
@@ -60,6 +61,18 @@ describe("periods", () => {
 		const days = { from: "2026-11-03", to: "2026-11-20" };
 
 		expect(shiftPeriod(days, 1)).toEqual(days);
+	});
+
+	it("gives the twelve months ending with a day's month", () => {
+		expect(twelveMonthsEnding("2026-11-14")).toEqual({
+			from: "2025-12-01",
+			to: "2026-11-30",
+		});
+		expect(twelveMonthsEnding("2026-12-31")).toEqual(yearPeriod(2026));
+		expect(twelveMonthsEnding("2028-02-10")).toEqual({
+			from: "2027-03-01",
+			to: "2028-02-29",
+		});
 	});
 
 	it("checks the first day isn't after the last", () => {

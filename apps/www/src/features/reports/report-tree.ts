@@ -1,5 +1,9 @@
-import type { Locale, Tag, TagReport } from "@repo/schemas";
-import { buildTagTree, type TagNode } from "@/features/tags/tag-tree";
+import type { Locale, MonthTotal, Tag, TagReport } from "@repo/schemas";
+import {
+	buildTagTree,
+	subtreeIds,
+	type TagNode,
+} from "@/features/tags/tag-tree";
 
 /** A tag of a report: what it and the tags under it gathered. */
 export interface ReportNode {
@@ -123,4 +127,32 @@ export function buildReport(
 		balance: incomeTotal - expenseTotal,
 		isEmpty: report.tags.length === 0,
 	};
+}
+
+/**
+ * A month's expenses and incomes, counted as a report counts a period: a
+ * refund lowers its tag's expenses. With `tagId`, only that tag and the tags
+ * under it, as its line in the report.
+ */
+export function monthTotals(
+	month: MonthTotal,
+	tags: Tag[],
+	locale: Locale,
+	tagId?: string,
+): { expense: number; income: number } {
+	const kept = tagId ? subtreeIds(tags, tagId) : undefined;
+	const view = buildReport(
+		{
+			from: month.month,
+			to: month.month,
+			tags: kept
+				? month.tags.filter(
+						(total) => total.tagId !== null && kept.has(total.tagId),
+					)
+				: month.tags,
+		},
+		tags,
+		locale,
+	);
+	return { expense: view.expenses.total, income: view.incomes.total };
 }

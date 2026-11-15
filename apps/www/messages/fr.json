@@ -306,5 +306,12 @@
 	"report_no_income": "Aucun revenu sur cette période.",
 	"report_accounts_note": "Les rapports comptent tous les comptes du foyer, y compris ceux dont vous ne voyez que le solde. Les transferts entre comptes ne comptent ni comme revenus ni comme dépenses.",
 	"error_report_period_invalid": "Choisissez un premier jour antérieur au dernier.",
-	"error_report_period_too_long": "Cette période est trop longue (5 ans au maximum)."
+	"error_report_period_too_long": "Cette période est trop longue (5 ans au maximum).",
+	"report_trend_title": "Sur douze mois",
+	"report_trend_all_tags": "Tous les tags",
+	"report_trend_expenses": "Dépenses par mois",
+	"report_trend_incomes": "Revenus par mois",
+	"report_trend_empty": "Rien sur ces douze mois.",
+	"report_trend_table_toggle": "Voir les chiffres",
+	"report_trend_month": "Mois"
 }

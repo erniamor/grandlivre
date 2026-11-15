@@ -12,6 +12,12 @@ export {
 	AlertDialogTrigger,
 } from "@repo/ui/components/ui/alert-dialog";
 export { Button, buttonVariants } from "@repo/ui/components/ui/button";
+export {
+	type ChartConfig,
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@repo/ui/components/ui/chart";
 export { Checkbox } from "@repo/ui/components/ui/checkbox";
 export {
 	Dialog,
@@ -49,5 +55,8 @@ export {
 	TooltipTrigger,
 } from "@repo/ui/components/ui/tooltip";
 export { cn } from "cn";
+// The chart pieces the apps compose inside a ChartContainer: Recharts stays
+// a dependency of this package only
+export { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 // Shows a toast in the app's <Toaster />
 export { toast } from "sonner";

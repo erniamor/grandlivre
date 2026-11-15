@@ -306,5 +306,12 @@
 	"report_no_income": "No income in this period.",
 	"report_accounts_note": "Reports count every account of the household, including those whose balance only you see. Transfers between accounts count neither as income nor as expenses.",
 	"error_report_period_invalid": "Choose a first day that comes before the last.",
-	"error_report_period_too_long": "This period is too long (5 years at most)."
+	"error_report_period_too_long": "This period is too long (5 years at most).",
+	"report_trend_title": "Over twelve months",
+	"report_trend_all_tags": "All tags",
+	"report_trend_expenses": "Expenses per month",
+	"report_trend_incomes": "Income per month",
+	"report_trend_empty": "Nothing over these twelve months.",
+	"report_trend_table_toggle": "See the figures",
+	"report_trend_month": "Month"
 }

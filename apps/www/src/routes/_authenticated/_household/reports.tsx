@@ -3,7 +3,10 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { isPeriod, monthOf } from "@/features/reports/period";
 import { ReportsPage } from "@/features/reports/ReportsPage";
-import { tagReportQueryOptions } from "@/features/reports/reports-query";
+import {
+	monthlyReportQueryOptions,
+	tagReportQueryOptions,
+} from "@/features/reports/reports-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { localToday } from "@/features/transactions/use-local-today";
 
@@ -30,6 +33,9 @@ export const Route = createFileRoute("/_authenticated/_household/reports")({
 		const { household, queryClient } = context;
 		return Promise.all([
 			queryClient.ensureQueryData(tagReportQueryOptions(household.id, deps)),
+			queryClient.ensureQueryData(
+				monthlyReportQueryOptions(household.id, deps),
+			),
 			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
 		]);
 	},

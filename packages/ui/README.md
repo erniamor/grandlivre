@@ -31,6 +31,7 @@ Apps import only from `@repo/ui` and `@repo/ui/styles.css`, never from internal 
 | `AlertDialog` and its parts (`AlertDialogTrigger`, `AlertDialogContent`, `AlertDialogHeader`, `AlertDialogTitle`, `AlertDialogDescription`, `AlertDialogFooter`, `AlertDialogCancel`, `AlertDialogAction`) | Confirmation dialog for an action that can't be undone |
 | `Button`, `buttonVariants` | shadcn button and its variants |
 | `DropdownMenu` and its parts (`DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuLabel`, `DropdownMenuGroup`, `DropdownMenuItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuSeparator`) | Menu opened from a button (Radix), usable with the keyboard |
+| `ChartContainer`, `ChartTooltip`, `ChartTooltipContent`, `ChartConfig`, and the Recharts pieces composed inside (`BarChart`, `Bar`, `XAxis`, `YAxis`, `CartesianGrid`) | Charts (shadcn chart, on Recharts): the `config` gives each series its label and color, as a CSS variable of the chart (`--color-<key>`); take the colors from the theme's tokens (`var(--primary)`). Recharts stays a dependency of this package: apps import its pieces from here |
 | `Checkbox` | Checkbox (Radix), checked with the mouse or the Space key |
 | `Input` | Text field; `aria-invalid` shows the error state |
 | `Label` | Field label, associated with its field through `htmlFor` |

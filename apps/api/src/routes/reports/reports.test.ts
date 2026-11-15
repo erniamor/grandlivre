@@ -100,6 +100,15 @@ async function setUp() {
 	};
 }
 
+/** The months of a report, without their detail by tag. */
+function totals(report: MonthlyReport) {
+	return report.months.map(({ month, expense, income }) => ({
+		month,
+		expense,
+		income,
+	}));
+}
+
 /** The tags of a report, sorted for comparison; null for the uncategorized. */
 function byTag(report: TagReport) {
 	return Object.fromEntries(
@@ -273,16 +282,14 @@ describe("GET /v1/households/:householdId/reports/monthly", () => {
 		);
 
 		expect(response.status).toBe(200);
-		expect(await response.json()).toEqual({
-			months: [
-				{ month: "2026-09", expense: 0, income: 0 },
-				{ month: "2026-10", expense: 40_000, income: 0 },
-				// 180.00 + 72.00 + 60.00; 30.00 + 2,500.00; not the transfer
-				{ month: "2026-11", expense: 31_200, income: 253_000 },
-				{ month: "2026-12", expense: 0, income: 0 },
-				{ month: "2027-01", expense: 0, income: 0 },
-			],
-		});
+		expect(totals(await json<MonthlyReport>(response))).toEqual([
+			{ month: "2026-09", expense: 0, income: 0 },
+			{ month: "2026-10", expense: 40_000, income: 0 },
+			// 180.00 + 72.00 + 60.00; 30.00 + 2,500.00; not the transfer
+			{ month: "2026-11", expense: 31_200, income: 253_000 },
+			{ month: "2026-12", expense: 0, income: 0 },
+			{ month: "2027-01", expense: 0, income: 0 },
+		]);
 	});
 
 	it("keeps to the days of the period inside its first and last months", async () => {
@@ -293,24 +300,47 @@ describe("GET /v1/households/:householdId/reports/monthly", () => {
 		);
 
 		// The repair on the 31st; Costco and Shell, the salary; not the 20th nor the 30th
-		expect(result.months).toEqual([
+		expect(totals(result)).toEqual([
 			{ month: "2026-10", expense: 40_000, income: 0 },
 			{ month: "2026-11", expense: 18_000 + 7200, income: 250_000 },
 		]);
 	});
 
+	it("details each month tag by tag, as the report by tag does", async () => {
+		const { alice, gas, food, car, report } = await setUp();
+
+		const result = await json<MonthlyReport>(
+			await report(alice, "monthly", "from=2026-10-01&to=2026-11-30"),
+		);
+		const tagsOf = (month: string) =>
+			Object.fromEntries(
+				(result.months.find((each) => each.month === month)?.tags ?? []).map(
+					({ tagId, expense, income }) => [String(tagId), { expense, income }],
+				),
+			);
+
+		expect(tagsOf("2026-10")).toEqual({
+			[car.id]: { expense: 40_000, income: 0 },
+		});
+		expect(tagsOf("2026-11")).toEqual({
+			[food.id]: { expense: 18_000, income: 3000 },
+			[gas.id]: { expense: 11_700, income: 0 },
+			null: { expense: 1500, income: 250_000 },
+		});
+	});
+
 	it("narrows to a tag, the tags under it included", async () => {
 		const { alice, car, food, report } = await setUp();
 		const months = async (tagId: string) =>
-			(
+			totals(
 				await json<MonthlyReport>(
 					await report(
 						alice,
 						"monthly",
 						`from=2026-10-01&to=2026-11-30&tagId=${tagId}`,
 					),
-				)
-			).months;
+				),
+			);
 
 		expect(await months(car.id)).toEqual([
 			{ month: "2026-10", expense: 40_000, income: 0 },
@@ -339,7 +369,7 @@ describe("GET /v1/households/:householdId/reports/monthly", () => {
 			`from=2026-11-01&to=2026-11-30&accountId=${card.id}`,
 		);
 
-		expect(onChequing.months).toEqual([
+		expect(totals(onChequing)).toEqual([
 			{ month: "2026-11", expense: 25_200, income: 253_000 },
 		]);
 		expect(onCard.status).toBe(403);

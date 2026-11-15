@@ -306,5 +306,12 @@
 	"report_no_income": "No hay ingresos en este periodo.",
 	"report_accounts_note": "Los informes cuentan todas las cuentas del hogar, incluidas aquellas de las que solo ves el saldo. Las transferencias entre cuentas no cuentan ni como ingresos ni como gastos.",
 	"error_report_period_invalid": "Elige un primer día anterior al último.",
-	"error_report_period_too_long": "Este periodo es demasiado largo (5 años como máximo)."
+	"error_report_period_too_long": "Este periodo es demasiado largo (5 años como máximo).",
+	"report_trend_title": "En doce meses",
+	"report_trend_all_tags": "Todas las etiquetas",
+	"report_trend_expenses": "Gastos por mes",
+	"report_trend_incomes": "Ingresos por mes",
+	"report_trend_empty": "Nada en estos doce meses.",
+	"report_trend_table_toggle": "Ver las cifras",
+	"report_trend_month": "Mes"
 }

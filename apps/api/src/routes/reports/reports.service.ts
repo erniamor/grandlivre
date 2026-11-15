@@ -1,4 +1,4 @@
-import type { MonthlyReport, TagReport } from "@repo/schemas";
+import type { MonthlyReport, MonthTotal, TagReport } from "@repo/schemas";
 import {
 	and,
 	eq,
@@ -172,7 +172,12 @@ export async function monthlyReport(
 	// Raw SQL: the month of a day has no Drizzle helper
 	const month = sql<string>`to_char(${transactions.date}, 'YYYY-MM')`;
 	const rows = await db
-		.select({ month, expense: expenseSum, income: incomeSum })
+		.select({
+			month,
+			tagId: transactionLines.tagId,
+			expense: expenseSum,
+			income: incomeSum,
+		})
 		.from(transactionLines)
 		.innerJoin(
 			transactions,
@@ -189,13 +194,24 @@ export async function monthlyReport(
 					: undefined,
 			),
 		)
-		.groupBy(month);
-	const byMonth = new Map(rows.map((row) => [row.month, row]));
+		.groupBy(month, transactionLines.tagId);
+	const byMonth = new Map<string, MonthTotal>();
+	for (const { month: key, tagId, expense, income } of rows) {
+		const total = byMonth.get(key) ?? {
+			month: key,
+			expense: 0,
+			income: 0,
+			tags: [],
+		};
+		total.expense += expense;
+		total.income += income;
+		total.tags.push({ tagId, expense, income });
+		byMonth.set(key, total);
+	}
 	return {
-		months: monthsOf(query.from, query.to).map((each) => ({
-			month: each,
-			expense: byMonth.get(each)?.expense ?? 0,
-			income: byMonth.get(each)?.income ?? 0,
-		})),
+		months: monthsOf(query.from, query.to).map(
+			(each) =>
+				byMonth.get(each) ?? { month: each, expense: 0, income: 0, tags: [] },
+		),
 	};
 }

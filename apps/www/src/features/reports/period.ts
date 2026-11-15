@@ -95,3 +95,14 @@ export function periodLabel(period: Period, locale: string): string {
 			}).formatRange(asDate(period.from), asDate(period.to));
 	}
 }
+
+/** The twelve months ending with the month of `day`, that one included. */
+export function twelveMonthsEnding(day: string): Period {
+	const [year, month] = yearMonthOf(day);
+	const zeroBased = month - 1 - 11;
+	const first = monthPeriod(
+		year + Math.floor(zeroBased / 12),
+		(((zeroBased % 12) + 12) % 12) + 1,
+	);
+	return { from: first.from, to: monthOf(day).to };
+}

@@ -29,6 +29,24 @@ export function formatAmount(
 }
 
 /**
+ * Formats an amount in minor units in few characters, for a chart's axis:
+ * "$1.3K", "1,3 k$". The exact amount shows elsewhere.
+ */
+export function formatAmountCompact(
+	amount: number,
+	currency: string,
+	locale: string,
+): string {
+	return new Intl.NumberFormat(locale, {
+		style: "currency",
+		currency,
+		currencyDisplay: "narrowSymbol",
+		notation: "compact",
+		maximumFractionDigits: 1,
+	}).format(amount / 10 ** minorUnitDigits(currency));
+}
+
+/**
  * Formats an amount in minor units as the text of an input, the way
  * `parseAmount()` reads it back: 125050 is "1250.50" in English and
  * "1250,50" in French.

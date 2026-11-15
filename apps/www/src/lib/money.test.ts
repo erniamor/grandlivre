@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatAmount, formatAmountInput, parseAmount } from "@/lib/money";
+import {
+	formatAmount,
+	formatAmountCompact,
+	formatAmountInput,
+	parseAmount,
+} from "@/lib/money";
 
 /** Intl separates groups and symbols with non-breaking spaces. */
 const plainSpaces = (text: string) => text.replace(/\s/g, " ");
@@ -29,6 +34,17 @@ describe("formatAmount", () => {
 		expect(plainSpaces(formatAmount(7200, "CAD", "fr", signed))).toBe(
 			"+72,00 $",
 		);
+	});
+});
+
+describe("formatAmountCompact", () => {
+	it("writes an amount in few characters, the way the language does", () => {
+		expect(formatAmountCompact(125_050, "CAD", "en")).toBe("$1.3K");
+		expect(formatAmountCompact(50_000, "CAD", "en")).toBe("$500");
+		expect(plainSpaces(formatAmountCompact(125_050, "CAD", "fr"))).toBe(
+			"1,3 k $",
+		);
+		expect(formatAmountCompact(0, "CAD", "en")).toBe("$0");
 	});
 });
 

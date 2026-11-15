@@ -1,4 +1,4 @@
-import type { Tag, TagReport } from "@repo/schemas";
+import type { MonthlyReport, Tag, TagReport } from "@repo/schemas";
 import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -66,12 +66,42 @@ const novemberReport: TagReport = {
 	],
 };
 
-function setUp(report: TagReport = novemberReport, period: Period = november) {
+/**
+ * Twelve months to November: October with the car, November as above; the
+ * other months empty.
+ */
+const months: MonthlyReport = {
+	months: Array.from({ length: 12 }, (_, index) => {
+		const month = `${index === 0 ? 2025 : 2026}-${String(index === 0 ? 12 : index).padStart(2, "0")}`;
+		if (month === "2026-10") {
+			const tags = [{ tagId: car.id, expense: 20_000, income: 0 }];
+			return { month, expense: 20_000, income: 0, tags };
+		}
+		if (month === "2026-11") {
+			return {
+				month,
+				expense: 58_500,
+				income: 263_000,
+				tags: novemberReport.tags,
+			};
+		}
+		return { month, expense: 0, income: 0, tags: [] };
+	}),
+};
+
+function setUp(
+	report: TagReport = novemberReport,
+	period: Period = november,
+	monthly: MonthlyReport = months,
+) {
 	const urls: URL[] = [];
 	mockApi((request, url) => {
 		urls.push(url);
 		if (request.path === `${base}/reports/tags`) {
 			return { status: 200, body: report };
+		}
+		if (request.path === `${base}/reports/monthly`) {
+			return { status: 200, body: monthly };
 		}
 		if (request.path === `${base}/tags`) {
 			return page(tags, { pageSize: 500 });
@@ -126,7 +156,8 @@ describe("ReportsPage", () => {
 			expect(
 				await screen.findByRole("heading", { level: 1, name: title }),
 			).toBeVisible();
-			expect(screen.getByText(month)).toBeVisible();
+			// The period picker's label, not the table of figures
+			expect(screen.getByText(month, { selector: "p" })).toBeVisible();
 			expect(await section(expenses)).toBeDefined();
 			expect(await section(incomes)).toBeDefined();
 			expect(reportQuery()).toBe("?from=2026-11-01&to=2026-11-30");
@@ -289,6 +320,94 @@ describe("ReportsPage", () => {
 			).toBeChecked();
 			expect(screen.getByLabelText("From")).toHaveValue("2026-11-03");
 			expect(screen.getByLabelText("To")).toHaveValue("2026-11-20");
+		});
+	});
+
+	describe("over twelve months", () => {
+		const trend = () => section("Over twelve months");
+		/** A month's line in the table of figures: month, expenses, income. */
+		const figures = async (month: string) => {
+			const table = (await trend()).getByRole("table");
+			const line = within(table)
+				.getByRole("rowheader", { name: month })
+				.closest("tr");
+			return within(line as HTMLElement)
+				.getAllByRole("cell")
+				.map((cell) => cell.textContent);
+		};
+
+		it("asks for the twelve months ending with the period", async () => {
+			const urls: URL[] = [];
+			mockApi((request, url) => {
+				urls.push(url);
+				return request.path.endsWith("/reports/monthly")
+					? { status: 200, body: months }
+					: request.path.endsWith("/reports/tags")
+						? { status: 200, body: novemberReport }
+						: page(tags, { pageSize: 500 });
+			});
+			renderWithRouter(
+				<ReportsPage
+					household={household}
+					period={november}
+					onPeriodChange={vi.fn()}
+				/>,
+			);
+
+			await trend();
+			expect(
+				urls.find((url) => url.pathname.endsWith("/reports/monthly"))?.search,
+			).toBe("?from=2025-12-01&to=2026-11-30");
+		});
+
+		it("charts the expenses and the income of each month, with their figures", async () => {
+			setUp();
+
+			const region = await trend();
+
+			expect(
+				region.getByRole("figure", { name: "Expenses per month" }),
+			).toBeVisible();
+			expect(
+				region.getByRole("figure", { name: "Income per month" }),
+			).toBeVisible();
+			expect(region.getAllByRole("row")).toHaveLength(13);
+			expect(await figures("October 2026")).toEqual(["$200.00", "$0.00"]);
+		});
+
+		it("counts a month as the report counts the period: refunds lower their tag", async () => {
+			setUp();
+
+			// 370.00 + 120.00 + 50.00 + 15.00, as in the summary above
+			expect(await figures("November 2026")).toEqual(["$555.00", "$2,600.00"]);
+		});
+
+		it("keeps to a tag and the tags under it once one is chosen", async () => {
+			const { user } = setUp();
+
+			await user.selectOptions((await trend()).getByLabelText("Tag"), "Food");
+
+			expect(await figures("November 2026")).toEqual(["$490.00", "$0.00"]);
+			expect(await figures("October 2026")).toEqual(["$0.00", "$0.00"]);
+			// No income on this tag: no chart for it
+			expect(
+				(await trend()).queryByRole("figure", { name: "Income per month" }),
+			).not.toBeInTheDocument();
+		});
+
+		it("says when the twelve months have nothing", async () => {
+			setUp(novemberReport, november, {
+				months: months.months.map((month) => ({
+					...month,
+					expense: 0,
+					income: 0,
+					tags: [],
+				})),
+			});
+
+			expect(
+				(await trend()).getByText("Nothing over these twelve months."),
+			).toBeVisible();
 		});
 	});
 });

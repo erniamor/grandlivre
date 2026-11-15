@@ -4,6 +4,7 @@ import { PeriodPicker } from "@/features/reports/PeriodPicker";
 import type { Period } from "@/features/reports/period";
 import { ReportSectionView } from "@/features/reports/ReportSectionView";
 import { ReportSummary } from "@/features/reports/ReportSummary";
+import { ReportTrend } from "@/features/reports/ReportTrend";
 import { buildReport } from "@/features/reports/report-tree";
 import { tagReportQueryOptions } from "@/features/reports/reports-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
@@ -48,6 +49,7 @@ export function ReportsPage({
 			) : (
 				<>
 					<ReportSummary view={view} currency={currency} />
+					<ReportTrend household={household} period={period} tags={tags} />
 					<ReportSectionView
 						title={m.report_expenses_title()}
 						section={view.expenses}

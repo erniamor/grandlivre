@@ -24,8 +24,13 @@ const tagReport = {
 
 const monthlyReport = {
 	months: [
-		{ month: "2026-10", expense: 40_000, income: 0 },
-		{ month: "2026-11", expense: 31_200, income: 253_000 },
+		{
+			month: "2026-10",
+			expense: 40_000,
+			income: 0,
+			tags: [{ tagId: TAG_ID, expense: 40_000, income: 0 }],
+		},
+		{ month: "2026-11", expense: 0, income: 0, tags: [] },
 	],
 };
 
@@ -117,7 +122,7 @@ describe("reports", () => {
 
 	it("rejects a report that doesn't match the contract", async () => {
 		const { api } = fakeApi(200, {
-			months: [{ month: "November", expense: 0, income: 0 }],
+			months: [{ month: "November", expense: 0, income: 0, tags: [] }],
 		});
 
 		await expect(
