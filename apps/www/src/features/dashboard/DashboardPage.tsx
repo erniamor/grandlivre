@@ -2,6 +2,8 @@ import type { Household, Profile } from "@repo/schemas";
 import { Link } from "@tanstack/react-router";
 import { HouseholdBalance } from "@/features/accounts/HouseholdBalance";
 import { InstallCard } from "@/features/pwa/InstallCard";
+import { PendingRecurring } from "@/features/recurring/PendingRecurring";
+import { UpcomingRecurring } from "@/features/recurring/UpcomingRecurring";
 import { useOpenDraft } from "@/features/transactions/note-draft";
 import { QuickEntry } from "@/features/transactions/QuickEntry";
 import { RecentTransactions } from "@/features/transactions/RecentTransactions";
@@ -30,6 +32,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 				householdId={household.id}
 				onDraft={(draft, photo) => openDraft(draft, { photo })}
 			/>
+			<PendingRecurring household={household} />
 			<HouseholdBalance household={household}>
 				<Link
 					to="/accounts"
@@ -39,6 +42,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 				</Link>
 			</HouseholdBalance>
 			<RecentTransactions household={household} />
+			<UpcomingRecurring household={household} />
 			<InstallCard />
 		</section>
 	);

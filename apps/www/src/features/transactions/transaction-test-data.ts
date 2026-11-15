@@ -151,7 +151,8 @@ export function page(items: unknown[], fields: object = {}): ApiResponse {
 
 /**
  * Answers the reads of a page that shows transactions: the accounts, the
- * tags, the consolidated balance, and the transactions given.
+ * tags, the consolidated balance, the transactions given, and no recurring
+ * transaction waiting or to come.
  */
 export function respondWith(
 	items: Transaction[] = transactions,
@@ -175,6 +176,13 @@ export function respondWith(
 		}
 		if (request.path === `${base}/transactions`) {
 			return page(items, pagination);
+		}
+		// No recurring transaction waits or comes
+		if (
+			request.path === `${base}/recurring-transactions/pending` ||
+			request.path === `${base}/recurring-transactions/upcoming`
+		) {
+			return page([]);
 		}
 		return undefined;
 	};

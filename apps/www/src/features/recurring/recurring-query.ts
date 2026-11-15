@@ -34,3 +34,36 @@ export function recurringQueryOptions(
 			getApi().recurring.get(householdId, recurringId, { signal }),
 	});
 }
+
+/** The days waiting for a member: few, one page holds them. */
+export function pendingQueryOptions(householdId: string) {
+	return queryOptions({
+		queryKey: [...recurringQueryKey(householdId), "pending"] as const,
+		queryFn: ({ signal }) =>
+			getApi().recurring.pending(householdId, {
+				pageSize: RECURRING_PAGE_SIZE,
+				signal,
+			}),
+	});
+}
+
+/** How far ahead the dashboard looks, and how many days it shows. */
+export const UPCOMING_DAYS = 30;
+export const UPCOMING_SHOWN = 5;
+
+/** The first days to come, over the next `UPCOMING_DAYS`. */
+export function upcomingQueryOptions(householdId: string) {
+	return queryOptions({
+		queryKey: [
+			...recurringQueryKey(householdId),
+			"upcoming",
+			{ days: UPCOMING_DAYS, pageSize: UPCOMING_SHOWN },
+		] as const,
+		queryFn: ({ signal }) =>
+			getApi().recurring.upcoming(householdId, {
+				days: UPCOMING_DAYS,
+				pageSize: UPCOMING_SHOWN,
+				signal,
+			}),
+	});
+}

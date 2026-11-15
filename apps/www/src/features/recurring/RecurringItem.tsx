@@ -1,8 +1,12 @@
 import type { Account, RecurringTransaction, Tag } from "@repo/schemas";
 import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import {
+	templateDirection,
+	templateTitle,
+	templateWhere,
+} from "@/features/recurring/recurring-view";
 import { scheduleLabel } from "@/features/recurring/schedule-label";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { formatDay } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -16,12 +20,6 @@ interface RecurringItemProps {
 	/** Links it to its page. */
 	linked?: boolean;
 }
-
-const typeLabels = {
-	expense: m.transaction_type_expense,
-	income: m.transaction_type_income,
-	transfer: m.transaction_type_transfer,
-};
 
 const modeLabels = {
 	automatic: m.recurring_mode_automatic,
@@ -38,35 +36,9 @@ export function RecurringItem({
 }: RecurringItemProps) {
 	const locale = getLocale();
 	const { transaction, schedule, nextDate, mode } = recurring;
-	const nameOf = (id: string | null) =>
-		accounts.find((account) => account.id === id)?.name ??
-		m.transaction_unknown_account();
-	const tagPaths = new Map(
-		flattenTagTree(buildTagTree(tags, locale)).map(({ tag, path }) => [
-			tag.id,
-			path,
-		]),
-	);
-	const title = transaction.payee ?? typeLabels[transaction.type]();
-	const where =
-		transaction.type === "transfer"
-			? m.transaction_transfer_accounts({
-					from: nameOf(transaction.accountId),
-					to: nameOf(transaction.toAccountId),
-				})
-			: [
-					...new Set(
-						transaction.lines.map(
-							(line) =>
-								(line.tagId && tagPaths.get(line.tagId)) ||
-								m.transaction_uncategorized(),
-						),
-					),
-					nameOf(transaction.accountId),
-				].join(" · ");
-	// Money going out, coming in, or moving between the household's accounts
-	const direction =
-		transaction.type === "expense" ? -1 : transaction.type === "income" ? 1 : 0;
+	const title = templateTitle(transaction);
+	const where = templateWhere(transaction, accounts, tags, locale);
+	const direction = templateDirection(transaction);
 
 	return (
 		<li className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card p-4 text-card-foreground">

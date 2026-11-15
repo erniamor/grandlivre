@@ -1,9 +1,13 @@
+import type { RecurringTransaction } from "@repo/schemas";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import {
 	base,
+	bobsCard,
+	chequing,
 	household,
+	page,
 	respondWith,
 	transactions,
 } from "@/features/transactions/transaction-test-data";
@@ -112,5 +116,129 @@ describe("DashboardPage", () => {
 		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
 
 		expect(await screen.findByText("No transaction yet.")).toBeVisible();
+	});
+
+	describe("the recurring transactions", () => {
+		const NOW = "2026-11-15T12:00:00.000Z";
+		const hydro: RecurringTransaction = {
+			id: "00000000-0000-4000-8000-000000000061",
+			householdId: household.id,
+			transaction: {
+				type: "expense",
+				accountId: chequing.id,
+				toAccountId: null,
+				amount: 9_000,
+				payee: "Hydro",
+				note: null,
+				lines: [{ amount: 9_000, tagId: null }],
+			},
+			schedule: {
+				unit: "month",
+				interval: 2,
+				startDate: "2026-11-10",
+				endDate: null,
+			},
+			mode: "confirm",
+			nextDate: "2027-01-10",
+			createdBy: null,
+			createdAt: NOW,
+			updatedAt: NOW,
+		};
+		const bobsGym: RecurringTransaction = {
+			...hydro,
+			id: "00000000-0000-4000-8000-000000000062",
+			transaction: {
+				...hydro.transaction,
+				accountId: bobsCard.id,
+				payee: "Gym",
+			},
+		};
+		const OCCURRENCE = "00000000-0000-4000-8000-000000000071";
+
+		function mockRecurring() {
+			const reads = respondWith();
+			mockApi((request) => {
+				if (request.path === `${base}/recurring-transactions/pending`) {
+					return page([
+						{ id: OCCURRENCE, date: "2026-11-10", recurring: hydro },
+						{
+							id: "00000000-0000-4000-8000-000000000072",
+							date: "2026-11-12",
+							recurring: bobsGym,
+						},
+					]);
+				}
+				if (request.path === `${base}/recurring-transactions/upcoming`) {
+					return page(
+						[
+							{
+								date: "2027-01-10",
+								recurring: { ...hydro, mode: "automatic" },
+							},
+						],
+						{ total: 4 },
+					);
+				}
+				return reads(request);
+			});
+		}
+
+		it("lists the days waiting, to check and record or skip, on the accounts the user holds", async () => {
+			mockRecurring();
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			const waiting = within(
+				await screen.findByRole("region", { name: "To confirm" }),
+			);
+			expect(waiting.getByText("Hydro")).toBeVisible();
+			expect(waiting.getByText("Tuesday, November 10, 2026")).toBeVisible();
+			expect(
+				waiting.getByRole("link", { name: "Check and record Hydro" }),
+			).toHaveAttribute("href", `/recurring/pending/${OCCURRENCE}`);
+			expect(waiting.getByRole("button", { name: "Skip Hydro" })).toBeVisible();
+			// Bob's: shown, but only Bob can record or skip it
+			expect(waiting.getByText("Gym")).toBeVisible();
+			expect(
+				waiting.queryByRole("button", { name: "Skip Gym" }),
+			).not.toBeInTheDocument();
+		});
+
+		it("shows the first days to come, and how many more", async () => {
+			mockRecurring();
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			const upcoming = within(
+				await screen.findByRole("region", { name: "In the next 30 days" }),
+			);
+			expect(
+				upcoming.getByText("Sunday, January 10, 2027 · Automatic"),
+			).toBeVisible();
+			expect(upcoming.getByText("And 3 more.")).toBeVisible();
+			expect(
+				upcoming.getByRole("link", { name: "See the recurring transactions" }),
+			).toHaveAttribute("href", "/recurring");
+		});
+
+		it("shows neither when none waits nor comes", async () => {
+			mockSummary();
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+			expect(
+				screen.queryByRole("region", { name: "To confirm" }),
+			).not.toBeInTheDocument();
+			expect(
+				screen.queryByRole("region", { name: "In the next 30 days" }),
+			).not.toBeInTheDocument();
+		});
 	});
 });
