@@ -19,6 +19,7 @@ const cached = [
 	["households", HOME, "tags"],
 	["households", HOME, "suggested-tags"],
 	["households", HOME, "transactions", "list", { page: 1 }],
+	["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 	["households", "elsewhere", "transactions", "list", { page: 1 }],
 	["me"],
 	["invitations", "received"],
@@ -63,6 +64,7 @@ describe("staleQueries", () => {
 				["households", HOME, "accounts", "list"],
 				["households", HOME, "accounts", "summary"],
 				["households", HOME, "transactions", "list", { page: 1 }],
+				["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 			],
 		],
 	] as const)(
@@ -90,6 +92,7 @@ describe("allHouseholdQueries", () => {
 			["households", HOME, "tags"],
 			["households", HOME, "suggested-tags"],
 			["households", HOME, "transactions", "list", { page: 1 }],
+			["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 		]);
 	});
 });

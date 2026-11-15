@@ -2,6 +2,7 @@ import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
 import {
 	ArrowLeftRightIcon,
+	ChartPieIcon,
 	LayoutDashboardIcon,
 	TagsIcon,
 	WalletIcon,
@@ -16,6 +17,7 @@ const items = [
 		label: m.transactions_title,
 		icon: ArrowLeftRightIcon,
 	},
+	{ to: "/reports", label: m.reports_title, icon: ChartPieIcon },
 	{ to: "/accounts", label: m.accounts_title, icon: WalletIcon },
 	{ to: "/tags", label: m.tags_title, icon: TagsIcon },
 ] as const;

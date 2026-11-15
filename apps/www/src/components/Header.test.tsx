@@ -128,6 +128,7 @@ describe("Header", () => {
 		).toEqual([
 			["Dashboard", "/dashboard"],
 			["Transactions", "/transactions"],
+			["Reports", "/reports"],
 			["Accounts", "/accounts"],
 			["Tags", "/tags"],
 		]);

@@ -42,6 +42,8 @@ const messagesByCode: Record<string, () => string> = {
 	account_archived: m.error_account_archived,
 	account_has_transactions: m.error_account_has_transactions,
 	tag_in_use: m.error_tag_in_use,
+	report_period_invalid: m.error_report_period_invalid,
+	report_period_too_long: m.error_report_period_too_long,
 	last_owner: m.error_last_owner,
 	already_member: m.error_already_member,
 	email_unavailable: m.error_email_unavailable,

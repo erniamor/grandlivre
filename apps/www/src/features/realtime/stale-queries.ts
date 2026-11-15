@@ -4,6 +4,7 @@ import { accountsQueryKey } from "@/features/accounts/accounts-query";
 import { householdInvitationsQueryKey } from "@/features/households/household-invitations-query";
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
+import { reportsQueryKey } from "@/features/reports/reports-query";
 import { tagsQueryKey } from "@/features/tags/tags-query";
 import { transactionsQueryKey } from "@/features/transactions/transactions-query";
 
@@ -40,10 +41,11 @@ export function staleQueries(
 		case "tags":
 			return [{ queryKey: tagsQueryKey(householdId) }];
 		case "transactions":
-			// The balances of the accounts follow the transactions
+			// The balances of the accounts and the reports follow the transactions
 			return [
 				{ queryKey: transactionsQueryKey(householdId) },
 				{ queryKey: accountsQueryKey(householdId) },
+				{ queryKey: reportsQueryKey(householdId) },
 			];
 	}
 }

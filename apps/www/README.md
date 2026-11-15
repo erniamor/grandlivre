@@ -23,6 +23,7 @@ What's in place: a header (logo, then menus for the language, the appearance and
 | `/transactions` | The transactions the user may see, grouped by day, most recent first: who was paid, the tags, the account, and the amount as money going out or coming in. `?account=<id>` keeps those of one account (a transfer then leaves it or enters it), `?page=<n>` shows another page |
 | `/transactions/new` | Records an expense, an income or a transfer: amount, tag, account (the one last used by default, or `?account=<id>`), date (today by default), who was paid, a note. An expense or an income can be split into several lines, each with its amount and its tag |
 | `/transactions/:transactionId` | Changes or deletes a transaction, for the holders of its account; the other members who may see it read it. A 404 for a transaction the user may not see |
+| `/reports` | What the household earned and spent over a period (`?from=<day>&to=<day>`; without it, the current month): income, expenses and the balance of the period, then the expenses and the income tag by tag, the biggest first. A tag adds up its sub-tags (open it to see them), and its refunds lower what it cost. Every account counts, those whose balance only the user sees included |
 | `/dashboard` | Home of a signed-in user, in their household, with its consolidated balance and its latest transactions: the starting point of the product's own pages |
 | `/offline` | Shown by the service worker when a page can't load without a connection |
 
