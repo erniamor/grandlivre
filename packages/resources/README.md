@@ -34,6 +34,7 @@ During server rendering, pass the incoming request's cookie in `headers` instead
 | `households.members` | `list(householdId)`, `update(householdId, userId, { role })`, `remove(householdId, userId)` (also how a member leaves) |
 | `households.invitations` | `list(householdId)`, `create(householdId, { email })`, `remove(householdId, invitationId)` |
 | `accounts` | The accounts of a household: `list(householdId)`, `get(householdId, id)`, `summary(householdId)` (assets, liabilities, net balance), `create(householdId, { name, type, visibility, openingBalance, holderIds? })`, `update(householdId, id, { ... })`, `remove(householdId, id)`. Amounts are integers in minor units (cents) |
+| `tags` | The tags of a household, a tree named in each language: `list(householdId)` (every tag, as an array), `create(householdId, { names, parentId? })`, `addSuggested(householdId)`, `update(householdId, id, { names?, parentId? })`, `remove(householdId, id)` |
 | `invitations` | The invitations received by the user: `list()`, `accept(id)` (returns the household joined), `decline(id)` |
 
 Add a resource per domain of the API: a `src/<resource>/<resource>.resource.ts` exporting `create<Resource>Resource(client)`, registered in `createApi()` (`src/index.ts`).
@@ -50,7 +51,7 @@ Add a resource per domain of the API: a `src/<resource>/<resource>.resource.ts` 
 | `NotFoundError` | 404 | `code` |
 | `RateLimitError` | 429 | `code` |
 | `ServerError` | 5xx, or a response that doesn't match its schema (`code: "unexpected_response"`) | `code` |
-| `ApiError` | Any other error status (e.g. 409 with the code `last_owner`, `already_member` or `currency_locked`); parent class of all the above | `status`, `code`, `message` |
+| `ApiError` | Any other error status (e.g. 409 with the code `last_owner`, `already_member`, `currency_locked` or `tag_has_children`); parent class of all the above | `status`, `code`, `message` |
 | `NetworkError` | The API couldn't be reached | `cause` |
 
 Errors of the sign-in routes (handled by Better Auth) are read the same way, with their codes lowercased: a wrong code is a `ValidationError` with the code `invalid_otp`. A cancelled request (`AbortSignal`) rejects with the original `AbortError`.

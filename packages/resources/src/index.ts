@@ -4,6 +4,7 @@ import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
 import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
+import { createTagsResource } from "./tags/tags.resource";
 
 export type { AccountsResource } from "./accounts/accounts.resource";
 export type { Page, PageOptions } from "./api/page";
@@ -22,6 +23,7 @@ export type { HouseholdsResource } from "./households/households.resource";
 export type { ApiClientConfig } from "./http/client";
 export type { InvitationsResource } from "./invitations/invitations.resource";
 export type { MeResource } from "./me/me.resource";
+export type { TagsResource } from "./tags/tags.resource";
 
 /** The API's resources, sharing one configuration. */
 export function createApi(config: ApiClientConfig) {
@@ -32,6 +34,7 @@ export function createApi(config: ApiClientConfig) {
 		households: createHouseholdsResource(client),
 		invitations: createInvitationsResource(client),
 		me: createMeResource(client),
+		tags: createTagsResource(client),
 	};
 }
 

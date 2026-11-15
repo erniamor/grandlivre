@@ -27,6 +27,7 @@ import {
 	updateMemberRole,
 } from "@/routes/households/households.service";
 import { householdInvitationRoutes } from "@/routes/invitations/invitations.routes";
+import { tagRoutes } from "@/routes/tags/tags.routes";
 
 export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.use(requireAuth)
@@ -41,6 +42,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.use("/:householdId/*", requireHouseholdMember)
 	.route("/:householdId/accounts", accountRoutes)
 	.route("/:householdId/invitations", householdInvitationRoutes)
+	.route("/:householdId/tags", tagRoutes)
 	.get("/:householdId", (c) => c.json(toHousehold(c.get("membership"))))
 	.patch(
 		"/:householdId",

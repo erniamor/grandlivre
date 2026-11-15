@@ -6,5 +6,7 @@ export { households } from "@/db/schema/households";
 export { ledgerAccountHolders } from "@/db/schema/ledger-account-holders";
 export { ledgerAccounts } from "@/db/schema/ledger-accounts";
 export { sessions } from "@/db/schema/sessions";
+export { tagNames } from "@/db/schema/tag-names";
+export { tags } from "@/db/schema/tags";
 export { users } from "@/db/schema/users";
 export { verifications } from "@/db/schema/verifications";

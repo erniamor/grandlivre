@@ -101,6 +101,20 @@ A member who leaves the household stops holding its accounts. An account left wi
 
 Once a household has an account, its currency can't change: `PATCH /v1/households/:householdId` with another `currency` answers 409 `currency_locked`.
 
+### Tags
+
+The categories of a household's transactions: a tree (a tag has at most one parent), shared and managed by all the members. A tag has a name per language (`names: { en?, fr?, es? }`, at least one), since members can use different languages; in a household, a name designates a single tag in a given language, whatever its case. A household has at most 500 tags.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/tags` | member | Lists the household's tags, oldest first, each with its `parentId` (the whole tree fits in one page) |
+| `POST /v1/households/:householdId/tags` `{ names, parentId? }` | member | Creates a tag (201), at the root without `parentId` |
+| `POST /v1/households/:householdId/tags/suggested` | member | Adds a starting set of tags, named in every language (204). A suggestion whose name already exists is left out, so it adds nothing twice |
+| `PATCH /v1/households/:householdId/tags/:tagId` `{ names?, parentId? }` | member | `names` replaces every name of the tag; `parentId` moves it with its child tags (`null`: to the root) |
+| `DELETE /v1/households/:householdId/tags/:tagId` | member | Deletes a tag without child tags (204) |
+
+A name already taken answers 422 with `tag_name_taken` on `names.<locale>`; a parent from outside the household, or the tag itself or one of its descendants, answers 422 with `tag_parent_invalid` on `parentId`.
+
 ### Invitations
 
 An owner invites someone by email. There is no invitation token: the invitation is addressed to an email, and signing in with that email is what proves it is theirs. Invitations are valid for 7 days; accepted, declined and cancelled ones are deleted.
@@ -130,6 +144,8 @@ Every error has the same shape:
 | 403 | `forbidden` | A cross-site form was rejected (CSRF), or the action takes an owner of the household or a holder of the account |
 | 404 | `not_found` | Unknown route or resource, or a household the user isn't a member of |
 | 409 | `last_owner` | The change would leave a household without an owner |
+| 409 | `tag_has_children` | The tag has child tags: it can't be deleted |
+| 409 | `tag_limit_reached` | The household already has its maximum number of tags |
 | 409 | `currency_locked` | The household has accounts: its currency can no longer change |
 | 409 | `already_member` | The invited email already belongs to a member of the household |
 | 413 | `payload_too_large` | Body over 1 MB |

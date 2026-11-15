@@ -3,6 +3,13 @@ import { z } from "zod";
 // Dates travel as ISO 8601 strings in JSON
 export const dateTimeSchema = z.iso.datetime();
 
+/** Languages of the product; the front ends and the API's emails support the same ones. */
+export const LOCALES = ["en", "fr", "es"] as const;
+
+export const localeSchema = z.enum(LOCALES);
+
+export type Locale = z.infer<typeof localeSchema>;
+
 /**
  * Largest amount accepted, in minor units (cents): far above a family's
  * finances, and small enough for sums to stay exact in JavaScript.
