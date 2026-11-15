@@ -28,6 +28,10 @@ What's in place: a header (logo, then menus for the language, the appearance and
 
 The app calls the API through [`@repo/resources`](../../packages/resources): it needs the API running (see [apps/api/README.md](../api/README.md)).
 
+## Real time
+
+While a household's pages are open, the app listens to the API's stream of the household's events (Server-Sent Events). When a member records a transaction, changes an account or a tag, or joins the household, the other members' screens reload what changed, without a refresh. After a lost connection, the browser reconnects by itself and the app reloads everything it shows, to catch up. A member removed from the household is sent back to `/setup`.
+
 ## Environment
 
 Copy `.env.example` to `.env`:
