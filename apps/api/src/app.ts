@@ -15,9 +15,10 @@ import { meRoutes } from "@/routes/me/me.routes";
 
 const MAX_BODY_SIZE = 1024 * 1024;
 
-// Routes taking a file, with their own limit: a receipt's photo, a statement
+// Routes taking a file, with their own limit: a receipt's photo, a recording,
+// a statement
 const FILE_ROUTES =
-	/^\/v1\/households\/[^/]+\/(transactions\/draft\/receipt|imports(\/preview)?)$/;
+	/^\/v1\/households\/[^/]+\/(transactions\/draft\/(receipt|transcribe)|imports(\/preview)?)$/;
 
 const defaultBodyLimit = bodyLimit({
 	maxSize: MAX_BODY_SIZE,

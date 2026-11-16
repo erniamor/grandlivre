@@ -28,6 +28,7 @@ Validated at startup by [`src/env.ts`](src/env.ts): the API refuses to start wit
 | `DATABASE_URL` | yes | PostgreSQL connection URL |
 | `CORS_ORIGINS` | yes | Comma-separated front-end origins allowed to call the API (with cookies) |
 | `BETTER_AUTH_SECRET` | yes | At least 32 characters; signs sessions and tokens |
+| `MISTRAL_API_KEY` | no | Key of Mistral's API, whose Voxtral transcribes the notes dictated through the microphone (`POST …/transactions/draft/transcribe`). Without it, that route answers 503 `voice_unavailable` and members type their notes |
 | `ANTHROPIC_API_KEY` | no | Key of the Claude API, which turns notes and receipt photos into draft transactions (`POST …/transactions/draft`, `…/draft/receipt`). Without it, those routes answer 503 `assistant_unavailable` and members enter by hand |
 | `RECURRING_RUN_EVERY_SECONDS` | no | How often the recurring transactions whose day has come are recorded or set aside (900, every 15 minutes, by default; at least 5). Lower it in development to try them |
 | `RESEND_API_KEY`, `EMAIL_FROM` | in production | Send the emails with [Resend](https://resend.com); both or none. `EMAIL_FROM` is `Name <address>` or `address`, on a domain verified in Resend. Without them (development, tests), emails are printed to the console |
@@ -167,6 +168,14 @@ What the Claude API receives: the note, the member's day, the household's curren
 - 422 `draft_not_understood`: no amount could be read, or every model declined the note.
 - 503 `assistant_unavailable`: no `ANTHROPIC_API_KEY`, or the Claude API failed or gave an unusable answer (logged without the note).
 - Model: `claude-opus-5-5` at low effort, the household's context cached between notes, and a server-side fallback to another model when one declines a note.
+
+#### Dictated notes
+
+`POST /v1/households/:householdId/transactions/draft/transcribe` (members), a multipart form with `audio` (a recording up to 2 MB, `VOICE_AUDIO_MAX_BYTES`: WebM, Ogg, MP4 or WAV, told by its first bytes), turns a note dictated through the microphone into text: `{ text }`, for the member to read before it is drafted like a typed note. The recording is sent to Mistral's API (model `voxtral-mini-transcribe-3-0`, pinned), told the member's language (`Accept-Language`), then dropped: never stored, never logged.
+
+- 60 recordings per hour and per member: beyond, 429 `too_many_requests`.
+- 422 on `audio`: `voice_audio_required`, `voice_audio_invalid` (not a recording, or one Mistral can't decode); 422 `voice_not_understood` when nothing was heard; 413 beyond 2 MB.
+- 503 `voice_unavailable`: no `MISTRAL_API_KEY`, or Mistral failed or gave an unusable answer (logged with its status only).
 
 #### Receipts
 

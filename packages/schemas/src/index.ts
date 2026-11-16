@@ -14,3 +14,4 @@ export * from "./report.schema";
 export * from "./sharing.schema";
 export * from "./tag.schema";
 export * from "./transaction.schema";
+export * from "./voice.schema";

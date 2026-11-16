@@ -21,6 +21,10 @@ const envSchema = z
 		// Claude API: turns notes into draft transactions; without it, the
 		// assistant answers that it is unavailable and members enter by hand
 		ANTHROPIC_API_KEY: z.string().min(1).optional(),
+		// Mistral's API key, for the notes dictated through the microphone: their
+		// audio is transcribed by Voxtral. Without it, dictating answers that it
+		// is unavailable and members type their notes
+		MISTRAL_API_KEY: z.string().min(1).optional(),
 		// How often the due recurring transactions are recorded or set aside
 		// for a member; shorter in development, to try them
 		RECURRING_RUN_EVERY_SECONDS: z.coerce

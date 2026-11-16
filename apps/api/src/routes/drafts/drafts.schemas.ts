@@ -6,3 +6,8 @@ export const receiptFormSchema = z.object({
 	photo: z.instanceof(File, { message: "receipt_photo_required" }),
 	today: calendarDateSchema,
 });
+
+/** A note dictated through the microphone, its recording. */
+export const voiceFormSchema = z.object({
+	audio: z.instanceof(File, { message: "voice_audio_required" }),
+});

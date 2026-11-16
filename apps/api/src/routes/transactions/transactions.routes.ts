@@ -4,6 +4,7 @@ import {
 	createTransactionSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
 	updateTransactionSchema,
+	VOICE_AUDIO_MAX_BYTES,
 } from "@repo/schemas";
 import { type Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -12,11 +13,15 @@ import { resolveLocale } from "@/lib/locale";
 import { validate } from "@/lib/validator";
 import type { HouseholdVariables } from "@/middlewares/require-household";
 import type { Viewer } from "@/routes/accounts/accounts.service";
-import { receiptFormSchema } from "@/routes/drafts/drafts.schemas";
+import {
+	receiptFormSchema,
+	voiceFormSchema,
+} from "@/routes/drafts/drafts.schemas";
 import {
 	draftFromReceipt,
 	draftTransaction,
 } from "@/routes/drafts/drafts.service";
+import { transcribeNote } from "@/routes/drafts/voice.service";
 import {
 	categorizePayee,
 	listUncategorizedPayees,
@@ -65,6 +70,28 @@ export const transactionRoutes = new Hono<Env>()
 		async (c) =>
 			c.json(
 				await draftFromReceipt(
+					viewerOf(c),
+					c.req.valid("form"),
+					resolveLocale(c.req.header("accept-language")),
+				),
+			),
+	)
+	// A note dictated through the microphone, as text to read: nothing is
+	// saved, the recording least of all. A larger body than elsewhere: audio.
+	.post(
+		"/draft/transcribe",
+		bodyLimit({
+			maxSize: VOICE_AUDIO_MAX_BYTES + 64 * 1024,
+			onError: (c) =>
+				c.json(
+					errorBody("payload_too_large", "The recording is too long"),
+					413,
+				),
+		}),
+		validate("form", voiceFormSchema),
+		async (c) =>
+			c.json(
+				await transcribeNote(
 					viewerOf(c),
 					c.req.valid("form"),
 					resolveLocale(c.req.header("accept-language")),
