@@ -1,22 +1,10 @@
 import { ApiError, RateLimitError, ValidationError } from "@repo/resources";
 import { describe, expect, it } from "vitest";
 import {
-	fitWithin,
 	RECEIPT_PHOTO_MAX_SIDE,
 	receiptErrorMessage,
 	shrinkPhoto,
 } from "@/features/transactions/receipt-photo";
-
-describe("fitWithin", () => {
-	it("shrinks the longest side to the limit, keeping the proportions", () => {
-		expect(fitWithin(4032, 3024, 1600)).toEqual({ width: 1600, height: 1200 });
-		expect(fitWithin(1000, 6000, 1600)).toEqual({ width: 267, height: 1600 });
-	});
-
-	it("never enlarges a small image", () => {
-		expect(fitWithin(800, 600, 1600)).toEqual({ width: 800, height: 600 });
-	});
-});
 
 describe("shrinkPhoto", () => {
 	it("sends the photo as it is when the browser can't redraw it", async () => {

@@ -1,4 +1,5 @@
 import { ApiError, ValidationError } from "@repo/resources";
+import { decodePhoto, renderPhoto } from "@/features/photo-edit/photo-render";
 import { formErrors } from "@/lib/error-messages";
 import { m } from "@/paraglide/messages";
 
@@ -8,19 +9,6 @@ import { m } from "@/paraglide/messages";
  */
 export const RECEIPT_PHOTO_MAX_SIDE = 1600;
 
-/** The size of an image of `width` × `height` fit within `maxSide`, never enlarged. */
-export function fitWithin(
-	width: number,
-	height: number,
-	maxSide: number,
-): { width: number; height: number } {
-	const scale = Math.min(1, maxSide / Math.max(width, height));
-	return {
-		width: Math.max(1, Math.round(width * scale)),
-		height: Math.max(1, Math.round(height * scale)),
-	};
-}
-
 /**
  * The photo redrawn as a JPEG of at most RECEIPT_PHOTO_MAX_SIDE pixels, the
  * right way up: lighter to send, and without its metadata (place, device).
@@ -28,36 +16,20 @@ export function fitWithin(
  * it is an image it takes.
  */
 export async function shrinkPhoto(photo: Blob): Promise<Blob> {
-	if (
-		typeof createImageBitmap !== "function" ||
-		typeof document === "undefined"
-	) {
+	if (typeof document === "undefined") {
 		return photo;
 	}
-	let bitmap: ImageBitmap;
-	try {
-		bitmap = await createImageBitmap(photo, { imageOrientation: "from-image" });
-	} catch {
+	const bitmap = await decodePhoto(photo);
+	if (!bitmap) {
 		return photo;
 	}
 	try {
-		const { width, height } = fitWithin(
-			bitmap.width,
-			bitmap.height,
-			RECEIPT_PHOTO_MAX_SIDE,
+		return (
+			(await renderPhoto({
+				source: bitmap,
+				maxSide: RECEIPT_PHOTO_MAX_SIDE,
+			})) ?? photo
 		);
-		const canvas = document.createElement("canvas");
-		canvas.width = width;
-		canvas.height = height;
-		const context = canvas.getContext("2d");
-		if (!context) {
-			return photo;
-		}
-		context.drawImage(bitmap, 0, 0, width, height);
-		const shrunk = await new Promise<Blob | null>((resolve) =>
-			canvas.toBlob(resolve, "image/jpeg", 0.85),
-		);
-		return shrunk ?? photo;
 	} finally {
 		bitmap.close();
 	}
