@@ -165,6 +165,24 @@ describe("NewAccountPage", () => {
 		expect(screen.getByRole("checkbox", { name: "Bob" })).not.toBeChecked();
 	});
 
+	it("explains the visibility, the holders and the opening balance where they are asked", async () => {
+		const { user } = setUp();
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "What does the visibility change?",
+			}),
+		);
+
+		expect(screen.getByText(/its balance only/)).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Who are the holders?" }),
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "What is the opening balance?" }),
+		).toBeVisible();
+	});
+
 	it("refuses a balance that isn't an amount, without calling the API", async () => {
 		const { user, onCreated, writes } = setUp();
 

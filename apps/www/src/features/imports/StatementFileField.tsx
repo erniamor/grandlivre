@@ -2,6 +2,7 @@ import { buttonVariants, cn } from "@repo/ui";
 import { FileUpIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
+import { HelpHint } from "@/features/help/HelpHint";
 import { m } from "@/paraglide/messages";
 
 interface StatementFileFieldProps {
@@ -49,9 +50,12 @@ export function StatementFileField({
 					}}
 				/>
 			</label>
-			<p id={hintId} className="text-muted-foreground text-sm">
-				{m.import_file_hint()}
-			</p>
+			<div className="flex items-start gap-1">
+				<p id={hintId} className="text-muted-foreground text-sm">
+					{m.import_file_hint()}
+				</p>
+				<HelpHint topic="importFile" />
+			</div>
 			<FormAlert message={error} />
 		</div>
 	);

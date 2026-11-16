@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { SelectField, type SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
+import { HelpHint } from "@/features/help/HelpHint";
 import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { TransactionLinesField } from "@/features/transactions/TransactionLinesField";
 import { TransactionTypeField } from "@/features/transactions/TransactionTypeField";
@@ -73,10 +74,13 @@ export function TransactionFields({
 
 	return (
 		<>
-			<TransactionTypeField
-				value={value.type}
-				onChange={(type) => onChange({ type })}
-			/>
+			<div className="flex items-center gap-1 [&>fieldset]:flex-1">
+				<TransactionTypeField
+					value={value.type}
+					onChange={(type) => onChange({ type })}
+				/>
+				<HelpHint topic="transfer" />
+			</div>
 			{aside}
 			<TransactionLinesField
 				lines={value.lines}

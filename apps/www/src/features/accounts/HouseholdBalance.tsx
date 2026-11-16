@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { type ReactNode, useId } from "react";
 import { Amount } from "@/features/accounts/Amount";
 import { accountsSummaryQueryOptions } from "@/features/accounts/accounts-query";
+import { HelpHint } from "@/features/help/HelpHint";
 import { m } from "@/paraglide/messages";
 
 interface HouseholdBalanceProps {
@@ -31,9 +32,15 @@ export function HouseholdBalance({
 			className="grid gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground"
 		>
 			<div className="grid gap-1">
-				<h2 id={titleId} className="font-medium text-muted-foreground text-sm">
-					{m.summary_title()}
-				</h2>
+				<div className="flex items-center gap-1">
+					<h2
+						id={titleId}
+						className="font-medium text-muted-foreground text-sm"
+					>
+						{m.summary_title()}
+					</h2>
+					<HelpHint topic="consolidatedView" />
+				</div>
 				<p>
 					<Amount
 						amount={summary.balance}

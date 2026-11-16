@@ -21,6 +21,7 @@ import {
 	accountVisibilityOptions,
 } from "@/features/accounts/account-options";
 import { HoldersField } from "@/features/accounts/HoldersField";
+import { HelpHint } from "@/features/help/HelpHint";
 import { formErrors } from "@/lib/error-messages";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -128,6 +129,7 @@ export function AccountForm({
 						defaultValue={initialBalance}
 						required
 						error={balanceError ?? errors.fields.openingBalance}
+						hint={<HelpHint topic={isDebt ? "amountOwed" : "openingBalance"} />}
 					/>
 					<p className="text-muted-foreground text-sm">
 						{isDebt
@@ -145,6 +147,7 @@ export function AccountForm({
 			/>
 			<SelectField
 				label={m.account_visibility_label()}
+				hint={<HelpHint topic="accountVisibility" />}
 				value={visibility}
 				options={accountVisibilityOptions()}
 				onChange={setVisibility}

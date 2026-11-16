@@ -1,6 +1,7 @@
 import type { HouseholdMember } from "@repo/schemas";
 import { Checkbox, Label } from "@repo/ui";
 import { useId } from "react";
+import { HelpHint } from "@/features/help/HelpHint";
 import { m } from "@/paraglide/messages";
 
 interface HoldersFieldProps {
@@ -30,8 +31,9 @@ export function HoldersField({
 			className="grid gap-2"
 			aria-describedby={error ? `${hintId} ${errorId}` : hintId}
 		>
-			<legend className="mb-2 font-medium text-sm">
+			<legend className="mb-2 flex items-center gap-1 font-medium text-sm">
 				{m.account_holders_label()}
+				<HelpHint topic="accountHolders" />
 			</legend>
 			{members.map((member) => {
 				const checkboxId = `${id}-${member.userId}`;

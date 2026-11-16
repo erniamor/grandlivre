@@ -13,6 +13,7 @@ import {
 	accountsQueryKey,
 } from "@/features/accounts/accounts-query";
 import { DeleteAccountButton } from "@/features/accounts/DeleteAccountButton";
+import { HelpHint } from "@/features/help/HelpHint";
 import { householdMembersQueryOptions } from "@/features/households/household-members-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { getApi } from "@/lib/api";
@@ -64,11 +65,14 @@ export function EditAccountPage({
 			{/* Its holders bring it to what it really holds */}
 			{account.isHolder && !account.archived && (
 				<div className="grid gap-2 rounded-lg border border-border p-4">
-					<p className="text-muted-foreground text-sm">
-						{account.type === "cash"
-							? m.account_count_hint()
-							: m.account_adjust_hint()}
-					</p>
+					<div className="flex items-start gap-1">
+						<p className="text-muted-foreground text-sm">
+							{account.type === "cash"
+								? m.account_count_hint()
+								: m.account_adjust_hint()}
+						</p>
+						<HelpHint topic="adjustBalance" />
+					</div>
 					<div className="flex flex-wrap gap-2">
 						<AdjustBalanceDialog
 							household={household}

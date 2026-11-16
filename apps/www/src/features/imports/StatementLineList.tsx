@@ -4,6 +4,7 @@ import type {
 	StatementPreviewLine,
 } from "@repo/schemas";
 import type { SelectOption } from "@/components/SelectField";
+import { HelpHint } from "@/features/help/HelpHint";
 import {
 	type ImportDraft,
 	type LineChoice,
@@ -59,7 +60,11 @@ export function StatementLineList({
 		account.lines.filter((line) => statuses.includes(statusOf(line)));
 	const groups = [
 		{ title: m.import_group_new(), lines: of("new") },
-		{ title: m.import_group_matched(), lines: of("matched", "counterpart") },
+		{
+			title: m.import_group_matched(),
+			lines: of("matched", "counterpart"),
+			hint: "importKnown" as const,
+		},
 		{ title: m.import_group_recurring(), lines: of("recurring") },
 	];
 	const imported = of("imported");
@@ -92,12 +97,15 @@ export function StatementLineList({
 	return (
 		<div className="grid gap-4">
 			{groups.map(
-				({ title, lines }) =>
+				({ title, lines, hint }) =>
 					lines.length > 0 && (
 						<section key={title} className="grid gap-1">
-							<h3 className="font-medium text-sm">
-								{title} ({lines.length})
-							</h3>
+							<div className="flex items-center gap-1">
+								<h3 className="font-medium text-sm">
+									{title} ({lines.length})
+								</h3>
+								{hint && <HelpHint topic={hint} />}
+							</div>
 							<ul>{lines.map(item)}</ul>
 						</section>
 					),

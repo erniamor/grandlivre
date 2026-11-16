@@ -3,6 +3,7 @@ import { PlusIcon, SplitIcon, XIcon } from "lucide-react";
 import { IconButton } from "@/components/IconButton";
 import { SelectField, type SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
+import { HelpHint } from "@/features/help/HelpHint";
 import {
 	draftTotal,
 	emptyLine,
@@ -86,8 +87,9 @@ export function TransactionLinesField({
 	const total = draftTotal(lines, currency, locale);
 	return (
 		<fieldset className="grid gap-4">
-			<legend className="mb-2 font-medium text-sm">
+			<legend className="mb-2 flex items-center gap-1 font-medium text-sm">
 				{m.transaction_lines_label()}
+				<HelpHint topic="lines" />
 			</legend>
 			{lines.map((line, index) => {
 				const n = index + 1;

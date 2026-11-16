@@ -1,6 +1,7 @@
 import type { Household } from "@repo/schemas";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useId } from "react";
+import { HelpHint } from "@/features/help/HelpHint";
 import { BalanceList } from "@/features/sharing/BalanceList";
 import { DefaultSplitForm } from "@/features/sharing/DefaultSplitForm";
 import { SettlementList } from "@/features/sharing/SettlementList";
@@ -71,9 +72,12 @@ export function SharingPage({ household, meId }: SharingPageProps) {
 				<SuggestionList suggestions={overview.suggestions} {...props} />
 			</section>
 			<section aria-labelledby={ids.split} className="grid gap-3">
-				<h2 id={ids.split} className="font-heading font-semibold text-lg">
-					{m.default_split_title()}
-				</h2>
+				<div className="flex items-center gap-1">
+					<h2 id={ids.split} className="font-heading font-semibold text-lg">
+						{m.default_split_title()}
+					</h2>
+					<HelpHint topic="sharingSplit" />
+				</div>
 				<DefaultSplitForm
 					household={household}
 					weights={overview.weights}

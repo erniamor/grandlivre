@@ -1,5 +1,6 @@
 import type { RecurrenceMode } from "@repo/schemas";
 import { useId } from "react";
+import { HelpHint } from "@/features/help/HelpHint";
 import { m } from "@/paraglide/messages";
 
 interface RecurringModeFieldProps {
@@ -29,7 +30,10 @@ export function RecurringModeField({
 
 	return (
 		<fieldset className="grid gap-2">
-			<legend className="mb-2 font-medium">{m.recurring_mode_label()}</legend>
+			<legend className="mb-2 flex items-center gap-1 font-medium">
+				{m.recurring_mode_label()}
+				<HelpHint topic="recurringMode" />
+			</legend>
 			{order.map((mode) => (
 				<label
 					key={mode}

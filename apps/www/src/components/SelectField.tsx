@@ -1,5 +1,5 @@
 import { cn } from "@repo/ui";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 
 export interface SelectOption<Value extends string> {
 	value: Value;
@@ -17,6 +17,8 @@ interface SelectFieldProps<Value extends string> {
 	tone?: "inverse" | "default";
 	disabled?: boolean;
 	className?: string;
+	/** Shown next to the label: a "?" explaining the field, say. */
+	hint?: ReactNode;
 }
 
 const toneClasses = {
@@ -34,14 +36,24 @@ export function SelectField<Value extends string>({
 	tone = "inverse",
 	disabled = false,
 	className,
+	hint,
 }: SelectFieldProps<Value>) {
 	const id = useId();
 
 	return (
 		<div className={cn("flex items-center gap-2", className)}>
-			<label htmlFor={id} className={cn("text-sm", hideLabel && "sr-only")}>
-				{label}
-			</label>
+			{hint ? (
+				<span className="flex items-center gap-1">
+					<label htmlFor={id} className={cn("text-sm", hideLabel && "sr-only")}>
+						{label}
+					</label>
+					{hint}
+				</span>
+			) : (
+				<label htmlFor={id} className={cn("text-sm", hideLabel && "sr-only")}>
+					{label}
+				</label>
+			)}
 			<select
 				id={id}
 				value={value}

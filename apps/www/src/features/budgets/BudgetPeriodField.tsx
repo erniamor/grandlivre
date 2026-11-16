@@ -1,5 +1,6 @@
 import { BUDGET_PERIODS, type BudgetPeriod } from "@repo/schemas";
 import { useId } from "react";
+import { HelpHint } from "@/features/help/HelpHint";
 import { m } from "@/paraglide/messages";
 
 interface BudgetPeriodFieldProps {
@@ -23,7 +24,10 @@ export function BudgetPeriodField({ value, onChange }: BudgetPeriodFieldProps) {
 
 	return (
 		<fieldset className="grid gap-2">
-			<legend className="mb-2 font-medium">{m.budget_period_label()}</legend>
+			<legend className="mb-2 flex items-center gap-1 font-medium">
+				{m.budget_period_label()}
+				<HelpHint topic="budgetPeriod" />
+			</legend>
 			{BUDGET_PERIODS.map((period) => (
 				<label
 					key={period}
