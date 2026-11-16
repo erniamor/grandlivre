@@ -40,7 +40,12 @@ export function TransactionItem({
 		accounts.find((account) => account.id === id)?.name ??
 		m.transaction_unknown_account();
 	const direction = transactionDirection(transaction, accountId);
-	const title = transaction.payee ?? typeLabels[transaction.type]();
+	// An adjustment has no payee: it is the gap with what was really there
+	const title =
+		transaction.payee ??
+		(transaction.origin === "adjustment"
+			? m.transaction_adjustment()
+			: typeLabels[transaction.type]());
 	const isTransfer = transaction.type === "transfer";
 	const tagNames = transactionTagNames(transaction, tags, locale).map(
 		(name) => name ?? m.transaction_uncategorized(),

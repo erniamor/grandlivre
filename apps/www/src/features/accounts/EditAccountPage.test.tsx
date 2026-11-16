@@ -9,6 +9,7 @@ import {
 	chequing,
 	household,
 	members,
+	NOW,
 	page,
 } from "@/features/accounts/account-test-data";
 import { EditAccountPage } from "@/features/accounts/EditAccountPage";
@@ -300,6 +301,124 @@ describe("EditAccountPage", () => {
 				),
 			).toBeVisible();
 			expect(screen.queryByLabelText("Account name")).not.toBeInTheDocument();
+		});
+	});
+
+	describe("bringing it to what it really holds", () => {
+		const wallet: Account = {
+			...chequing,
+			name: "Wallet",
+			type: "cash",
+			balance: 27_000,
+			openingBalance: 10_000,
+		};
+		const adjusted = (amount: number) => ({
+			status: 200,
+			body: {
+				adjustment: {
+					id: "00000000-0000-4000-8000-000000000071",
+					householdId: household.id,
+					type: "expense",
+					date: "2026-11-15",
+					accountId: ACCOUNT_ID,
+					toAccountId: null,
+					amount,
+					payee: null,
+					note: null,
+					origin: "adjustment",
+					receipt: null,
+					lines: [
+						{ id: "00000000-0000-4000-8000-000000000072", amount, tagId: null },
+					],
+					createdBy: null,
+					createdAt: NOW,
+					updatedAt: NOW,
+				},
+				balance: 15_000,
+			},
+		});
+
+		it("counts a wallet: shows what was spent and not noted, then records it", async () => {
+			const toastSuccess = vi.spyOn(toast, "success");
+			const { user, writes } = setUp({
+				account: wallet,
+				respond: (request) =>
+					request.path.endsWith("/adjust") ? adjusted(12_000) : undefined,
+			});
+
+			await user.click(
+				await screen.findByRole("button", { name: "Count my wallet" }),
+			);
+			const dialog = within(
+				screen.getByRole("dialog", { name: "Count my wallet" }),
+			);
+			expect(dialog.getByText("Balance in the app: $270.00.")).toBeVisible();
+			await user.type(dialog.getByLabelText("Cash in the wallet"), "150");
+			expect(
+				dialog.getByText("$120.00 spent without being noted"),
+			).toBeVisible();
+			await user.click(dialog.getByRole("button", { name: "Record" }));
+
+			await vi.waitFor(() =>
+				expect(toastSuccess).toHaveBeenCalledWith("Adjustment recorded."),
+			);
+			expect(writes()).toEqual([
+				{
+					method: "POST",
+					path: `${accountPath}/adjust`,
+					body: { balance: 15_000, date: expect.any(String) },
+				},
+			]);
+		});
+
+		it("adjusts a card to the amount the bank says is owed", async () => {
+			const { user, writes } = setUp({
+				account: {
+					...chequing,
+					type: "credit_card",
+					balance: -50_000,
+					openingBalance: -50_000,
+				},
+				respond: (request) =>
+					request.path.endsWith("/adjust") ? adjusted(2_000) : undefined,
+			});
+
+			await user.click(
+				await screen.findByRole("button", { name: "Adjust the balance" }),
+			);
+			const dialog = within(screen.getByRole("dialog"));
+			expect(dialog.getByText("Balance in the app: $500.00.")).toBeVisible();
+			await user.type(dialog.getByLabelText("Amount really owed"), "520");
+			expect(
+				dialog.getByText("$20.00 less than in the app: recorded as an expense"),
+			).toBeVisible();
+			await user.click(dialog.getByRole("button", { name: "Record" }));
+
+			await vi.waitFor(() =>
+				expect(writes()[0]?.body).toMatchObject({ balance: -52_000 }),
+			);
+		});
+
+		it("says when the balance is already right", async () => {
+			const { user } = setUp({ account: wallet });
+
+			await user.click(
+				await screen.findByRole("button", { name: "Count my wallet" }),
+			);
+			await user.type(screen.getByLabelText("Cash in the wallet"), "270");
+
+			expect(
+				screen.getByText("The balance is right: nothing to record."),
+			).toBeVisible();
+		});
+
+		it("is only for the holders of an account that takes transactions", async () => {
+			setUp({ account: { ...wallet, isHolder: false, holders: [] } });
+
+			await screen.findByRole("heading", { level: 1 });
+			expect(
+				screen.queryByRole("button", { name: "Count my wallet" }),
+			).not.toBeInTheDocument();
 		});
 	});
 });

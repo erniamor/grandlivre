@@ -3,6 +3,7 @@ import { toast } from "@repo/ui";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AccountForm } from "@/features/accounts/AccountForm";
 import { AccountsBackLink } from "@/features/accounts/AccountsBackLink";
+import { AdjustBalanceDialog } from "@/features/accounts/AdjustBalanceDialog";
 import { ArchiveAccountButton } from "@/features/accounts/ArchiveAccountButton";
 import { canEditAccount } from "@/features/accounts/account-form";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/features/accounts/accounts-query";
 import { DeleteAccountButton } from "@/features/accounts/DeleteAccountButton";
 import { householdMembersQueryOptions } from "@/features/households/household-members-query";
+import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { getApi } from "@/lib/api";
 import { m } from "@/paraglide/messages";
 
@@ -36,6 +38,7 @@ export function EditAccountPage({
 	const { data: members } = useSuspenseQuery(
 		householdMembersQueryOptions(household.id),
 	);
+	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
 	const finish = async (message: string) => {
 		// Leave first: the page must not reload an account that no longer exists
 		await onDone();
@@ -55,6 +58,23 @@ export function EditAccountPage({
 				<p className="rounded-lg border border-border bg-muted p-3 text-sm">
 					{m.account_archived_notice()}
 				</p>
+			)}
+			{/* Its holders bring it to what it really holds */}
+			{account.isHolder && !account.archived && (
+				<div className="grid gap-2 rounded-lg border border-border p-4">
+					<p className="text-muted-foreground text-sm">
+						{account.type === "cash"
+							? m.account_count_hint()
+							: m.account_adjust_hint()}
+					</p>
+					<div>
+						<AdjustBalanceDialog
+							household={household}
+							account={account}
+							tags={tags}
+						/>
+					</div>
+				</div>
 			)}
 			{canEditAccount(account, household.role === "owner") ? (
 				<>

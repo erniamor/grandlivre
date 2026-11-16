@@ -131,6 +131,14 @@ describe("TransactionsPage", () => {
 		expect(october.getByText("Uncategorized · Everyday")).toBeVisible();
 	});
 
+	it("names an adjustment, which has no payee", async () => {
+		setUp({
+			respond: respondWith([{ ...fillUp, payee: null, origin: "adjustment" }]),
+		});
+
+		expect(await screen.findByText("Adjustment")).toBeVisible();
+	});
+
 	it("says when there is no transaction yet", async () => {
 		setUp({ respond: respondWith([]) });
 

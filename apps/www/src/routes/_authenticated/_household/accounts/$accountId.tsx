@@ -4,6 +4,7 @@ import { z } from "zod";
 import { accountQueryOptions } from "@/features/accounts/accounts-query";
 import { EditAccountPage } from "@/features/accounts/EditAccountPage";
 import { householdMembersQueryOptions } from "@/features/households/household-members-query";
+import { tagsQueryOptions } from "@/features/tags/tags-query";
 
 const accountIdSchema = z.uuid();
 
@@ -22,6 +23,7 @@ export const Route = createFileRoute(
 					accountQueryOptions(household.id, params.accountId),
 				),
 				queryClient.ensureQueryData(householdMembersQueryOptions(household.id)),
+				queryClient.ensureQueryData(tagsQueryOptions(household.id)),
 			]);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
