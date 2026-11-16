@@ -1,8 +1,12 @@
 import {
 	type Account,
 	type AccountsSummary,
+	type AdjustAccount,
+	type AdjustAccountResult,
 	accountSchema,
 	accountsSummarySchema,
+	adjustAccountResultSchema,
+	adjustAccountSchema,
 	type CreateAccount,
 	createAccountSchema,
 	paginatedSchema,
@@ -100,6 +104,25 @@ export function createAccountsResource(client: ApiClient) {
 				path: accountPath(householdId, accountId),
 				body: parseInput(updateAccountSchema, input),
 				response: accountSchema,
+			});
+		},
+
+		/**
+		 * Brings an account's balance to what it really holds on a day (the
+		 * cash counted in a wallet, a bank's balance): the gap is recorded as
+		 * an adjustment, an expense when it holds less, an income when it holds
+		 * more; `adjustment` is null when there was none. Holders only.
+		 */
+		async adjust(
+			householdId: string,
+			accountId: string,
+			input: AdjustAccount,
+		): Promise<AdjustAccountResult> {
+			return client.request({
+				method: "POST",
+				path: `${accountPath(householdId, accountId)}/adjust`,
+				body: parseInput(adjustAccountSchema, input),
+				response: adjustAccountResultSchema,
 			});
 		},
 

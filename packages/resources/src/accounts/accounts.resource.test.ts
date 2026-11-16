@@ -195,4 +195,64 @@ describe("accounts", () => {
 			method: "DELETE",
 		});
 	});
+
+	describe("adjust", () => {
+		const adjustment = {
+			id: ACCOUNT_ID,
+			householdId: HOUSEHOLD_ID,
+			type: "expense",
+			date: "2026-11-15",
+			accountId: ACCOUNT_ID,
+			toAccountId: null,
+			amount: 12_000,
+			payee: null,
+			note: null,
+			origin: "adjustment",
+			receipt: null,
+			lines: [{ id: ACCOUNT_ID, amount: 12_000, tagId: null }],
+			createdBy: null,
+			createdAt: "2026-11-15T12:00:00.000Z",
+			updatedAt: "2026-11-15T12:00:00.000Z",
+		};
+
+		it("sends what the account really holds, and gives the gap recorded", async () => {
+			const { api, requests } = fakeApi(200, { adjustment, balance: 15_000 });
+
+			expect(
+				await api.accounts.adjust(HOUSEHOLD_ID, ACCOUNT_ID, {
+					balance: 15_000,
+					date: "2026-11-15",
+				}),
+			).toEqual({ adjustment, balance: 15_000 });
+			expect(requests[0]).toMatchObject({
+				url: `${base}/${ACCOUNT_ID}/adjust`,
+				method: "POST",
+				body: { balance: 15_000, date: "2026-11-15" },
+			});
+		});
+
+		it("gives no adjustment when there was no gap", async () => {
+			const { api } = fakeApi(200, { adjustment: null, balance: 10_000 });
+
+			expect(
+				await api.accounts.adjust(HOUSEHOLD_ID, ACCOUNT_ID, {
+					balance: 10_000,
+					date: "2026-11-15",
+				}),
+			).toEqual({ adjustment: null, balance: 10_000 });
+		});
+
+		it("checks the day before sending", async () => {
+			const { api, fetch } = fakeApi(200);
+
+			const error = await api.accounts
+				.adjust(HOUSEHOLD_ID, ACCOUNT_ID, { balance: 1, date: "15/11/2026" })
+				.catch((reason: unknown) => reason);
+
+			expect((error as ValidationError).issues).toEqual([
+				{ field: "date", message: "date_invalid" },
+			]);
+			expect(fetch).not.toHaveBeenCalled();
+		});
+	});
 });
