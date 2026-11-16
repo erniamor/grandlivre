@@ -1,4 +1,5 @@
 import type {
+	RecurringTransaction,
 	Settlement,
 	SharedExpense,
 	SharingOverview,
@@ -12,7 +13,8 @@ import {
 	type TestUser,
 } from "@test/helpers/households";
 import { householdApi } from "@test/helpers/transactions";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { runDueRecurrences } from "@/routes/recurring/recurring-runner";
 
 type Page<T> = { data: T[]; pagination: { total: number } };
 
@@ -419,5 +421,134 @@ describe("expense sharing", () => {
 		expect(
 			(await overview()).balances.find((each) => each.userId === bob.id),
 		).toMatchObject({ isMember: false, balance: -6_000 });
+	});
+});
+
+describe("sharing a recurring transaction", () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	type Setup = Awaited<ReturnType<typeof setUp>>;
+
+	/**
+	 * Alice's monthly rent from her own account, from the 20th, shared as
+	 * `shares` says, given the household's members.
+	 */
+	async function withRent(
+		shares: (setup: Setup) => unknown,
+		{ enabled = true } = {},
+	) {
+		// November 15th, at noon in Montreal
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(new Date("2026-11-15T17:00:00Z"));
+		const setup = await setUp({ enabled });
+		const base = `${setup.h.base}/recurring-transactions`;
+		const body = (fields: Record<string, unknown>) => ({
+			transaction: {
+				type: "expense",
+				accountId: setup.alices.id,
+				payee: "Landlord",
+				lines: [{ amount: 150_000 }],
+				...fields,
+			},
+			schedule: {
+				unit: "month",
+				interval: 1,
+				startDate: "2026-11-20",
+				endDate: null,
+			},
+			mode: "automatic",
+		});
+		const response = await api(base, {
+			method: "POST",
+			cookie: setup.alice.cookie,
+			body: body({ shares: shares(setup) }),
+		});
+		const replace = async (id: string, fields: Record<string, unknown>) =>
+			json<RecurringTransaction>(
+				await api(`${base}/${id}`, {
+					method: "PUT",
+					cookie: setup.alice.cookie,
+					body: body(fields),
+				}),
+			);
+		const recorded = async () =>
+			(await json<Page<Transaction>>(await setup.h.list(setup.alice))).data;
+		return { ...setup, response, replace, recorded };
+	}
+
+	/** Midnight passed in Montreal on the 20th. */
+	const onThe20th = new Date("2026-11-20T06:00:00Z");
+
+	it("records each of its days shared as it says", async () => {
+		const { alice, bob, response, recorded, balanceOf } = await withRent(
+			({ alice, bob }) => ({ mode: "equal", userIds: [alice.id, bob.id] }),
+		);
+
+		expect(response.status).toBe(201);
+		expect(
+			((await response.json()) as RecurringTransaction).transaction.shares,
+		).toEqual({ mode: "equal", userIds: [alice.id, bob.id] });
+		await runDueRecurrences(onThe20th);
+
+		const [rent] = await recorded();
+		expect(rent?.sharing?.parts).toEqual([
+			{ userId: alice.id, amount: 75_000 },
+			{ userId: bob.id, amount: 75_000 },
+		]);
+		expect(await balanceOf(bob.id)).toBe(-75_000);
+	});
+
+	it("checks its split as a transaction's, and only where sharing is on", async () => {
+		const mismatched = await withRent(({ alice, bob }) => ({
+			mode: "amounts",
+			parts: [
+				{ userId: alice.id, amount: 1 },
+				{ userId: bob.id, amount: 1 },
+			],
+		}));
+		expect(await mismatched.response.json()).toMatchObject({
+			error: {
+				details: [
+					{ field: "transaction.shares", message: "share_amounts_mismatch" },
+				],
+			},
+		});
+		vi.useRealTimers();
+
+		const off = await withRent(
+			({ alice }) => ({ mode: "equal", userIds: [alice.id] }),
+			{ enabled: false },
+		);
+		expect(off.response.status).toBe(409);
+	});
+
+	it("keeps its split when a change doesn't say, stops it on null", async () => {
+		const { alice, bob, response, replace } = await withRent(
+			({ alice, bob }) => ({ mode: "equal", userIds: [alice.id, bob.id] }),
+		);
+		const { id } = (await response.json()) as RecurringTransaction;
+
+		expect(
+			(await replace(id, { lines: [{ amount: 160_000 }] })).transaction.shares,
+		).toEqual({ mode: "equal", userIds: [alice.id, bob.id] });
+		expect(
+			(await replace(id, { shares: null })).transaction.shares,
+		).toBeUndefined();
+	});
+
+	it("records a day unshared once the household stopped settling shared expenses", async () => {
+		const { alice, enable, recorded } = await withRent(({ alice, bob }) => ({
+			mode: "equal",
+			userIds: [alice.id, bob.id],
+		}));
+
+		await enable(alice, false);
+		await runDueRecurrences(onThe20th);
+
+		const [rent] = await recorded();
+		expect(rent?.amount).toBe(150_000);
+		expect(rent?.sharing).toBeUndefined();
 	});
 });

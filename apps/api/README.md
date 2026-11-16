@@ -184,6 +184,8 @@ An invalid period answers 422: `report_period_invalid` on `to` when it comes bef
 
 A transaction that repeats: a rent, a subscription, a pay. It holds what it records (`transaction`: a transaction without its `date`, checked like one) and when (`schedule`): from `startDate`, its first day, every `interval` (1 to 99) `unit`s (`week`, `month`, `year`), until `endDate` included, or forever when `null`. A monthly day past the end of a shorter month falls on its last day (the 31st on April 30th, on February 28th or 29th) and is back on the 31st the month after.
 
+A recurring expense or income can carry `transaction.shares`, checked and kept like a transaction's (missing on `PUT` keeps it, `null` stops it): each day recorded on its own is shared as it says, while the household still settles shared expenses and the split still holds (its account has one holder, its members are still there); otherwise the day is recorded unshared. A day confirmed by a member is shared as the transaction sent says.
+
 `mode`: `automatic`, recorded on its own when its day comes (a fixed amount), or `confirm` (default), which waits for a member to confirm it, its amount open to change. `nextDate` is its next day not yet recorded or waiting; `null` once it has ended.
 
 | Route | Who | Effect |

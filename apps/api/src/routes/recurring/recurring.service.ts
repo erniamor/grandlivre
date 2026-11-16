@@ -4,6 +4,7 @@ import type {
 	PendingOccurrence,
 	RecurrenceSchedule,
 	RecurringTransaction,
+	ShareSplit,
 	Transaction,
 	TransactionLineInput,
 	UpcomingOccurrence,
@@ -42,6 +43,7 @@ import {
 	nextOccurrence,
 	occurrencesBetween,
 } from "@/routes/recurring/schedule";
+import { checkSharing } from "@/routes/sharing/transaction-sharing";
 import {
 	type AccountAccess,
 	accountAccess,
@@ -75,6 +77,7 @@ function toRecurring(
 			payee: row.payee,
 			note: row.note,
 			lines: lines.map((line) => ({ amount: line.amount, tagId: line.tagId })),
+			...(row.shareSplit ? { shares: row.shareSplit } : {}),
 		},
 		schedule: {
 			unit: row.unit,
@@ -235,20 +238,33 @@ function scheduleValues(
 
 /**
  * The columns of what the recurring transaction records, checked as a
- * transaction on its first day would be; errors point into `transaction`.
+ * transaction on its first day would be, its split too; errors point into
+ * `transaction`. A split missing keeps `previous`; null stops it.
  */
 async function templateValues(
 	tx: Tx,
 	viewer: Viewer,
 	access: Map<string, AccountAccess>,
 	{ transaction, schedule }: UpdateRecurringTransaction,
+	previous: ShareSplit | null = null,
 ) {
 	try {
 		const { date: _date, ...values } = await toValues(tx, viewer, access, {
 			...transaction,
 			date: schedule.startDate,
 		});
-		return values;
+		const given = transaction.type === "transfer" ? null : transaction.shares;
+		const shareSplit = given === undefined ? previous : given;
+		if (shareSplit) {
+			await checkSharing(
+				tx,
+				viewer.membership.household,
+				values.accountId,
+				values.amount,
+				shareSplit,
+			);
+		}
+		return { ...values, shareSplit };
 	} catch (error) {
 		if (error instanceof AppError && Array.isArray(error.details)) {
 			throw new AppError(
@@ -375,6 +391,7 @@ export async function updateRecurring(
 			viewer,
 			access,
 			input,
+			previous.shareSplit,
 		);
 		const [row] = await tx
 			.update(recurringTransactions)

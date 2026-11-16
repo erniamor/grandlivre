@@ -4,6 +4,7 @@ import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { EditRecurringPage } from "@/features/recurring/EditRecurringPage";
 import { recurringQueryOptions } from "@/features/recurring/recurring-query";
+import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 
 const recurringIdSchema = z.uuid();
@@ -24,6 +25,12 @@ export const Route = createFileRoute(
 				),
 				queryClient.ensureQueryData(accountsQueryOptions(household.id)),
 				queryClient.ensureQueryData(tagsQueryOptions(household.id)),
+				// The members and the default split, to share it
+				household.expenseSharing
+					? queryClient.ensureQueryData(
+							sharingOverviewQueryOptions(household.id),
+						)
+					: undefined,
 			]);
 		} catch (error) {
 			// Unknown, or on an account that only shows its balance to this user

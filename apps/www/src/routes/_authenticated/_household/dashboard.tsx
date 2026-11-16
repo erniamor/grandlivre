@@ -9,6 +9,7 @@ import {
 	pendingQueryOptions,
 	upcomingQueryOptions,
 } from "@/features/recurring/recurring-query";
+import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { RECENT_TRANSACTIONS_COUNT } from "@/features/transactions/RecentTransactions";
 import { transactionsQueryOptions } from "@/features/transactions/transactions-query";
@@ -28,6 +29,9 @@ export const Route = createFileRoute("/_authenticated/_household/dashboard")({
 			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
 			queryClient.ensureQueryData(pendingQueryOptions(household.id)),
 			queryClient.ensureQueryData(upcomingQueryOptions(household.id)),
+			household.expenseSharing
+				? queryClient.ensureQueryData(sharingOverviewQueryOptions(household.id))
+				: undefined,
 			queryClient.ensureQueryData(
 				budgetsQueryOptions(
 					household.id,

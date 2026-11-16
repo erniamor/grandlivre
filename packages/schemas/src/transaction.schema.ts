@@ -143,9 +143,8 @@ export const transactionTemplateSchema = z
 	.discriminatedUnion(
 		"type",
 		[
-			// Sharing a recurring transaction comes later
-			expenseInputSchema.omit({ date: true, shares: true }),
-			incomeInputSchema.omit({ date: true, shares: true }),
+			expenseInputSchema.omit({ date: true }),
+			incomeInputSchema.omit({ date: true }),
 			transferInputSchema.omit({ date: true }),
 		],
 		"transaction_type_invalid",

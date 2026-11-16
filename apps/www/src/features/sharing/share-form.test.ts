@@ -35,14 +35,7 @@ describe("shareStateOf", () => {
 		expect(
 			shareStateOf(
 				{
-					paidBy: "alice",
-					split: {
-						mode: "amounts",
-						parts: [
-							{ userId: "alice", amount: 2_500 },
-							{ userId: "bob", amount: 7_500 },
-						],
-					},
+					mode: "amounts",
 					parts: [
 						{ userId: "alice", amount: 2_500 },
 						{ userId: "bob", amount: 7_500 },

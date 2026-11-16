@@ -1,6 +1,7 @@
 import {
 	RECURRENCE_MODES,
 	RECURRENCE_UNITS,
+	type ShareSplit,
 	TRANSACTION_TYPES,
 } from "@repo/schemas";
 import { sql } from "drizzle-orm";
@@ -11,6 +12,7 @@ import {
 	foreignKey,
 	index,
 	integer,
+	jsonb,
 	pgTable,
 	text,
 	unique,
@@ -37,6 +39,8 @@ export const recurringTransactions = pgTable(
 		amount: bigint({ mode: "number" }).notNull(),
 		payee: text(),
 		note: text(),
+		// How each transaction it records is shared among members, if it is
+		shareSplit: jsonb().$type<ShareSplit>(),
 		unit: text({ enum: RECURRENCE_UNITS }).notNull(),
 		interval: integer().notNull(),
 		// Its first day: the day of the month or of the week it repeats on

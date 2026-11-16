@@ -536,5 +536,9 @@
 	"error_share_account_not_personal": "Only an expense paid from an account with a single holder can be shared: a joint account is already common money.",
 	"error_settlement_same_member": "Choose two different members.",
 	"error_settlement_note_too_long": "This note is too long (200 characters at most).",
-	"error_settlement_account_invalid": "Choose an account of the one who pays, and one of the one paid."
+	"error_settlement_account_invalid": "Choose an account of the one who pays, and one of the one paid.",
+	"sharing_you_owe": "You owe {name} {amount}",
+	"sharing_owes_you": "{name} owes you {amount}",
+	"sharing_you_are_even": "You're even with everyone.",
+	"sharing_summary_link": "See who owes whom"
 }

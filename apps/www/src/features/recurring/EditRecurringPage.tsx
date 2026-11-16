@@ -8,6 +8,7 @@ import { RecurringForm } from "@/features/recurring/RecurringForm";
 import { RecurringItem } from "@/features/recurring/RecurringItem";
 import { recurringQueryOptions } from "@/features/recurring/recurring-query";
 import { useRecurringChange } from "@/features/recurring/use-recurring-change";
+import { useSharingContext } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { writableAccounts } from "@/features/transactions/transaction-form";
 import { getApi } from "@/lib/api";
@@ -36,6 +37,7 @@ export function EditRecurringPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const sharing = useSharingContext(household);
 	const refresh = useRecurringChange(household.id);
 	const finish = async (message: string) => {
 		// Leave first: the page must not reload one that no longer exists
@@ -58,6 +60,7 @@ export function EditRecurringPage({
 					<RecurringForm
 						currency={household.currency}
 						timeZone={household.timeZone}
+						sharing={sharing}
 						accounts={accounts.items}
 						tags={tags}
 						recurring={recurring}

@@ -536,5 +536,9 @@
 	"error_share_account_not_personal": "Seule une dépense payée depuis un compte à un seul titulaire peut se partager : un compte joint est déjà de l'argent commun.",
 	"error_settlement_same_member": "Choisissez deux membres différents.",
 	"error_settlement_note_too_long": "Cette note est trop longue (200 caractères au plus).",
-	"error_settlement_account_invalid": "Choisissez un compte de celui qui paie, et un de celui qui est payé."
+	"error_settlement_account_invalid": "Choisissez un compte de celui qui paie, et un de celui qui est payé.",
+	"sharing_you_owe": "Vous devez {amount} à {name}",
+	"sharing_owes_you": "{name} vous doit {amount}",
+	"sharing_you_are_even": "Vous êtes à jour avec tout le monde.",
+	"sharing_summary_link": "Voir qui doit quoi à qui"
 }

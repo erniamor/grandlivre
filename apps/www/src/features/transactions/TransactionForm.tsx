@@ -1,6 +1,7 @@
 import type {
 	Account,
 	ProposedTag,
+	ShareSplit,
 	Tag,
 	Transaction,
 	TransactionDraft,
@@ -57,6 +58,8 @@ interface TransactionFormProps {
 	onSaved: (transaction: Transaction) => void | Promise<void>;
 	/** The members and the default split, when the household shares expenses. */
 	sharing?: SharingContext;
+	/** How a new transaction starts shared: as its recurring transaction says. */
+	initialShares?: ShareSplit;
 }
 
 // A select's value is a string: this one stands for "nothing chosen"
@@ -77,6 +80,7 @@ export function TransactionForm({
 	save,
 	onSaved,
 	sharing,
+	initialShares,
 }: TransactionFormProps) {
 	const locale = getLocale();
 	const [draft, setDraft] = useState<TransactionFormState>(() =>
@@ -96,7 +100,7 @@ export function TransactionForm({
 	);
 	const [shares, setShares] = useState(() =>
 		shareStateOf(
-			transaction?.sharing,
+			transaction?.sharing?.split ?? initialShares,
 			sharing?.weights ?? [],
 			currency,
 			locale,
@@ -256,7 +260,7 @@ export function TransactionForm({
 					onChange={(next) =>
 						setShares(
 							// Turned on: from the default split, as it is now
-							next.on && !shares.on && !transaction?.sharing
+							next.on && !shares.on
 								? {
 										...shareStateOf(
 											undefined,

@@ -1,5 +1,6 @@
 import type {
 	Household,
+	RecurringTransaction,
 	Settlement,
 	SharedExpense,
 	SharingOverview,
@@ -9,6 +10,9 @@ import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Header } from "@/components/Header";
+import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { ConfirmOccurrencePage } from "@/features/recurring/ConfirmOccurrencePage";
+import { NewRecurringPage } from "@/features/recurring/NewRecurringPage";
 import { SettlePage } from "@/features/sharing/SettlePage";
 import { SharingPage } from "@/features/sharing/SharingPage";
 import { EditTransactionPage } from "@/features/transactions/EditTransactionPage";
@@ -460,5 +464,118 @@ describe("the navigation", () => {
 		expect(
 			await within(nav).findByRole("link", { name: "Sharing" }),
 		).toHaveAttribute("href", "/shared");
+	});
+});
+
+describe("sharing a recurring transaction", () => {
+	const rent: RecurringTransaction = {
+		id: "00000000-0000-4000-8000-000000000091",
+		householdId: sharing.id,
+		transaction: {
+			type: "expense",
+			accountId: chequing.id,
+			toAccountId: null,
+			amount: 150_000,
+			payee: "Landlord",
+			note: null,
+			lines: [{ amount: 150_000, tagId: null }],
+			shares: { mode: "equal", userIds: [ALICE, BOB] },
+		},
+		schedule: {
+			unit: "month",
+			interval: 1,
+			startDate: "2026-11-20",
+			endDate: null,
+		},
+		mode: "confirm",
+		nextDate: "2026-12-20",
+		createdBy: null,
+		createdAt: NOW,
+		updatedAt: NOW,
+	};
+
+	it("is shared in its form like a transaction", async () => {
+		const writes = api((request) =>
+			request.method === "POST" ? { status: 201, body: rent } : undefined,
+		);
+		const onCreated = vi.fn();
+		const user = userEvent.setup();
+		renderWithRouter(
+			<NewRecurringPage household={sharing} onCreated={onCreated} />,
+		);
+
+		await user.type(await screen.findByLabelText("Amount"), "1500");
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Share between members" }),
+		);
+		await user.click(
+			screen.getByRole("button", { name: "Create the recurring transaction" }),
+		);
+
+		await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
+		expect(writes()[0]?.body).toMatchObject({
+			transaction: {
+				lines: [{ amount: 150_000 }],
+				shares: { mode: "equal", userIds: [ALICE, BOB] },
+			},
+		});
+	});
+
+	it("shares a day confirmed as the recurring transaction says", async () => {
+		const occurrence = "00000000-0000-4000-8000-000000000092";
+		const writes = api((request) => {
+			if (request.path === `${base}/recurring-transactions/pending`) {
+				return page([{ id: occurrence, date: "2026-11-20", recurring: rent }]);
+			}
+			return request.path.endsWith("/confirm")
+				? { status: 201, body: fillUp }
+				: undefined;
+		});
+		const onDone = vi.fn();
+		const user = userEvent.setup();
+		renderWithRouter(
+			<ConfirmOccurrencePage
+				household={sharing}
+				occurrenceId={occurrence}
+				onDone={onDone}
+			/>,
+		);
+
+		expect(
+			await screen.findByRole("checkbox", { name: "Share between members" }),
+		).toBeChecked();
+		await user.click(
+			screen.getByRole("button", { name: "Record the transaction" }),
+		);
+
+		await vi.waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+		expect(writes()[0]?.body).toMatchObject({
+			shares: { mode: "equal", userIds: [ALICE, BOB] },
+		});
+	});
+});
+
+describe("the dashboard of a household that shares expenses", () => {
+	it("says who owes the user, and what they owe", async () => {
+		api();
+		renderWithRouter(<DashboardPage me={aliceProfile} household={sharing} />);
+
+		const summary = within(
+			await screen.findByRole("region", { name: "Sharing" }),
+		);
+		expect(summary.getByText("Bob owes you $60.00")).toBeVisible();
+		expect(
+			summary.getByRole("link", { name: "See who owes whom" }),
+		).toHaveAttribute("href", "/shared");
+	});
+
+	it("says nothing of it to a household that doesn't share", async () => {
+		api();
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+		expect(
+			screen.queryByRole("region", { name: "Sharing" }),
+		).not.toBeInTheDocument();
 	});
 });

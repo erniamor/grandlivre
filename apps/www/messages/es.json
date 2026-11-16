@@ -536,5 +536,9 @@
 	"error_share_account_not_personal": "Solo un gasto pagado desde una cuenta con un único titular se puede compartir: una cuenta conjunta ya es dinero común.",
 	"error_settlement_same_member": "Elige dos miembros distintos.",
 	"error_settlement_note_too_long": "Esta nota es demasiado larga (200 caracteres como máximo).",
-	"error_settlement_account_invalid": "Elige una cuenta de quien paga y una de quien recibe."
+	"error_settlement_account_invalid": "Elige una cuenta de quien paga y una de quien recibe.",
+	"sharing_you_owe": "Le debes {amount} a {name}",
+	"sharing_owes_you": "{name} te debe {amount}",
+	"sharing_you_are_even": "Estás al día con todos.",
+	"sharing_summary_link": "Ver quién debe qué a quién"
 }

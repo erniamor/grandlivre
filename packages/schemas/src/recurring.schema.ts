@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { calendarDateSchema, dateTimeSchema } from "./common";
+import { shareSplitSchema } from "./sharing.schema";
 import {
 	transactionLineSchema,
 	transactionTemplateSchema,
@@ -105,6 +106,11 @@ export const recurringTransactionSchema = z.object({
 		note: z.string().nullable(),
 		/** Empty for a transfer. */
 		lines: z.array(transactionLineSchema.omit({ id: true })),
+		/**
+		 * How each transaction it records is shared among members, when the
+		 * household settles shared expenses; missing when it isn't.
+		 */
+		shares: shareSplitSchema.optional(),
 	}),
 	schedule: z.object({
 		unit: recurrenceUnitSchema,

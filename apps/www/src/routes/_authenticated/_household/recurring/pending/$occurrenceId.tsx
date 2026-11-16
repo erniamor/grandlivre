@@ -3,6 +3,7 @@ import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { ConfirmOccurrencePage } from "@/features/recurring/ConfirmOccurrencePage";
 import { pendingQueryOptions } from "@/features/recurring/recurring-query";
+import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 
 const occurrenceIdSchema = z.uuid();
@@ -20,6 +21,10 @@ export const Route = createFileRoute(
 			queryClient.ensureQueryData(pendingQueryOptions(household.id)),
 			queryClient.ensureQueryData(accountsQueryOptions(household.id)),
 			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
+			// The members and the default split, to share it
+			household.expenseSharing
+				? queryClient.ensureQueryData(sharingOverviewQueryOptions(household.id))
+				: undefined,
 		]);
 		// Unknown, already handled, or hidden from this user
 		if (!pending.items.some((item) => item.id === params.occurrenceId)) {

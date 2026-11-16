@@ -21,6 +21,7 @@ import {
 import { todayIn } from "@/lib/dates";
 import { publishHouseholdEvent } from "@/lib/events";
 import { addDays, nextOccurrence } from "@/routes/recurring/schedule";
+import { shareRecorded } from "@/routes/sharing/transaction-sharing";
 import { insertLines } from "@/routes/transactions/transactions.service";
 
 type RecurringRow = InferSelectModel<typeof recurringTransactions>;
@@ -66,6 +67,7 @@ async function recordOccurrence(
 	rule: RecurringRow,
 	lines: LineRow[],
 	date: string,
+	expenseSharing: boolean,
 ): Promise<string> {
 	const [row] = await tx
 		.insert(transactions)
@@ -92,6 +94,14 @@ async function recordOccurrence(
 		row.id,
 		lines.map((line) => ({ amount: line.amount, tagId: line.tagId })),
 	);
+	if (rule.shareSplit) {
+		await shareRecorded(
+			tx,
+			{ id: rule.householdId, expenseSharing },
+			{ id: row.id, accountId: rule.accountId, amount: rule.amount },
+			rule.shareSplit,
+		);
+	}
 	return row.id;
 }
 
@@ -125,6 +135,10 @@ export async function runRecurring(
 			.where(eq(recurringTransactionLines.recurringId, rule.id))
 			.orderBy(asc(recurringTransactionLines.position));
 		const alone = rule.mode === "automatic" && (await canRecordAlone(tx, rule));
+		const [household] = await tx
+			.select({ expenseSharing: households.expenseSharing })
+			.from(households)
+			.where(eq(households.id, rule.householdId));
 		const schedule = {
 			unit: rule.unit,
 			interval: rule.interval,
@@ -147,7 +161,13 @@ export async function runRecurring(
 				.onConflictDoNothing()
 				.returning({ id: recurringOccurrences.id });
 			if (occurrence && alone) {
-				const transactionId = await recordOccurrence(tx, rule, lines, date);
+				const transactionId = await recordOccurrence(
+					tx,
+					rule,
+					lines,
+					date,
+					household?.expenseSharing ?? false,
+				);
 				await tx
 					.update(recurringOccurrences)
 					.set({ transactionId })

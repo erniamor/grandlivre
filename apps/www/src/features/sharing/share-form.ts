@@ -1,8 +1,4 @@
-import type {
-	ShareSplit,
-	SharingWeight,
-	TransactionSharing,
-} from "@repo/schemas";
+import type { ShareSplit, SharingWeight } from "@repo/schemas";
 import { formatAmountInput, parseAmount } from "@/lib/money";
 
 /** How a transaction is shared, as the form holds it, as typed. */
@@ -19,12 +15,13 @@ export interface ShareFormState {
 }
 
 /**
- * The form's sharing: as the transaction is shared, or, until turned on,
- * the household's default split: equal parts when every weight is the
- * same, the weights otherwise.
+ * The form's sharing: as `split` says (how the transaction, or the recurring
+ * transaction it comes from, is shared), or, until turned on, the
+ * household's default split: equal parts when every weight is the same,
+ * the weights otherwise.
  */
 export function shareStateOf(
-	sharing: TransactionSharing | undefined,
+	split: ShareSplit | undefined,
 	defaults: SharingWeight[],
 	currency: string,
 	locale: string,
@@ -32,7 +29,7 @@ export function shareStateOf(
 	const weights = Object.fromEntries(
 		defaults.map(({ userId, weight }) => [userId, String(weight)]),
 	);
-	if (!sharing) {
+	if (!split) {
 		const values = new Set(defaults.map((each) => each.weight));
 		return {
 			on: false,
@@ -44,26 +41,43 @@ export function shareStateOf(
 			amounts: {},
 		};
 	}
-	const { split, parts } = sharing;
-	return {
-		on: true,
-		mode: split.mode,
-		included: parts
-			.filter((part) => part.amount > 0)
-			.map((part) => part.userId),
-		weights:
-			split.mode === "weights"
-				? Object.fromEntries(
-						split.parts.map(({ userId, weight }) => [userId, String(weight)]),
-					)
-				: weights,
-		amounts: Object.fromEntries(
-			parts.map(({ userId, amount }) => [
-				userId,
-				formatAmountInput(amount, currency, locale),
-			]),
-		),
-	};
+	switch (split.mode) {
+		case "equal":
+			return {
+				on: true,
+				mode: "equal",
+				included: split.userIds,
+				weights,
+				amounts: {},
+			};
+		case "weights":
+			return {
+				on: true,
+				mode: "weights",
+				included: split.parts
+					.filter((part) => part.weight > 0)
+					.map((part) => part.userId),
+				weights: Object.fromEntries(
+					split.parts.map(({ userId, weight }) => [userId, String(weight)]),
+				),
+				amounts: {},
+			};
+		case "amounts":
+			return {
+				on: true,
+				mode: "amounts",
+				included: split.parts
+					.filter((part) => part.amount > 0)
+					.map((part) => part.userId),
+				weights,
+				amounts: Object.fromEntries(
+					split.parts.map(({ userId, amount }) => [
+						userId,
+						formatAmountInput(amount, currency, locale),
+					]),
+				),
+			};
+	}
 }
 
 type ShareResult =

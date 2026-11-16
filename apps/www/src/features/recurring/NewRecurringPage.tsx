@@ -5,6 +5,7 @@ import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { RecurringBackLink } from "@/features/recurring/RecurringBackLink";
 import { RecurringForm } from "@/features/recurring/RecurringForm";
 import { useRecurringChange } from "@/features/recurring/use-recurring-change";
+import { useSharingContext } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { getApi } from "@/lib/api";
 import { m } from "@/paraglide/messages";
@@ -32,6 +33,7 @@ export function NewRecurringPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const sharing = useSharingContext(household);
 	const refresh = useRecurringChange(household.id);
 
 	return (
@@ -46,6 +48,7 @@ export function NewRecurringPage({
 			<RecurringForm
 				currency={household.currency}
 				timeZone={household.timeZone}
+				sharing={sharing}
 				accounts={accounts.items}
 				tags={tags}
 				defaultAccountId={accountId}

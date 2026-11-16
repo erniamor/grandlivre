@@ -19,6 +19,9 @@ import {
 	toRecurringInput,
 } from "@/features/recurring/recurring-form";
 import { ScheduleFields } from "@/features/recurring/ScheduleFields";
+import { SharesField } from "@/features/sharing/SharesField";
+import { shareStateOf, toShareSplit } from "@/features/sharing/share-form";
+import type { SharingContext } from "@/features/sharing/sharing-query";
 import { TransactionFields } from "@/features/transactions/TransactionFields";
 import { writableAccounts } from "@/features/transactions/transaction-form";
 import { todayIn } from "@/lib/dates";
@@ -42,6 +45,8 @@ interface RecurringFormProps {
 	submitLabel: string;
 	save: (input: CreateRecurringTransaction) => Promise<RecurringTransaction>;
 	onSaved: (recurring: RecurringTransaction) => void | Promise<void>;
+	/** The members and the default split, when the household shares expenses. */
+	sharing?: SharingContext;
 }
 
 /**
@@ -59,6 +64,7 @@ export function RecurringForm({
 	submitLabel,
 	save,
 	onSaved,
+	sharing,
 }: RecurringFormProps) {
 	const locale = getLocale();
 	const today = todayIn(timeZone);
@@ -68,6 +74,14 @@ export function RecurringForm({
 			: from
 				? recurringStateOfTransaction(from, currency, locale, today)
 				: emptyRecurringState(today),
+	);
+	const [shares, setShares] = useState(() =>
+		shareStateOf(
+			recurring?.transaction.shares,
+			sharing?.weights ?? [],
+			currency,
+			locale,
+		),
 	);
 	const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 	const mutation = useMutation({ mutationFn: save, onSuccess: onSaved });
@@ -94,6 +108,12 @@ export function RecurringForm({
 				""),
 	};
 	const current = { ...state, transaction };
+	// Shared: an expense or a refund paid from one member's own account
+	const shareable =
+		sharing !== undefined &&
+		transaction.type !== "transfer" &&
+		accounts.find((account) => account.id === transaction.accountId)?.holders
+			.length === 1;
 
 	return (
 		<form
@@ -119,8 +139,27 @@ export function RecurringForm({
 					);
 					return;
 				}
+				const input = result.input;
+				if (input.transaction.type !== "transfer" && sharing) {
+					if (shareable && shares.on) {
+						const split = toShareSplit(
+							shares,
+							sharing.members.map((member) => member.userId),
+							currency,
+							locale,
+						);
+						if (!split.ok) {
+							setLocalErrors({ shares: errorMessage(split.error) });
+							return;
+						}
+						input.transaction = { ...input.transaction, shares: split.split };
+					} else if (recurring?.transaction.shares) {
+						// Shared before, no longer
+						input.transaction = { ...input.transaction, shares: null };
+					}
+				}
 				setLocalErrors({});
-				mutation.mutate(result.input);
+				mutation.mutate(input);
 			}}
 		>
 			<TransactionFields
@@ -145,6 +184,29 @@ export function RecurringForm({
 					/>
 				}
 			/>
+			{shareable && sharing && (
+				<SharesField
+					value={shares}
+					onChange={(next) =>
+						setShares(
+							// Turned on: from the default split, as it is now
+							next.on && !shares.on
+								? {
+										...shareStateOf(
+											undefined,
+											sharing.weights,
+											currency,
+											locale,
+										),
+										on: true,
+									}
+								: next,
+						)
+					}
+					context={sharing}
+					error={errors.shares}
+				/>
+			)}
 			<RecurringModeField
 				value={current.mode}
 				onChange={(mode) => setState({ ...current, mode })}
