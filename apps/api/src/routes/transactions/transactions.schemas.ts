@@ -20,3 +20,9 @@ export const transactionsQuerySchema = paginationQuerySchema({
 export type TransactionsQuery = z.infer<typeof transactionsQuerySchema>;
 
 export const transactionParamSchema = z.object({ transactionId: z.uuid() });
+
+/** The payees without a tag: a family's fit in a few pages. */
+export const uncategorizedQuerySchema = paginationQuerySchema({
+	defaultPageSize: 50,
+	maxPageSize: 200,
+});

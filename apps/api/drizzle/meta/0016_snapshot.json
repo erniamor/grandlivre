@@ -1,0 +1,2490 @@
+{
+	"id": "7816b511-a1ac-4d77-ad1c-053404a4e5e1",
+	"prevId": "d9eb578f-f86b-44b2-81ec-bd8e498ba5a2",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.accounts": {
+			"name": "accounts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"account_id": {
+					"name": "account_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"provider_id": {
+					"name": "provider_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"access_token": {
+					"name": "access_token",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"refresh_token": {
+					"name": "refresh_token",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"id_token": {
+					"name": "id_token",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"access_token_expires_at": {
+					"name": "access_token_expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"refresh_token_expires_at": {
+					"name": "refresh_token_expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"scope": {
+					"name": "scope",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"password": {
+					"name": "password",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"accounts_user_id_index": {
+					"name": "accounts_user_id_index",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"accounts_user_id_users_id_fk": {
+					"name": "accounts_user_id_users_id_fk",
+					"tableFrom": "accounts",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.budgets": {
+			"name": "budgets",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"tag_id": {
+					"name": "tag_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"period": {
+					"name": "period",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"from_month": {
+					"name": "from_month",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"updated_by": {
+					"name": "updated_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"budgets_household_id_index": {
+					"name": "budgets_household_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"budgets_household_id_households_id_fk": {
+					"name": "budgets_household_id_households_id_fk",
+					"tableFrom": "budgets",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"budgets_updated_by_users_id_fk": {
+					"name": "budgets_updated_by_users_id_fk",
+					"tableFrom": "budgets",
+					"tableTo": "users",
+					"columnsFrom": ["updated_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"budgets_tag_id_household_id_tags_id_household_id_fk": {
+					"name": "budgets_tag_id_household_id_tags_id_household_id_fk",
+					"tableFrom": "budgets",
+					"tableTo": "tags",
+					"columnsFrom": ["tag_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"budgets_tagId_fromMonth_unique": {
+					"name": "budgets_tagId_fromMonth_unique",
+					"nullsNotDistinct": false,
+					"columns": ["tag_id", "from_month"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"budgets_amount_positive": {
+					"name": "budgets_amount_positive",
+					"value": "\"budgets\".\"amount\" is null or \"budgets\".\"amount\" > 0"
+				},
+				"budgets_from_first_day": {
+					"name": "budgets_from_first_day",
+					"value": "extract(day from \"budgets\".\"from_month\") = 1"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.household_invitations": {
+			"name": "household_invitations",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"invited_by": {
+					"name": "invited_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"household_invitations_email_index": {
+					"name": "household_invitations_email_index",
+					"columns": [
+						{
+							"expression": "email",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"household_invitations_household_id_households_id_fk": {
+					"name": "household_invitations_household_id_households_id_fk",
+					"tableFrom": "household_invitations",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"household_invitations_invited_by_users_id_fk": {
+					"name": "household_invitations_invited_by_users_id_fk",
+					"tableFrom": "household_invitations",
+					"tableTo": "users",
+					"columnsFrom": ["invited_by"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"household_invitations_householdId_email_unique": {
+					"name": "household_invitations_householdId_email_unique",
+					"nullsNotDistinct": false,
+					"columns": ["household_id", "email"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.household_members": {
+			"name": "household_members",
+			"schema": "",
+			"columns": {
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"role": {
+					"name": "role",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"getting_started_hidden": {
+					"name": "getting_started_hidden",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"household_members_user_id_index": {
+					"name": "household_members_user_id_index",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"household_members_household_id_households_id_fk": {
+					"name": "household_members_household_id_households_id_fk",
+					"tableFrom": "household_members",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"household_members_user_id_users_id_fk": {
+					"name": "household_members_user_id_users_id_fk",
+					"tableFrom": "household_members",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"household_members_household_id_user_id_pk": {
+					"name": "household_members_household_id_user_id_pk",
+					"columns": ["household_id", "user_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.households": {
+			"name": "households",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"currency": {
+					"name": "currency",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"time_zone": {
+					"name": "time_zone",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'America/Toronto'"
+				},
+				"expense_sharing": {
+					"name": "expense_sharing",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.ledger_account_holders": {
+			"name": "ledger_account_holders",
+			"schema": "",
+			"columns": {
+				"account_id": {
+					"name": "account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"ledger_account_holders_household_id_user_id_index": {
+					"name": "ledger_account_holders_household_id_user_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"ledger_account_holders_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "ledger_account_holders_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "ledger_account_holders",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"ledger_account_holders_household_id_user_id_household_members_household_id_user_id_fk": {
+					"name": "ledger_account_holders_household_id_user_id_household_members_household_id_user_id_fk",
+					"tableFrom": "ledger_account_holders",
+					"tableTo": "household_members",
+					"columnsFrom": ["household_id", "user_id"],
+					"columnsTo": ["household_id", "user_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"ledger_account_holders_account_id_user_id_pk": {
+					"name": "ledger_account_holders_account_id_user_id_pk",
+					"columns": ["account_id", "user_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.ledger_accounts": {
+			"name": "ledger_accounts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"visibility": {
+					"name": "visibility",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"opening_balance": {
+					"name": "opening_balance",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"archived_at": {
+					"name": "archived_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"ledger_accounts_household_id_index": {
+					"name": "ledger_accounts_household_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"ledger_accounts_household_id_households_id_fk": {
+					"name": "ledger_accounts_household_id_households_id_fk",
+					"tableFrom": "ledger_accounts",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"ledger_accounts_id_householdId_unique": {
+					"name": "ledger_accounts_id_householdId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id", "household_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.recurring_occurrences": {
+			"name": "recurring_occurrences",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"recurring_id": {
+					"name": "recurring_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"date": {
+					"name": "date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"recurring_occurrences_household_id_status_index": {
+					"name": "recurring_occurrences_household_id_status_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"recurring_occurrences_transaction_id_transactions_id_fk": {
+					"name": "recurring_occurrences_transaction_id_transactions_id_fk",
+					"tableFrom": "recurring_occurrences",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"recurring_occurrences_recurring_id_household_id_recurring_transactions_id_household_id_fk": {
+					"name": "recurring_occurrences_recurring_id_household_id_recurring_transactions_id_household_id_fk",
+					"tableFrom": "recurring_occurrences",
+					"tableTo": "recurring_transactions",
+					"columnsFrom": ["recurring_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"recurring_occurrences_recurringId_date_unique": {
+					"name": "recurring_occurrences_recurringId_date_unique",
+					"nullsNotDistinct": false,
+					"columns": ["recurring_id", "date"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.recurring_transaction_lines": {
+			"name": "recurring_transaction_lines",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"recurring_id": {
+					"name": "recurring_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"tag_id": {
+					"name": "tag_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"recurring_transaction_lines_recurring_id_index": {
+					"name": "recurring_transaction_lines_recurring_id_index",
+					"columns": [
+						{
+							"expression": "recurring_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"recurring_transaction_lines_tag_id_index": {
+					"name": "recurring_transaction_lines_tag_id_index",
+					"columns": [
+						{
+							"expression": "tag_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"recurring_transaction_lines_recurring_id_household_id_recurring_transactions_id_household_id_fk": {
+					"name": "recurring_transaction_lines_recurring_id_household_id_recurring_transactions_id_household_id_fk",
+					"tableFrom": "recurring_transaction_lines",
+					"tableTo": "recurring_transactions",
+					"columnsFrom": ["recurring_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"recurring_transaction_lines_tag_id_household_id_tags_id_household_id_fk": {
+					"name": "recurring_transaction_lines_tag_id_household_id_tags_id_household_id_fk",
+					"tableFrom": "recurring_transaction_lines",
+					"tableTo": "tags",
+					"columnsFrom": ["tag_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"recurring_transaction_lines_amount_positive": {
+					"name": "recurring_transaction_lines_amount_positive",
+					"value": "\"recurring_transaction_lines\".\"amount\" > 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.recurring_transactions": {
+			"name": "recurring_transactions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"account_id": {
+					"name": "account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"to_account_id": {
+					"name": "to_account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"payee": {
+					"name": "payee",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"note": {
+					"name": "note",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"share_split": {
+					"name": "share_split",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"unit": {
+					"name": "unit",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"interval": {
+					"name": "interval",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"start_date": {
+					"name": "start_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"end_date": {
+					"name": "end_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"mode": {
+					"name": "mode",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'confirm'"
+				},
+				"next_date": {
+					"name": "next_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"recurring_transactions_household_id_index": {
+					"name": "recurring_transactions_household_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"recurring_transactions_next_date_index": {
+					"name": "recurring_transactions_next_date_index",
+					"columns": [
+						{
+							"expression": "next_date",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"recurring_transactions_household_id_households_id_fk": {
+					"name": "recurring_transactions_household_id_households_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"recurring_transactions_created_by_users_id_fk": {
+					"name": "recurring_transactions_created_by_users_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "users",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"recurring_transactions_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "recurring_transactions_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"recurring_transactions_to_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "recurring_transactions_to_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["to_account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"recurring_transactions_id_householdId_unique": {
+					"name": "recurring_transactions_id_householdId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id", "household_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"recurring_transactions_amount_positive": {
+					"name": "recurring_transactions_amount_positive",
+					"value": "\"recurring_transactions\".\"amount\" > 0"
+				},
+				"recurring_transactions_interval_positive": {
+					"name": "recurring_transactions_interval_positive",
+					"value": "\"recurring_transactions\".\"interval\" > 0"
+				},
+				"recurring_transactions_transfer_destination": {
+					"name": "recurring_transactions_transfer_destination",
+					"value": "(\"recurring_transactions\".\"type\" = 'transfer') = (\"recurring_transactions\".\"to_account_id\" is not null) and \"recurring_transactions\".\"to_account_id\" is distinct from \"recurring_transactions\".\"account_id\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.sessions": {
+			"name": "sessions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"token": {
+					"name": "token",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"ip_address": {
+					"name": "ip_address",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"user_agent": {
+					"name": "user_agent",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"sessions_user_id_index": {
+					"name": "sessions_user_id_index",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"sessions_user_id_users_id_fk": {
+					"name": "sessions_user_id_users_id_fk",
+					"tableFrom": "sessions",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"sessions_token_unique": {
+					"name": "sessions_token_unique",
+					"nullsNotDistinct": false,
+					"columns": ["token"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.settlements": {
+			"name": "settlements",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"from_user_id": {
+					"name": "from_user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"to_user_id": {
+					"name": "to_user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"date": {
+					"name": "date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"note": {
+					"name": "note",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"settlements_household_id_date_index": {
+					"name": "settlements_household_id_date_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "date",
+							"isExpression": false,
+							"asc": false,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"settlements_household_id_households_id_fk": {
+					"name": "settlements_household_id_households_id_fk",
+					"tableFrom": "settlements",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"settlements_from_user_id_users_id_fk": {
+					"name": "settlements_from_user_id_users_id_fk",
+					"tableFrom": "settlements",
+					"tableTo": "users",
+					"columnsFrom": ["from_user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"settlements_to_user_id_users_id_fk": {
+					"name": "settlements_to_user_id_users_id_fk",
+					"tableFrom": "settlements",
+					"tableTo": "users",
+					"columnsFrom": ["to_user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"settlements_transaction_id_transactions_id_fk": {
+					"name": "settlements_transaction_id_transactions_id_fk",
+					"tableFrom": "settlements",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"settlements_created_by_users_id_fk": {
+					"name": "settlements_created_by_users_id_fk",
+					"tableFrom": "settlements",
+					"tableTo": "users",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"settlements_amount_positive": {
+					"name": "settlements_amount_positive",
+					"value": "\"settlements\".\"amount\" > 0"
+				},
+				"settlements_two_members": {
+					"name": "settlements_two_members",
+					"value": "\"settlements\".\"from_user_id\" <> \"settlements\".\"to_user_id\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.sharing_weights": {
+			"name": "sharing_weights",
+			"schema": "",
+			"columns": {
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"weight": {
+					"name": "weight",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"sharing_weights_household_id_households_id_fk": {
+					"name": "sharing_weights_household_id_households_id_fk",
+					"tableFrom": "sharing_weights",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"sharing_weights_user_id_users_id_fk": {
+					"name": "sharing_weights_user_id_users_id_fk",
+					"tableFrom": "sharing_weights",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"sharing_weights_household_id_user_id_pk": {
+					"name": "sharing_weights_household_id_user_id_pk",
+					"columns": ["household_id", "user_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"sharing_weights_weight": {
+					"name": "sharing_weights_weight",
+					"value": "\"sharing_weights\".\"weight\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.statement_accounts": {
+			"name": "statement_accounts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"account_id": {
+					"name": "account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"number_hash": {
+					"name": "number_hash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"bank_name": {
+					"name": "bank_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"number_end": {
+					"name": "number_end",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"statement_accounts_account_id_index": {
+					"name": "statement_accounts_account_id_index",
+					"columns": [
+						{
+							"expression": "account_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"statement_accounts_household_id_households_id_fk": {
+					"name": "statement_accounts_household_id_households_id_fk",
+					"tableFrom": "statement_accounts",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"statement_accounts_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "statement_accounts_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "statement_accounts",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"statement_accounts_householdId_numberHash_unique": {
+					"name": "statement_accounts_householdId_numberHash_unique",
+					"nullsNotDistinct": false,
+					"columns": ["household_id", "number_hash"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.statement_imports": {
+			"name": "statement_imports",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"format": {
+					"name": "format",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"opening_balances": {
+					"name": "opening_balances",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'[]'::jsonb"
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"statement_imports_household_id_created_at_index": {
+					"name": "statement_imports_household_id_created_at_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "created_at",
+							"isExpression": false,
+							"asc": false,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"statement_imports_household_id_households_id_fk": {
+					"name": "statement_imports_household_id_households_id_fk",
+					"tableFrom": "statement_imports",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"statement_imports_created_by_users_id_fk": {
+					"name": "statement_imports_created_by_users_id_fk",
+					"tableFrom": "statement_imports",
+					"tableTo": "users",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"statement_imports_id_householdId_unique": {
+					"name": "statement_imports_id_householdId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id", "household_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.statement_lines": {
+			"name": "statement_lines",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"account_id": {
+					"name": "account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"external_id": {
+					"name": "external_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"import_id": {
+					"name": "import_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"kind": {
+					"name": "kind",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"joined_before": {
+					"name": "joined_before",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"statement_lines_transaction_id_index": {
+					"name": "statement_lines_transaction_id_index",
+					"columns": [
+						{
+							"expression": "transaction_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"statement_lines_import_id_index": {
+					"name": "statement_lines_import_id_index",
+					"columns": [
+						{
+							"expression": "import_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"statement_lines_import_id_household_id_statement_imports_id_household_id_fk": {
+					"name": "statement_lines_import_id_household_id_statement_imports_id_household_id_fk",
+					"tableFrom": "statement_lines",
+					"tableTo": "statement_imports",
+					"columnsFrom": ["import_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"statement_lines_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "statement_lines_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "statement_lines",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"statement_lines_transaction_id_household_id_transactions_id_household_id_fk": {
+					"name": "statement_lines_transaction_id_household_id_transactions_id_household_id_fk",
+					"tableFrom": "statement_lines",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"statement_lines_accountId_externalId_unique": {
+					"name": "statement_lines_accountId_externalId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["account_id", "external_id"]
+				},
+				"statement_lines_accountId_transactionId_unique": {
+					"name": "statement_lines_accountId_transactionId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["account_id", "transaction_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.tag_names": {
+			"name": "tag_names",
+			"schema": "",
+			"columns": {
+				"tag_id": {
+					"name": "tag_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"locale": {
+					"name": "locale",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"tag_names_household_id_locale_name_index": {
+					"name": "tag_names_household_id_locale_name_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "locale",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "lower(\"name\")",
+							"asc": true,
+							"isExpression": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"tag_names_tag_id_household_id_tags_id_household_id_fk": {
+					"name": "tag_names_tag_id_household_id_tags_id_household_id_fk",
+					"tableFrom": "tag_names",
+					"tableTo": "tags",
+					"columnsFrom": ["tag_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"tag_names_tag_id_locale_pk": {
+					"name": "tag_names_tag_id_locale_pk",
+					"columns": ["tag_id", "locale"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.tags": {
+			"name": "tags",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"tags_household_id_index": {
+					"name": "tags_household_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"tags_household_id_households_id_fk": {
+					"name": "tags_household_id_households_id_fk",
+					"tableFrom": "tags",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"tags_parent_id_household_id_tags_id_household_id_fk": {
+					"name": "tags_parent_id_household_id_tags_id_household_id_fk",
+					"tableFrom": "tags",
+					"tableTo": "tags",
+					"columnsFrom": ["parent_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"tags_id_householdId_unique": {
+					"name": "tags_id_householdId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id", "household_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.transaction_lines": {
+			"name": "transaction_lines",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"tag_id": {
+					"name": "tag_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"transaction_lines_transaction_id_index": {
+					"name": "transaction_lines_transaction_id_index",
+					"columns": [
+						{
+							"expression": "transaction_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"transaction_lines_tag_id_index": {
+					"name": "transaction_lines_tag_id_index",
+					"columns": [
+						{
+							"expression": "tag_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"transaction_lines_transaction_id_household_id_transactions_id_household_id_fk": {
+					"name": "transaction_lines_transaction_id_household_id_transactions_id_household_id_fk",
+					"tableFrom": "transaction_lines",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"transaction_lines_tag_id_household_id_tags_id_household_id_fk": {
+					"name": "transaction_lines_tag_id_household_id_tags_id_household_id_fk",
+					"tableFrom": "transaction_lines",
+					"tableTo": "tags",
+					"columnsFrom": ["tag_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"transaction_lines_amount_positive": {
+					"name": "transaction_lines_amount_positive",
+					"value": "\"transaction_lines\".\"amount\" > 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.transaction_shares": {
+			"name": "transaction_shares",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"transaction_shares_household_id_index": {
+					"name": "transaction_shares_household_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"transaction_shares_user_id_users_id_fk": {
+					"name": "transaction_shares_user_id_users_id_fk",
+					"tableFrom": "transaction_shares",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"transaction_shares_transaction_id_household_id_transactions_id_household_id_fk": {
+					"name": "transaction_shares_transaction_id_household_id_transactions_id_household_id_fk",
+					"tableFrom": "transaction_shares",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"transaction_shares_transactionId_userId_unique": {
+					"name": "transaction_shares_transactionId_userId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["transaction_id", "user_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"transaction_shares_amount": {
+					"name": "transaction_shares_amount",
+					"value": "\"transaction_shares\".\"amount\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.transactions": {
+			"name": "transactions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"household_id": {
+					"name": "household_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"date": {
+					"name": "date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"account_id": {
+					"name": "account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"to_account_id": {
+					"name": "to_account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"amount": {
+					"name": "amount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"payee": {
+					"name": "payee",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"note": {
+					"name": "note",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"origin": {
+					"name": "origin",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'manual'"
+				},
+				"receipt": {
+					"name": "receipt",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"share_split": {
+					"name": "share_split",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"share_paid_by": {
+					"name": "share_paid_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"transactions_household_id_date_id_index": {
+					"name": "transactions_household_id_date_id_index",
+					"columns": [
+						{
+							"expression": "household_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "date",
+							"isExpression": false,
+							"asc": false,
+							"nulls": "last"
+						},
+						{
+							"expression": "id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"transactions_account_id_index": {
+					"name": "transactions_account_id_index",
+					"columns": [
+						{
+							"expression": "account_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"transactions_to_account_id_index": {
+					"name": "transactions_to_account_id_index",
+					"columns": [
+						{
+							"expression": "to_account_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"transactions_household_id_households_id_fk": {
+					"name": "transactions_household_id_households_id_fk",
+					"tableFrom": "transactions",
+					"tableTo": "households",
+					"columnsFrom": ["household_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"transactions_share_paid_by_users_id_fk": {
+					"name": "transactions_share_paid_by_users_id_fk",
+					"tableFrom": "transactions",
+					"tableTo": "users",
+					"columnsFrom": ["share_paid_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"transactions_created_by_users_id_fk": {
+					"name": "transactions_created_by_users_id_fk",
+					"tableFrom": "transactions",
+					"tableTo": "users",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"transactions_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "transactions_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "transactions",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"transactions_to_account_id_household_id_ledger_accounts_id_household_id_fk": {
+					"name": "transactions_to_account_id_household_id_ledger_accounts_id_household_id_fk",
+					"tableFrom": "transactions",
+					"tableTo": "ledger_accounts",
+					"columnsFrom": ["to_account_id", "household_id"],
+					"columnsTo": ["id", "household_id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"transactions_id_householdId_unique": {
+					"name": "transactions_id_householdId_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id", "household_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {
+				"transactions_amount_positive": {
+					"name": "transactions_amount_positive",
+					"value": "\"transactions\".\"amount\" > 0"
+				},
+				"transactions_transfer_destination": {
+					"name": "transactions_transfer_destination",
+					"value": "(\"transactions\".\"type\" = 'transfer') = (\"transactions\".\"to_account_id\" is not null) and \"transactions\".\"to_account_id\" is distinct from \"transactions\".\"account_id\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.users": {
+			"name": "users",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"email_verified": {
+					"name": "email_verified",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"image": {
+					"name": "image",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"users_email_unique": {
+					"name": "users_email_unique",
+					"nullsNotDistinct": false,
+					"columns": ["email"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.verifications": {
+			"name": "verifications",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"identifier": {
+					"name": "identifier",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"value": {
+					"name": "value",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"verifications_identifier_index": {
+					"name": "verifications_identifier_index",
+					"columns": [
+						{
+							"expression": "identifier",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}

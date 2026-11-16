@@ -1,5 +1,12 @@
 import { HOUSEHOLD_ROLES } from "@repo/schemas";
-import { index, pgTable, primaryKey, text, uuid } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	index,
+	pgTable,
+	primaryKey,
+	text,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "@/db/schema/columns";
 import { households } from "@/db/schema/households";
 import { users } from "@/db/schema/users";
@@ -16,6 +23,8 @@ export const householdMembers = pgTable(
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
 		role: text({ enum: HOUSEHOLD_ROLES }).notNull(),
+		// The member put the household's "getting started" away
+		gettingStartedHidden: boolean().notNull().default(false),
 		createdAt: createdAt(),
 	},
 	(table) => [

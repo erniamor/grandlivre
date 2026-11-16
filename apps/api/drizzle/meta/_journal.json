@@ -113,6 +113,13 @@
 			"when": 1794841027650,
 			"tag": "0015_statement_joins",
 			"breakpoints": true
+		},
+		{
+			"idx": 16,
+			"version": "7",
+			"when": 1794847140073,
+			"tag": "0016_getting_started",
+			"breakpoints": true
 		}
 	]
 }

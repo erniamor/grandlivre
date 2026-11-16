@@ -14,6 +14,7 @@ import {
 import { accountRoutes } from "@/routes/accounts/accounts.routes";
 import { budgetRoutes } from "@/routes/budgets/budgets.routes";
 import { eventRoutes } from "@/routes/events/events.routes";
+import { gettingStartedRoutes } from "@/routes/getting-started/getting-started.routes";
 import {
 	householdsQuerySchema,
 	memberParamSchema,
@@ -50,6 +51,7 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.route("/:householdId/accounts", accountRoutes)
 	.route("/:householdId/budgets", budgetRoutes)
 	.route("/:householdId/events", eventRoutes)
+	.route("/:householdId/getting-started", gettingStartedRoutes)
 	.route("/:householdId/imports", importRoutes)
 	.route("/:householdId/invitations", householdInvitationRoutes)
 	.route("/:householdId/recurring-transactions", recurringRoutes)

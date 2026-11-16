@@ -130,6 +130,30 @@ describe("GET /v1/households/:householdId/events", () => {
 		expect(
 			await topicsOf(() => h.replace(alice, transactionId, expense)),
 		).toEqual(["transactions"]);
+		// A payee's transactions without a tag, tagged at once: on a tag and an
+		// entry of their own, so the tag and the account above can go later
+		let fuel = { id: "" };
+		let costco = { id: "" };
+		await topicsOf(async () => {
+			fuel = await h.tag(alice, "Fuel");
+		});
+		await topicsOf(async () => {
+			costco = await h.created(alice, {
+				...expense,
+				payee: "Costco",
+				lines: [{ amount: 100 }],
+			});
+		});
+		expect(
+			await topicsOf(() =>
+				call("POST", "/transactions/categorize", {
+					key: "costco",
+					type: "expense",
+					tagId: fuel.id,
+				}),
+			),
+		).toEqual(["transactions"]);
+		await topicsOf(() => h.remove(alice, costco.id));
 		expect(await topicsOf(() => h.remove(alice, transactionId))).toEqual([
 			"transactions",
 		]);

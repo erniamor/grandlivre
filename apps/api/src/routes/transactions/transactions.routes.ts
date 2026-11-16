@@ -1,4 +1,5 @@
 import {
+	categorizePayeeSchema,
 	createDraftSchema,
 	createTransactionSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
@@ -17,8 +18,13 @@ import {
 	draftTransaction,
 } from "@/routes/drafts/drafts.service";
 import {
+	categorizePayee,
+	listUncategorizedPayees,
+} from "@/routes/transactions/categorize.service";
+import {
 	transactionParamSchema,
 	transactionsQuerySchema,
+	uncategorizedQuerySchema,
 } from "@/routes/transactions/transactions.schemas";
 import {
 	createTransaction,
@@ -74,6 +80,17 @@ export const transactionRoutes = new Hono<Env>()
 				resolveLocale(c.req.header("accept-language")),
 			),
 		),
+	)
+	// The expenses and incomes without a tag of the member's accounts, by payee
+	.get(
+		"/uncategorized",
+		validate("query", uncategorizedQuerySchema),
+		async (c) =>
+			c.json(await listUncategorizedPayees(viewerOf(c), c.req.valid("query"))),
+	)
+	// A tag for all of a payee's expenses (or incomes) without one
+	.post("/categorize", validate("json", categorizePayeeSchema), async (c) =>
+		c.json(await categorizePayee(viewerOf(c), c.req.valid("json"))),
 	)
 	.get(
 		"/:transactionId",

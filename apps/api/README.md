@@ -144,6 +144,15 @@ Who sees: the holders of an account, and every member when the account's `visibi
 
 An account or a tag from outside the household answers 422 (`transaction_account_invalid` on `accountId` or `toAccountId`, `transaction_tag_invalid` on `lines.<n>.tagId`).
 
+### Categorizing by payee
+
+The expenses and incomes without a tag of the accounts a member holds (still open), grouped by payee: payees alike in their letters, without accents nor case, are one (`COSTCO ESSENCE W100` and `COSTCO ESSENCE W1234`). The next statement imports learn from the transactions tagged.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/transactions/uncategorized` | member | The payees, paginated (`pageSize` up to 200), the most transactions first: `{ key, payee, type, count, total, firstDate, lastDate }`, `payee` written as most of its transactions write it, expenses and incomes apart; transactions without a payee left out |
+| `POST /v1/households/:householdId/transactions/categorize` `{ key, type, tagId }` | member | Tags every line of the payee's expenses (or incomes) without a tag, on the member's accounts: `{ count }`. 422 `transaction_tag_invalid` for a tag from elsewhere |
+
 ### Drafts (quick entry)
 
 `POST /v1/households/:householdId/transactions/draft` `{ text, today }` (members) turns a note typed or dictated by the member ("gas 72 $", "restaurant 85.40 yesterday") into a draft transaction, with the Claude API. Nothing is saved and no tag is created: the front end shows the draft in the transaction form, and the member records it, or not, through the routes above. `today` is the member's day, to read "yesterday".
@@ -249,6 +258,13 @@ A transaction (an expense, or an income: a refund) paid from an account with **o
 | `GET /v1/households/:householdId/sharing/settlements` | member | The settlements, the most recent first |
 | `POST /v1/households/:householdId/sharing/settlements` `{ fromUserId, toUserId, amount, date, note?, transfer? }` | the one who pays, or is paid | Records a payment between two members (201). With `transfer: { fromAccountId, toAccountId }`, also records it as a transfer from an account the payer holds to one the other holds (422 `settlement_account_invalid` otherwise), by a holder of the first |
 | `DELETE /v1/households/:householdId/sharing/settlements/:settlementId` | the one who paid, or was paid | Deletes it (204), with its transfer, which only its account's holders can delete; deleting the transfer deletes the settlement too |
+
+### Getting started
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/getting-started` | member | Where the household stands in its first steps, as the member sees it, computed from its data each time: `steps` (`tags`: it has tags; `accounts`: an account still open; `wallet`: the member holds an open cash account; `members`: another member, or an invitation sent; `imported`: a statement imported; `categorized`: none of the member's expenses and incomes left without a tag; `recurring`; `budgets`: a budget with an amount), `uncategorized` (how many of the member's are left without a tag) and `hidden` |
+| `PUT /v1/households/:householdId/getting-started` `{ hidden }` | member | Hides it from the dashboard, for the member only, or shows it again; answers it |
 
 ### Statement imports
 

@@ -4,6 +4,7 @@ export * from "./budget.schema";
 export * from "./common";
 export * from "./draft.schema";
 export * from "./event.schema";
+export * from "./getting-started.schema";
 export * from "./household.schema";
 export * from "./import.schema";
 export * from "./profile.schema";

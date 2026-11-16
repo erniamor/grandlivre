@@ -1,0 +1,1 @@
+ALTER TABLE "household_members" ADD COLUMN "getting_started_hidden" boolean DEFAULT false NOT NULL;
