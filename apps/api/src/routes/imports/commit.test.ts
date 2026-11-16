@@ -944,3 +944,145 @@ describe("the opening balance of an account the statements go further back in", 
 		);
 	});
 });
+
+describe("cards whose payments are named otherwise, and a card replaced", () => {
+	const REMISES = "Remises Visa **** 1234";
+
+	it("finds the payments whose entry names the card in another order, or not at all", async () => {
+		const { alice, h, everyday, card, preview } = await setUp();
+		const reversed = await h.created(alice, {
+			type: "expense",
+			accountId: everyday.id,
+			date: "2026-03-31",
+			payee: "VISA Remises Desjardins",
+			lines: [{ amount: 2_000_00 }],
+		});
+		const unnamed = await h.created(alice, {
+			type: "expense",
+			accountId: everyday.id,
+			date: "2026-08-19",
+			payee: "Carte de credit",
+			lines: [{ amount: 600_00 }],
+		});
+		const statement = [
+			cardLine(REMISES, "2026/03/31", "PAIEMENT CAISSE", "", "2000.00"),
+			cardLine(REMISES, "2026/08/19", "PAIEMENT CAISSE", "", "600.00"),
+		].join("\n");
+
+		const found = await preview(alice, statement, [
+			{ index: 0, accountId: card.id },
+		]);
+
+		expect(
+			found.accounts[0]?.lines.map((line) => line.match?.transactionId),
+		).toEqual([reversed.id, unnamed.id]);
+	});
+
+	it("brings a card replaced under a new number into the same new account", async () => {
+		const { alice, preview, importIt, balanceOf } = await setUp();
+		const statement = [
+			cardLine(
+				"Boni Visa **** 9876",
+				"2026/10/05",
+				"LIBRAIRIE EXEMPLE",
+				"20.00",
+				"",
+			),
+			cardLine(
+				"Boni Visa **** 1111",
+				"2025/06/10",
+				"CREDIT VOYAGE BONIDOLLARS",
+				"",
+				"183.57",
+			),
+		].join("\n");
+		const { accounts } = await preview(alice, statement);
+
+		const response = await importIt(alice, statement, {
+			accounts: [
+				{
+					index: 0,
+					target: {
+						create: {
+							name: "Boni Visa",
+							type: "credit_card",
+							visibility: "details",
+							openingBalance: 0,
+						},
+					},
+					lines: accounts[0]?.lines.map((line) => ({
+						externalId: line.externalId,
+						action: "create",
+					})),
+				},
+				{
+					index: 1,
+					target: { sameAs: 0 },
+					lines: accounts[1]?.lines.map((line) => ({
+						externalId: line.externalId,
+						action: "create",
+					})),
+				},
+			],
+		});
+
+		expect(response.status).toBe(201);
+		const made = await json<StatementImport>(response);
+		expect(made.accounts).toEqual([expect.objectContaining({ created: 2 })]);
+		const accountId = made.accounts[0]?.accountId ?? "";
+		expect(await balanceOf(accountId)).toBe(183_57 - 20_00);
+		// Both numbers known next time, in the same account
+		expect(
+			(await preview(alice, statement)).accounts.map((each) => each.accountId),
+		).toEqual([accountId, accountId]);
+	});
+
+	it("sends two accounts of the file to an account already there, but never one line twice", async () => {
+		const { alice, card, preview, importIt } = await setUp();
+		const alike = cardLine(REMISES, "2026/10/02", "CAFE EXEMPLE", "4.25", "");
+		const statement = [alike, alike.replace("**** 1234", "**** 5678")].join(
+			"\n",
+		);
+		const { accounts } = await preview(alice, statement);
+		const plan = (both: boolean) => ({
+			accounts: [0, 1].map((index) => ({
+				index,
+				target: { accountId: card.id },
+				lines:
+					both || index === 0
+						? accounts[index]?.lines.map((line) => ({
+								externalId: line.externalId,
+								action: "create",
+							}))
+						: [],
+			})),
+		});
+
+		const twice = await importIt(alice, statement, plan(true));
+		const once = await importIt(alice, statement, plan(false));
+
+		expect(twice.status).toBe(422);
+		expect(await twice.json()).toMatchObject({
+			error: { details: [{ field: "accounts.1.lines.0.externalId" }] },
+		});
+		expect(once.status).toBe(201);
+	});
+
+	it("refuses an account going with itself, or with an account not in the plan", async () => {
+		const { alice, importIt } = await setUp();
+		const statement = cardLine(
+			REMISES,
+			"2026/10/02",
+			"CAFE EXEMPLE",
+			"4.25",
+			"",
+		);
+
+		for (const sameAs of [0, 3]) {
+			const response = await importIt(alice, statement, {
+				accounts: [{ index: 0, target: { sameAs }, lines: [] }],
+			});
+			expect(response.status).toBe(422);
+		}
+	});
+});

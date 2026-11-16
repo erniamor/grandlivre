@@ -256,10 +256,23 @@ export const statementImportAccountSchema = z.strictObject({
 		.int()
 		.min(0)
 		.max(STATEMENT_MAX_ACCOUNTS - 1),
+	/**
+	 * An account the member holds, a new one, or wherever another account of
+	 * the file goes (`sameAs`, its place): a card replaced, under a new
+	 * number, is the same account. Two accounts of the file may go to the
+	 * same account.
+	 */
 	target: z.union(
 		[
 			z.strictObject({ accountId: z.uuid("import_account_invalid") }),
 			z.strictObject({ create: createAccountSchema }),
+			z.strictObject({
+				sameAs: z
+					.number()
+					.int()
+					.min(0)
+					.max(STATEMENT_MAX_ACCOUNTS - 1),
+			}),
 		],
 		"import_account_invalid",
 	),

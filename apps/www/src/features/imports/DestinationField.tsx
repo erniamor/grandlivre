@@ -4,6 +4,7 @@ import {
 	type AccountType,
 	type StatementPreviewAccount,
 } from "@repo/schemas";
+import { FormAlert } from "@/components/FormAlert";
 import { SelectField } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { accountTypeOptions } from "@/features/accounts/account-options";
@@ -20,8 +21,10 @@ interface DestinationFieldProps {
 	destination: Destination;
 	/** The accounts it can go to: the member's, still open. */
 	accounts: Account[];
+	/** The other accounts of the file going to a new account, to go with. */
+	companions: { index: number; name: string }[];
 	currency: string;
-	errors: { name?: string; owed?: string };
+	errors: { name?: string; owed?: string; with?: string };
 	disabled?: boolean;
 	onChange: (destination: Destination) => void;
 }
@@ -35,6 +38,7 @@ export function DestinationField({
 	account,
 	destination,
 	accounts,
+	companions,
 	currency,
 	errors,
 	disabled,
@@ -42,10 +46,23 @@ export function DestinationField({
 }: DestinationFieldProps) {
 	const locale = getLocale();
 	const value =
-		destination.kind === "account" ? destination.accountId : destination.kind;
+		destination.kind === "account"
+			? destination.accountId
+			: destination.kind === "with"
+				? `with:${destination.index}`
+				: destination.kind;
 	const options = [
 		...accounts.map((each) => ({ value: each.id, label: each.name })),
 		{ value: "new", label: m.import_destination_new() },
+		...companions.map((companion) => ({
+			value: `with:${companion.index}`,
+			label: m.import_destination_with({ account: companion.name }),
+		})),
+		// Still listed while it is chosen, whatever its companion became
+		...(destination.kind === "with" &&
+		!companions.some((companion) => companion.index === destination.index)
+			? [{ value, label: m.import_destination_with({ account: "…" }) }]
+			: []),
 		{ value: "skip", label: m.import_destination_skip() },
 	];
 	const choose = (next: string) => {
@@ -58,6 +75,8 @@ export function DestinationField({
 			});
 		} else if (next === "skip") {
 			onChange({ kind: "skip" });
+		} else if (next.startsWith("with:")) {
+			onChange({ kind: "with", index: Number(next.slice("with:".length)) });
 		} else {
 			onChange({ kind: "account", accountId: next });
 		}
@@ -73,6 +92,12 @@ export function DestinationField({
 				tone="default"
 				disabled={disabled}
 			/>
+			<FormAlert message={errors.with} />
+			{destination.kind === "with" && (
+				<p className="text-muted-foreground text-sm">
+					{m.import_destination_with_hint()}
+				</p>
+			)}
 			{account.recognized && destination.kind === "account" && (
 				<p className="text-muted-foreground text-sm">
 					{m.import_destination_recognized()}

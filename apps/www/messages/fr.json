@@ -657,5 +657,8 @@
 	"import_action_join": "C'est le virement saisi dans {account} : « {payee} » du {date}",
 	"import_done_opening": "Son solde d'ouverture suit maintenant le relevé : {amount}.",
 	"error_import_join_invalid": "Cette saisie ne peut pas devenir le virement : elle doit être du même montant dans l'autre sens, sur un autre de vos comptes.",
-	"import_undo_confirm": "Défaire l'import"
+	"import_undo_confirm": "Défaire l'import",
+	"import_destination_with": "Avec {account}",
+	"import_destination_with_hint": "Le même compte sous un autre numéro (une carte remplacée, par exemple) : ses lignes vont dans le compte créé pour l'autre.",
+	"import_destination_with_invalid": "Le compte qu'il accompagne doit aller dans un compte à lui."
 }

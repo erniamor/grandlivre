@@ -260,8 +260,9 @@ export async function importStatement(
 
 /**
  * Each account of the plan, in the file, and the household's account it
- * goes to: one the member holds, still open, or a new one made for it. Two
- * accounts of the file never go to the same one.
+ * goes to: one the member holds, still open, a new one made for it, or
+ * where another account of the plan goes (`sameAs`: a card replaced).
+ * Listed as the plan lists them.
  */
 async function resolveDestinations(
 	tx: Tx,
@@ -270,44 +271,40 @@ async function resolveDestinations(
 	plan: StatementImportPlan,
 	found: StatementAccount[],
 ): Promise<Destination[]> {
-	const destinations: Destination[] = [];
+	const accountIds = new Map<number, string>();
+	// The accounts named or made first, then those going with one of them
 	for (const [at, planned] of plan.accounts.entries()) {
 		const field = `accounts.${at}`;
-		const statementAccount = found[planned.index];
-		if (!statementAccount) {
+		if (!found[planned.index]) {
 			throw invalid(`${field}.index`, "import_targets_invalid");
 		}
-		let accountId: string;
 		if ("create" in planned.target) {
-			({ id: accountId } = await insertAccount(
-				tx,
-				viewer,
-				planned.target.create,
-			));
+			const { id } = await insertAccount(tx, viewer, planned.target.create);
 			// Its maker holds it: the access read before doesn't know it yet
-			access.set(accountId, {
-				isHolder: true,
-				seesDetails: true,
-				archived: false,
-			});
-		} else {
-			accountId = planned.target.accountId;
-			const rights = access.get(accountId);
+			access.set(id, { isHolder: true, seesDetails: true, archived: false });
+			accountIds.set(planned.index, id);
+		} else if ("accountId" in planned.target) {
+			const rights = access.get(planned.target.accountId);
 			if (!rights?.isHolder || rights.archived) {
 				throw invalid(`${field}.target`, "import_account_invalid");
 			}
+			accountIds.set(planned.index, planned.target.accountId);
 		}
-		if (destinations.some((each) => each.accountId === accountId)) {
+	}
+	return plan.accounts.map((planned, at) => {
+		const field = `accounts.${at}`;
+		const accountId =
+			"sameAs" in planned.target
+				? planned.target.sameAs !== planned.index
+					? accountIds.get(planned.target.sameAs)
+					: undefined
+				: accountIds.get(planned.index);
+		const statementAccount = found[planned.index];
+		if (!accountId || !statementAccount) {
 			throw invalid(`${field}.target`, "import_targets_invalid");
 		}
-		destinations.push({
-			index: planned.index,
-			statementAccount,
-			accountId,
-			field,
-		});
-	}
-	return destinations;
+		return { index: planned.index, statementAccount, accountId, field };
+	});
 }
 
 /** A line decided, with its line on the statement and where it goes. */
@@ -343,10 +340,14 @@ function decisionsOf(
 			const field = `${destination.field}.lines.${lineAt}`;
 			const line = byId.get(decision.externalId);
 			const key = `${destination.index}:${decision.externalId}`;
-			if (!line || seen.has(key)) {
+			// Two accounts of the file going to one: a line of each alike
+			// would be the same line of that account's statements
+			const inAccount = `${destination.accountId}:${decision.externalId}`;
+			if (!line || seen.has(key) || seen.has(inAccount)) {
 				throw invalid(`${field}.externalId`, "statement_line_invalid");
 			}
 			seen.add(key);
+			seen.add(inAccount);
 			let pair: Decided["pair"];
 			if (decision.action === "transfer" && decision.pair) {
 				const other = destinations.find(
@@ -822,6 +823,14 @@ async function followOpenings(
 			continue;
 		}
 		const { accountId } = destination;
+		// With another account of the file, the file's balances aren't the account's
+		if (
+			destinations.some(
+				(each) => each !== destination && each.accountId === accountId,
+			)
+		) {
+			continue;
+		}
 		const [earlier] = await tx
 			.select({ id: transactions.id })
 			.from(transactions)

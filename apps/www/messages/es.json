@@ -657,5 +657,8 @@
 	"import_action_join": "Es la transferencia registrada en {account}: «{payee}» del {date}",
 	"import_done_opening": "Su saldo inicial sigue ahora el extracto: {amount}.",
 	"error_import_join_invalid": "Este registro no puede convertirse en la transferencia: debe ser del mismo importe en sentido contrario, en otra de sus cuentas.",
-	"import_undo_confirm": "Deshacer la importación"
+	"import_undo_confirm": "Deshacer la importación",
+	"import_destination_with": "Con {account}",
+	"import_destination_with_hint": "La misma cuenta con otro número (una tarjeta sustituida, por ejemplo): sus líneas van a la cuenta creada para la otra.",
+	"import_destination_with_invalid": "La cuenta a la que acompaña debe ir a una cuenta propia."
 }

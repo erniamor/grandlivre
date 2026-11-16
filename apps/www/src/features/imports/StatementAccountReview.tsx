@@ -23,6 +23,8 @@ interface StatementAccountReviewProps {
 	currency: string;
 	tagOptions: SelectOption<string>[];
 	nameOf: (index: number) => string | null;
+	/** The other accounts of the file going to a new account: this one can go with them. */
+	companions: { index: number; name: string }[];
 	problems: DraftProblem[];
 	reading: boolean;
 	onDestination: (destination: Destination) => void;
@@ -37,6 +39,7 @@ export function StatementAccountReview({
 	currency,
 	tagOptions,
 	nameOf,
+	companions,
 	problems,
 	reading,
 	onDestination,
@@ -76,6 +79,7 @@ export function StatementAccountReview({
 				account={account}
 				destination={destination}
 				accounts={destinationAccounts(accounts)}
+				companions={companions}
 				currency={currency}
 				disabled={reading}
 				errors={{
@@ -84,6 +88,9 @@ export function StatementAccountReview({
 						: undefined,
 					owed: mine.some((problem) => problem.kind === "owed")
 						? m.error_amount_invalid()
+						: undefined,
+					with: mine.some((problem) => problem.kind === "with")
+						? m.import_destination_with_invalid()
 						: undefined,
 				}}
 				onChange={onDestination}

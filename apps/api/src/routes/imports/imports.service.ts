@@ -648,7 +648,7 @@ async function findCounterparts(
 							: null;
 					const cardName =
 						hint?.kind === "payment"
-							? descriptionKey(found[account.index]?.bankName ?? "")
+							? (found[account.index]?.bankName ?? "")
 							: null;
 					return other || cardName ? [{ account, line, other, cardName }] : [];
 				})
@@ -711,10 +711,8 @@ async function findCounterparts(
 			}
 			return each.other
 				? candidate.accountId === each.other
-				: Boolean(
-						each.cardName &&
-							descriptionKey(candidate.payee ?? "").includes(each.cardName),
-					);
+				: each.cardName !== null &&
+						paysCard(candidate.payee ?? "", each.cardName);
 		},
 	);
 	for (const [at, candidate] of matched) {
@@ -732,4 +730,31 @@ async function findCounterparts(
 		};
 		each.line.suggestion = { kind: "transfer", accountId: candidate.accountId };
 	}
+}
+
+/** The words of a text, without accents nor case. */
+function wordsOf(text: string): string[] {
+	return text
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.toLowerCase()
+		.split(/[^a-z]+/)
+		.filter(Boolean);
+}
+
+/** What an account's entry says when it pays a card it doesn't name. */
+const ANY_CARD = /\b(visa|mastercard|carte de credit|credit card)\b/;
+
+/**
+ * Whether an account's entry pays the card named `cardName`: every word of
+ * the card's name in it, in any order ("VISA Remises Desjardins" pays
+ * "Remises Visa"), or a card it doesn't name ("Carte de credit").
+ */
+export function paysCard(payee: string, cardName: string): boolean {
+	const words = new Set(wordsOf(payee));
+	const name = wordsOf(cardName);
+	return (
+		(name.length > 0 && name.every((word) => words.has(word))) ||
+		ANY_CARD.test(wordsOf(payee).join(" "))
+	);
 }

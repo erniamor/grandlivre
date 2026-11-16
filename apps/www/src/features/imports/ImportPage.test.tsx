@@ -254,6 +254,39 @@ describe("ImportPage", () => {
 		]);
 	});
 
+	it("sends an account of the file with another, into the account made for it", async () => {
+		const { requests, user } = setUp();
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+		const everyday = within(
+			await screen.findByRole("region", { name: "Caisse du Plateau ···456" }),
+		);
+
+		await user.selectOptions(
+			everyday.getByLabelText("Goes to"),
+			"With Caisse du Plateau ···321",
+		);
+		expect(
+			everyday.getByText(
+				"The same account under another number (a card replaced, say): its lines go into the account made for the other.",
+			),
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Import" }));
+
+		await screen.findByText("Statement imported");
+		const plan = jsonField(sent(requests, "/imports")[0], "plan") as {
+			accounts: { index: number; target: unknown }[];
+		};
+		expect(
+			plan.accounts.map(({ index, target }) => ({ index, target })),
+		).toEqual([
+			{ index: 0, target: { sameAs: 1 } },
+			expect.objectContaining({ index: 1 }),
+		]);
+	});
+
 	it("says what is missing before importing anything", async () => {
 		const { requests, user } = setUp();
 		await user.upload(

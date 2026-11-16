@@ -269,6 +269,58 @@ describe("buildPlan", () => {
 	});
 });
 
+describe("buildPlan, for a card replaced", () => {
+	const card = (index: number, end: string, amount: number) => ({
+		...savingsAccount,
+		index,
+		numberEnd: end,
+		type: "credit_card" as const,
+		openingBalance: null,
+		closingBalance: null,
+		lines: [{ ...transferIn, externalId: `${end}-0`, pair: null, amount }],
+	});
+	const preview: StatementPreview = {
+		...statementPreview,
+		accounts: [card(0, "9876", -20_00), card(1, "1111", 183_57)],
+	};
+
+	it("sends the old card's lines with the new card's, into one account owing what both lines left", () => {
+		const draft = initialDraft(preview);
+		draft.destinations[0] = {
+			kind: "new",
+			name: "Boni Visa",
+			type: "credit_card",
+			owed: "0",
+		};
+		draft.destinations[1] = { kind: "with", index: 0 };
+
+		const { plan } = buildPlan(preview, draft, "CAD", "en");
+
+		expect(plan?.accounts.map((account) => account.target)).toEqual([
+			{
+				create: {
+					name: "Boni Visa",
+					type: "credit_card",
+					visibility: "details",
+					// Nothing owed today, after both cards' lines
+					openingBalance: -(183_57 - 20_00),
+				},
+			},
+			{ sameAs: 0 },
+		]);
+	});
+
+	it("says when the account it goes with goes nowhere", () => {
+		const draft = initialDraft(preview);
+		draft.destinations[0] = { kind: "skip" };
+		draft.destinations[1] = { kind: "with", index: 0 };
+
+		expect(buildPlan(preview, draft, "CAD", "en").problems).toEqual([
+			{ kind: "with", index: 1 },
+		]);
+	});
+});
+
 describe("openingBalanceOf", () => {
 	it("finds a card's opening balance from what it owes today, less its lines", () => {
 		// Lines of the account: +300.00 in all

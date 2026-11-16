@@ -1,6 +1,7 @@
 import type { Account, Tag } from "@repo/schemas";
 import { Button } from "@repo/ui";
 import { FormAlert } from "@/components/FormAlert";
+import { statementAccountName } from "@/features/imports/import-draft";
 import { StatementAccountReview } from "@/features/imports/StatementAccountReview";
 import type { StatementImporter } from "@/features/imports/use-statement-import";
 import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
@@ -42,6 +43,15 @@ export function StatementReview({
 					?.name ?? null
 			);
 		}
+		if (destination?.kind === "with") {
+			const other = draft.destinations[destination.index];
+			return other?.kind === "new"
+				? other.name
+				: other?.kind === "account"
+					? (accounts.find((account) => account.id === other.accountId)?.name ??
+						null)
+					: null;
+		}
 		return destination?.kind === "new" ? destination.name : null;
 	};
 	const saveError = importer.saveError ? formErrors(importer.saveError) : null;
@@ -57,6 +67,16 @@ export function StatementReview({
 					currency={currency}
 					tagOptions={tagOptions}
 					nameOf={nameOf}
+					companions={preview.accounts
+						.filter(
+							(other) =>
+								other.index !== account.index &&
+								draft.destinations[other.index]?.kind === "new",
+						)
+						.map((other) => ({
+							index: other.index,
+							name: statementAccountName(other),
+						}))}
 					problems={problems}
 					reading={importer.reading}
 					onDestination={(destination) =>

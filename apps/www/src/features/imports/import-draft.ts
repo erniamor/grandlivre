@@ -24,6 +24,8 @@ export type Destination =
 			 */
 			owed: string;
 	  }
+	/** Wherever another account of the file goes: a card replaced, say. */
+	| { kind: "with"; index: number }
 	| { kind: "skip" };
 
 /** What becomes of a line. */
@@ -150,7 +152,9 @@ export function choicesFor(
 	return Object.fromEntries(
 		account.lines.flatMap((line) => {
 			const choice = initialChoice(
-				holds || (line.status === "counterpart" && destination?.kind === "new")
+				holds ||
+					(line.status === "counterpart" &&
+						(destination?.kind === "new" || destination?.kind === "with"))
 					? line
 					: { ...line, status: "new", match: null, occurrence: null },
 			);
@@ -241,6 +245,8 @@ export function openingBalanceOf(
 	destination: Extract<Destination, { kind: "new" }>,
 	currency: string,
 	locale: string,
+	/** The lines of the file's accounts that go with it, into the same account. */
+	alongside: StatementPreviewLine[] = [],
 ): number | null {
 	if (account.openingBalance !== null) {
 		return account.openingBalance;
@@ -251,13 +257,21 @@ export function openingBalanceOf(
 	}
 	// A debt is a negative balance; any other account holds what is typed
 	const today = ACCOUNT_DEBT_TYPES.includes(destination.type) ? -owed : owed;
-	return today - account.lines.reduce((total, line) => total + line.amount, 0);
+	return (
+		today -
+		[...account.lines, ...alongside].reduce(
+			(total, line) => total + line.amount,
+			0,
+		)
+	);
 }
 
 /** What keeps the import from being sent, account by account. */
 export type DraftProblem =
 	| { kind: "name"; index: number }
 	| { kind: "owed"; index: number }
+	/** Goes with an account of the file that goes nowhere, or with another going with one. */
+	| { kind: "with"; index: number }
 	| { kind: "transfer"; index: number; externalId: string }
 	| { kind: "nothing" };
 
@@ -280,12 +294,26 @@ export function buildPlan(
 		let target: StatementImportPlan["accounts"][number]["target"];
 		if (destination.kind === "account") {
 			target = { accountId: destination.accountId };
+		} else if (destination.kind === "with") {
+			const other = draft.destinations[destination.index]?.kind;
+			// Only with an account that goes somewhere of its own
+			if (other !== "account" && other !== "new") {
+				problems.push({ kind: "with", index: account.index });
+			}
+			target = { sameAs: destination.index };
 		} else {
+			const alongside = preview.accounts.flatMap((each) => {
+				const with_ = draft.destinations[each.index];
+				return with_?.kind === "with" && with_.index === account.index
+					? each.lines
+					: [];
+			});
 			const openingBalance = openingBalanceOf(
 				account,
 				destination,
 				currency,
 				locale,
+				alongside,
 			);
 			if (destination.name.trim() === "") {
 				problems.push({ kind: "name", index: account.index });

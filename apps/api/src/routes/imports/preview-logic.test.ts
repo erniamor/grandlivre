@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { paysCard } from "@/routes/imports/imports.service";
 import { pairTransfers } from "@/routes/imports/in-file-pairs";
 import {
 	payeeHabits,
@@ -240,5 +241,20 @@ describe("pairTransfers", () => {
 				line(1, "far", "2026-10-19", 300_00, null),
 			]).size,
 		).toBe(0);
+	});
+});
+
+describe("paysCard", () => {
+	it("knows a card's payment by every word of its name, in any order", () => {
+		expect(paysCard("Remises Visa Desjardins", "Remises Visa")).toBe(true);
+		expect(paysCard("VISA Remises Desjardins", "Remises Visa")).toBe(true);
+		expect(paysCard("Desjardins Boni Visa", "Boni Visa")).toBe(true);
+	});
+
+	it("knows a payment to a card it doesn't name, and nothing else", () => {
+		expect(paysCard("Carte de crédit", "Remises Visa")).toBe(true);
+		expect(paysCard("Mastercard", "Remises Visa")).toBe(true);
+		expect(paysCard("Hydro-Québec", "Remises Visa")).toBe(false);
+		expect(paysCard("Remises", "Remises Visa")).toBe(false);
 	});
 });

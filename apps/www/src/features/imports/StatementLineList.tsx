@@ -50,7 +50,9 @@ export function StatementLineList({
 	const statusOf = (
 		line: StatementPreviewLine,
 	): StatementPreviewLine["status"] =>
-		holds || (line.status === "counterpart" && destination?.kind === "new")
+		holds ||
+		(line.status === "counterpart" &&
+			(destination?.kind === "new" || destination?.kind === "with"))
 			? line.status
 			: "new";
 	const of = (...statuses: StatementPreviewLine["status"][]) =>
