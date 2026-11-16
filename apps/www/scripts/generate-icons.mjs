@@ -1,31 +1,113 @@
-// Draws the app's icons (public/) from the logo of src/components/Logo.tsx:
-// a rounded square with a check mark, in the default theme's colors.
-// No dependency: the shapes are drawn with distance functions, antialiased by
-// supersampling, and the PNGs encoded with Node's zlib.
+// Draws the app's icons (public/) from the logo: an open ledger, its left
+// page ruled, its right page turned into rising bars, on a night navy
+// rounded square. The same shapes as src/components/LogoMark.tsx: keep them
+// in sync. Two drawings: the full one for the large icons (180 px and up),
+// the compact one (thicker rules, drawn larger in its square) for the
+// browser's tab, where the thin rules would vanish.
+// No dependency: the shapes are drawn with distance functions and a
+// polygon test, antialiased by supersampling, the PNGs encoded with zlib.
 // Run after changing the logo or its colors: pnpm --filter www icons
 import { writeFileSync } from "node:fs";
 import { crc32, deflateSync } from "node:zlib";
 
-// Stationery's --primary and --primary-foreground (packages/themes)
-const PRIMARY = [0xb4, 0x45, 0x1f];
-const FOREGROUND = [0xff, 0xfd, 0xf8];
+// The logo's own colors, the same in every theme
+const NAVY = "#0F172A";
+const PAGE = "#F8FAFC";
+const MINT = "#34D399";
+const EMERALD = "#10B981";
+const AMBER = "#FBBF24";
 
-// The logo, in its 24 × 24 viewBox
-const VIEWBOX = 24;
-const CORNER_RADIUS = 6;
-const CHECK = [
-	[7, 12.5],
-	[10.2, 15.7],
-	[17, 8.8],
+// In its 200 × 200 viewBox
+const VIEWBOX = 200;
+const CORNER_RADIUS = 44;
+const PAGE_PATH =
+	"M 46 66 C 46 60, 52 56, 58 58 L 94 70 L 94 142 L 54 128 C 49 126, 46 121, 46 116 Z";
+const RULES = [
+	[
+		[60, 84],
+		[80, 90],
+	],
+	[
+		[60, 102],
+		[80, 108],
+	],
 ];
-const CHECK_HALF_WIDTH = 1.2;
+const BARS = [
+	{ x: 106, y: 106, width: 12, height: 36, color: MINT },
+	{ x: 124, y: 86, width: 12, height: 52, color: EMERALD },
+	{ x: 142, y: 62, width: 12, height: 70, color: AMBER },
+];
+const BAR_RADIUS = 6;
+
+/** The full drawing, and the compact one for small sizes. */
+const DRAWINGS = {
+	full: { rule: 6, scale: 1 },
+	compact: { rule: 10, scale: 1.22 },
+};
 const SAMPLES = 4;
 
-function insideRoundedSquare(x, y) {
-	const r = CORNER_RADIUS;
-	const dx = Math.max(r - x, 0, x - (VIEWBOX - r));
-	const dy = Math.max(r - y, 0, y - (VIEWBOX - r));
-	return dx * dx + dy * dy <= r * r;
+const rgb = (hex) =>
+	[1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+
+/** The page's outline as a polygon: its curves cut into short straight steps. */
+function pagePolygon() {
+	const points = [];
+	const tokens = PAGE_PATH.replaceAll(",", " ").split(/\s+/).filter(Boolean);
+	let at = 0;
+	let current = [0, 0];
+	const number = () => Number(tokens[at++]);
+	while (at < tokens.length) {
+		const command = tokens[at++];
+		if (command === "M" || command === "L") {
+			current = [number(), number()];
+			points.push(current);
+		} else if (command === "C") {
+			const c1 = [number(), number()];
+			const c2 = [number(), number()];
+			const end = [number(), number()];
+			const start = current;
+			for (let step = 1; step <= 16; step++) {
+				const t = step / 16;
+				const u = 1 - t;
+				points.push(
+					[0, 1].map(
+						(axis) =>
+							u ** 3 * start[axis] +
+							3 * u * u * t * c1[axis] +
+							3 * u * t * t * c2[axis] +
+							t ** 3 * end[axis],
+					),
+				);
+			}
+			current = end;
+		}
+	}
+	return points;
+}
+const PAGE_POLYGON = pagePolygon();
+
+function insidePolygon(x, y, polygon) {
+	let inside = false;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		const [xi, yi] = polygon[i];
+		const [xj, yj] = polygon[j];
+		if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
+function insideRoundedRect(x, y, { x: left, y: top, width, height }, radius) {
+	const dx = Math.max(left + radius - x, 0, x - (left + width - radius));
+	const dy = Math.max(top + radius - y, 0, y - (top + height - radius));
+	return (
+		x >= left &&
+		x <= left + width &&
+		y >= top &&
+		y <= top + height &&
+		dx * dx + dy * dy <= radius * radius
+	);
 }
 
 function distanceToSegment(x, y, [ax, ay], [bx, by]) {
@@ -40,49 +122,72 @@ function distanceToSegment(x, y, [ax, ay], [bx, by]) {
 	return Math.hypot(x - (ax + t * (bx - ax)), y - (ay + t * (by - ay)));
 }
 
-function onCheck(x, y) {
-	return (
-		Math.min(
-			distanceToSegment(x, y, CHECK[0], CHECK[1]),
-			distanceToSegment(x, y, CHECK[1], CHECK[2]),
-		) <= CHECK_HALF_WIDTH
-	);
+/**
+ * The color at a point of the logo, the topmost shape's; null outside it.
+ * `fullBleed`: the background fills the whole square, for the icons the
+ * system crops itself (maskable, Apple).
+ */
+function colorAt(px, py, { rule, scale }, fullBleed) {
+	if (
+		!fullBleed &&
+		!insideRoundedRect(
+			px,
+			py,
+			{ x: 0, y: 0, width: VIEWBOX, height: VIEWBOX },
+			CORNER_RADIUS,
+		)
+	) {
+		return null;
+	}
+	// The drawing, larger in its square in the compact logo
+	const x = (px - VIEWBOX / 2) / scale + VIEWBOX / 2;
+	const y = (py - VIEWBOX / 2) / scale + VIEWBOX / 2;
+	for (const bar of BARS) {
+		if (insideRoundedRect(x, y, bar, BAR_RADIUS)) {
+			return bar.color;
+		}
+	}
+	if (RULES.some(([a, b]) => distanceToSegment(x, y, a, b) <= rule / 2)) {
+		return NAVY;
+	}
+	if (insidePolygon(x, y, PAGE_POLYGON)) {
+		return PAGE;
+	}
+	return NAVY;
 }
 
-/**
- * RGBA pixels of the icon. `fullBleed`: the background fills the whole
- * square, for icons the system crops itself (maskable, Apple).
- */
-function draw(size, fullBleed) {
+/** RGBA pixels of the icon, `size` pixels a side. */
+function draw(size, drawing, fullBleed) {
 	const pixels = Buffer.alloc(size * size * 4);
 	const scale = VIEWBOX / size;
 	for (let py = 0; py < size; py++) {
 		for (let px = 0; px < size; px++) {
-			let background = 0;
-			let check = 0;
+			const sum = [0, 0, 0];
+			let covered = 0;
 			for (let sy = 0; sy < SAMPLES; sy++) {
 				for (let sx = 0; sx < SAMPLES; sx++) {
-					const x = (px + (sx + 0.5) / SAMPLES) * scale;
-					const y = (py + (sy + 0.5) / SAMPLES) * scale;
-					if (onCheck(x, y)) {
-						check++;
-					} else if (fullBleed || insideRoundedSquare(x, y)) {
-						background++;
+					const color = colorAt(
+						(px + (sx + 0.5) / SAMPLES) * scale,
+						(py + (sy + 0.5) / SAMPLES) * scale,
+						drawing,
+						fullBleed,
+					);
+					if (color) {
+						const [r, g, b] = rgb(color);
+						sum[0] += r;
+						sum[1] += g;
+						sum[2] += b;
+						covered++;
 					}
 				}
 			}
-			const total = SAMPLES * SAMPLES;
-			const alpha = (background + check) / total;
 			const offset = (py * size + px) * 4;
 			for (let channel = 0; channel < 3; channel++) {
-				const color =
-					alpha === 0
-						? 0
-						: (PRIMARY[channel] * background + FOREGROUND[channel] * check) /
-							(background + check);
-				pixels[offset + channel] = Math.round(color);
+				pixels[offset + channel] = covered
+					? Math.round(sum[channel] / covered)
+					: 0;
 			}
-			pixels[offset + 3] = Math.round(alpha * 255);
+			pixels[offset + 3] = Math.round((covered / (SAMPLES * SAMPLES)) * 255);
 		}
 	}
 	return pixels;
@@ -116,10 +221,18 @@ function png(size, pixels) {
 	]);
 }
 
-const hex = (rgb) =>
-	`#${rgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
-const [[x1, y1], [x2, y2], [x3, y3]] = CHECK;
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}"><title>Grand Livre</title><rect width="${VIEWBOX}" height="${VIEWBOX}" rx="${CORNER_RADIUS}" fill="${hex(PRIMARY)}"/><path d="M${x1} ${y1} ${x2} ${y2} ${x3} ${y3}" fill="none" stroke="${hex(FOREGROUND)}" stroke-width="${CHECK_HALF_WIDTH * 2}" stroke-linecap="round" stroke-linejoin="round"/></svg>\n`;
+/** The logo as SVG, in one of its drawings. */
+function svg({ rule, scale }) {
+	const rules = RULES.map(
+		([[x1, y1], [x2, y2]]) =>
+			`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${NAVY}" stroke-width="${rule}" stroke-linecap="round"/>`,
+	).join("");
+	const bars = BARS.map(
+		({ x, y, width, height, color }) =>
+			`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${BAR_RADIUS}" fill="${color}"/>`,
+	).join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}"><title>Grand Livre</title><rect width="${VIEWBOX}" height="${VIEWBOX}" rx="${CORNER_RADIUS}" fill="${NAVY}"/><g transform="translate(100 100) scale(${scale}) translate(-100 -100)"><path d="${PAGE_PATH}" fill="${PAGE}"/>${rules}${bars}</g></svg>\n`;
+}
 
 const outputs = [
 	["icon-192.png", 192, false],
@@ -128,8 +241,12 @@ const outputs = [
 	["apple-touch-icon.png", 180, true],
 ];
 const publicDir = new URL("../public/", import.meta.url);
-writeFileSync(new URL("favicon.svg", publicDir), svg);
+// The browser's tab: small, the compact drawing
+writeFileSync(new URL("favicon.svg", publicDir), svg(DRAWINGS.compact));
 for (const [name, size, fullBleed] of outputs) {
-	writeFileSync(new URL(name, publicDir), png(size, draw(size, fullBleed)));
+	writeFileSync(
+		new URL(name, publicDir),
+		png(size, draw(size, DRAWINGS.full, fullBleed)),
+	);
 }
 console.log(`Icons written to ${publicDir.pathname}`);
