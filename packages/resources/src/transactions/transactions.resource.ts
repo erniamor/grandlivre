@@ -12,12 +12,15 @@ import {
 	type Transaction,
 	type TransactionDraft,
 	type TransactionType,
+	type Transcription,
 	transactionDraftSchema,
 	transactionSchema,
+	transcriptionSchema,
 	type UncategorizedPayee,
 	type UpdateTransaction,
 	uncategorizedPayeeSchema,
 	updateTransactionSchema,
+	VOICE_AUDIO_MAX_BYTES,
 } from "@repo/schemas";
 import {
 	type Page,
@@ -243,6 +246,40 @@ export function createTransactionsResource(client: ApiClient) {
 				path: `${transactionsPath(householdId)}/categorize`,
 				body: parseInput(categorizePayeeSchema, input),
 				response: categorizeResultSchema,
+			});
+		},
+
+		/**
+		 * A note dictated through the microphone, as text to read before it is
+		 * drafted. Rejects with a ValidationError on `audio` for an empty or too
+		 * long recording (checked before sending) or one that isn't audio, an
+		 * ApiError `voice_not_understood` (422) when nothing was heard,
+		 * `voice_unavailable` (503), and a RateLimitError beyond the recordings
+		 * allowed per hour.
+		 */
+		async transcribe(
+			householdId: string,
+			{ audio }: { audio: Blob },
+		): Promise<Transcription> {
+			const message =
+				audio.size === 0
+					? "voice_audio_required"
+					: audio.size > VOICE_AUDIO_MAX_BYTES
+						? "voice_audio_too_long"
+						: null;
+			if (message) {
+				throw new ValidationError(422, "validation_error", "Invalid request", [
+					{ field: "audio", message },
+				]);
+			}
+			const form = new FormData();
+			// A name makes it a file for the API, whatever the Blob
+			form.set("audio", audio, "note");
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/draft/transcribe`,
+				body: form,
+				response: transcriptionSchema,
 			});
 		},
 	};

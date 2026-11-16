@@ -16,6 +16,7 @@ export const faq: FaqItem[] = [
 		answer: m.faq_entered_then_imported_a,
 	},
 	{ question: m.faq_receipt_kept_q, answer: m.faq_receipt_kept_a },
+	{ question: m.faq_voice_q, answer: m.faq_voice_a },
 	{ question: m.faq_file_kept_q, answer: m.faq_file_kept_a },
 	{ question: m.faq_undo_import_q, answer: m.faq_undo_import_a },
 	{ question: m.faq_delete_q, answer: m.faq_delete_a },
