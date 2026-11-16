@@ -2,7 +2,7 @@ import { themeBarColors } from "@repo/themes";
 import { afterEach, describe, expect, it } from "vitest";
 import { applyThemeColor, themeColorMetas } from "@/features/pwa/theme-color";
 
-const garden = themeBarColors.garden;
+const dusk = themeBarColors.dusk;
 
 function contents(metas: { content: string }[]) {
 	return metas.map((meta) => meta.content);
@@ -10,20 +10,20 @@ function contents(metas: { content: string }[]) {
 
 describe("themeColorMetas", () => {
 	it("follows the system's appearance, with the theme's colors", () => {
-		expect(contents(themeColorMetas("garden", "system"))).toEqual([
-			garden.light,
-			garden.dark,
+		expect(contents(themeColorMetas("dusk", "system"))).toEqual([
+			dusk.light,
+			dusk.dark,
 		]);
 	});
 
 	it("uses one color whatever the system, when a mode is chosen", () => {
-		expect(contents(themeColorMetas("garden", "light"))).toEqual([
-			garden.light,
-			garden.light,
+		expect(contents(themeColorMetas("dusk", "light"))).toEqual([
+			dusk.light,
+			dusk.light,
 		]);
-		expect(contents(themeColorMetas("garden", "dark"))).toEqual([
-			garden.dark,
-			garden.dark,
+		expect(contents(themeColorMetas("dusk", "dark"))).toEqual([
+			dusk.dark,
+			dusk.dark,
 		]);
 	});
 });
@@ -34,7 +34,7 @@ describe("applyThemeColor", () => {
 	});
 
 	it("updates the page's tags after a change of appearance", () => {
-		for (const meta of themeColorMetas("stationery", "system")) {
+		for (const meta of themeColorMetas("ledger", "system")) {
 			const tag = document.createElement("meta");
 			tag.setAttribute("name", meta.name);
 			tag.setAttribute("media", meta.media);
@@ -42,12 +42,12 @@ describe("applyThemeColor", () => {
 			document.head.append(tag);
 		}
 
-		applyThemeColor("garden", "dark");
+		applyThemeColor("dusk", "dark");
 
 		expect(
 			[...document.querySelectorAll('meta[name="theme-color"]')].map((tag) =>
 				tag.getAttribute("content"),
 			),
-		).toEqual([garden.dark, garden.dark]);
+		).toEqual([dusk.dark, dusk.dark]);
 	});
 });

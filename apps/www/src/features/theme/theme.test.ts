@@ -3,12 +3,13 @@ import { parseTheme } from "@/features/theme/theme";
 
 describe("parseTheme", () => {
 	it("keeps an offered theme", () => {
-		expect(parseTheme("brutalist")).toBe("brutalist");
+		expect(parseTheme("ink")).toBe("ink");
 	});
 
 	it("falls back to the default theme for a missing or no longer offered one", () => {
-		expect(parseTheme(undefined)).toBe("stationery");
-		expect(parseTheme("brand")).toBe("stationery");
-		expect(parseTheme("variant-a")).toBe("stationery");
+		expect(parseTheme(undefined)).toBe("ledger");
+		// A choice stored before the themes were replaced
+		expect(parseTheme("stationery")).toBe("ledger");
+		expect(parseTheme("variant-a")).toBe("ledger");
 	});
 });

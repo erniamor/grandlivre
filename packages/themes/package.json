@@ -6,11 +6,11 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./base.css": "./src/base.css",
-		"./stationery.css": "./src/themes/stationery.css",
-		"./synthwave.css": "./src/themes/synthwave.css",
-		"./garden.css": "./src/themes/garden.css",
-		"./brutalist.css": "./src/themes/brutalist.css",
-		"./neutral.css": "./src/themes/neutral.css"
+		"./ledger.css": "./src/themes/ledger.css",
+		"./raspberry.css": "./src/themes/raspberry.css",
+		"./dusk.css": "./src/themes/dusk.css",
+		"./ink.css": "./src/themes/ink.css",
+		"./citrus.css": "./src/themes/citrus.css"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",

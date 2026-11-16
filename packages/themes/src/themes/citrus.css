@@ -1,0 +1,77 @@
+/*
+ * "citrus" theme: playful. Bright orange to act, a lime band, a cream page;
+ * rounded type and large corners.
+ * Fonts are system fonts: nothing to load.
+ */
+
+[data-theme="citrus"] {
+	--background: #fffaf0;
+	--foreground: #2d2a1f;
+	--card: #ffffff;
+	--card-foreground: #2d2a1f;
+	--popover: #ffffff;
+	--popover-foreground: #2d2a1f;
+	--primary: #c2410c;
+	--primary-foreground: #ffffff;
+	--secondary: #fdf1d6;
+	--secondary-foreground: #2d2a1f;
+	--muted: #fbf3e2;
+	--muted-foreground: #6b6249;
+	--accent: #e6f6c8;
+	--accent-foreground: #2f5a0b;
+	--destructive: #be123c;
+	--destructive-foreground: #ffffff;
+	--border: #f1e2c0;
+	--input: #e0cc9c;
+	--ring: #c2410c;
+
+	--inverse: #3f6212;
+	--inverse-foreground: #fffaf0;
+	--inverse-muted-foreground: #d9f99d;
+	--inverse-border: #4d7c0f;
+
+	--typeface-body:
+		ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system,
+		"Segoe UI", Roboto, sans-serif;
+	--typeface-heading:
+		ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system,
+		"Segoe UI", Roboto, sans-serif;
+
+	--radius: 1rem;
+}
+
+[data-theme="citrus"].dark {
+	--background: #1a1710;
+	--foreground: #f7efdc;
+	--card: #24201a;
+	--card-foreground: #f7efdc;
+	--popover: #24201a;
+	--popover-foreground: #f7efdc;
+	--primary: #fb923c;
+	--primary-foreground: #1a1710;
+	--secondary: #2e2a1f;
+	--secondary-foreground: #f7efdc;
+	--muted: #2e2a1f;
+	--muted-foreground: #c4b998;
+	--accent: #24320f;
+	--accent-foreground: #c8ec8a;
+	--destructive: #fb7185;
+	--destructive-foreground: #1a1710;
+	--border: #3d3727;
+	--input: #554c36;
+	--ring: #fb923c;
+
+	--inverse: #1c2a07;
+	--inverse-foreground: #f7efdc;
+	--inverse-muted-foreground: #c8ec8a;
+	--inverse-border: #2e420f;
+
+	--typeface-body:
+		ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system,
+		"Segoe UI", Roboto, sans-serif;
+	--typeface-heading:
+		ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system,
+		"Segoe UI", Roboto, sans-serif;
+
+	--radius: 1rem;
+}

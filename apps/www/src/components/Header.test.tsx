@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 async function renderHeader(me: Profile | null = null) {
-	renderWithRouter(<Header appearance="system" theme="stationery" me={me} />);
+	renderWithRouter(<Header appearance="system" theme="ledger" me={me} />);
 	return screen.findByRole("banner");
 }
 
@@ -177,9 +177,9 @@ describe("Header", () => {
 	});
 
 	it.each([
-		["en", "Language: English", "Appearance: System, Stationery"],
-		["fr", "Langue : Français", "Apparence : Système, Papeterie"],
-		["es", "Idioma: Español", "Apariencia: Sistema, Papelería"],
+		["en", "Language: English", "Appearance: System, Ledger"],
+		["fr", "Langue : Français", "Apparence : Système, Registre"],
+		["es", "Idioma: Español", "Apariencia: Sistema, Registro"],
 	] as const)(
 		"names its menus with their current choice, in %s",
 		async (locale, language, appearance) => {
@@ -201,7 +201,7 @@ describe("Header", () => {
 		const user = userEvent.setup();
 		const header = await renderHeader();
 		const trigger = within(header).getByRole("button", {
-			name: "Appearance: System, Stationery",
+			name: "Appearance: System, Ledger",
 		});
 
 		// Logo, language, then appearance
@@ -219,7 +219,7 @@ describe("Header", () => {
 		expect(readCookie(document.cookie, "appearance")).toBe("dark");
 		expect(
 			within(header).getByRole("button", {
-				name: "Appearance: Dark, Stationery",
+				name: "Appearance: Dark, Ledger",
 			}),
 		).toHaveFocus();
 	});

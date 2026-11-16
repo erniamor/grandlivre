@@ -1,11 +1,11 @@
 @import "tailwindcss";
 @import "@repo/themes/base.css";
-/* The themes offered in the appearance menu; stationery is the default */
-@import "@repo/themes/stationery.css";
-@import "@repo/themes/synthwave.css";
-@import "@repo/themes/garden.css";
-@import "@repo/themes/brutalist.css";
-@import "@repo/themes/neutral.css";
+/* The themes offered in the appearance menu; ledger is the default */
+@import "@repo/themes/ledger.css";
+@import "@repo/themes/raspberry.css";
+@import "@repo/themes/dusk.css";
+@import "@repo/themes/ink.css";
+@import "@repo/themes/citrus.css";
 @import "@repo/ui/styles.css";
 
 /* Lets Tailwind generate the classes used by the shared components */

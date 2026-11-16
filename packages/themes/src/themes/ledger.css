@@ -1,0 +1,80 @@
+/*
+ * "ledger" theme: the product's default theme, an account ledger. Night
+ * navy for the band and the ink, emerald to act, amber for what must stand
+ * out; a bluish white page. Plain sans-serif type and rounded corners.
+ * Fonts are system fonts: nothing to load.
+ */
+
+:root:not([data-theme]),
+[data-theme="ledger"] {
+	--background: #f8fafc;
+	--foreground: #0f172a;
+	--card: #ffffff;
+	--card-foreground: #0f172a;
+	--popover: #ffffff;
+	--popover-foreground: #0f172a;
+	--primary: #047857;
+	--primary-foreground: #ffffff;
+	--secondary: #e2e8f0;
+	--secondary-foreground: #0f172a;
+	--muted: #f1f5f9;
+	--muted-foreground: #475569;
+	--accent: #fef3c7;
+	--accent-foreground: #78350f;
+	--destructive: #b91c1c;
+	--destructive-foreground: #ffffff;
+	--border: #e2e8f0;
+	--input: #cbd5e1;
+	--ring: #047857;
+
+	--inverse: #0f172a;
+	--inverse-foreground: #f8fafc;
+	--inverse-muted-foreground: #94a3b8;
+	--inverse-border: #1e293b;
+
+	--typeface-body:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+	--typeface-heading:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+
+	--radius: 0.75rem;
+}
+
+:root.dark:not([data-theme]),
+[data-theme="ledger"].dark {
+	--background: #0f172a;
+	--foreground: #f1f5f9;
+	--card: #1e293b;
+	--card-foreground: #f1f5f9;
+	--popover: #1e293b;
+	--popover-foreground: #f1f5f9;
+	--primary: #34d399;
+	--primary-foreground: #022c22;
+	--secondary: #1e293b;
+	--secondary-foreground: #f1f5f9;
+	--muted: #1e293b;
+	--muted-foreground: #94a3b8;
+	--accent: #422006;
+	--accent-foreground: #fcd34d;
+	--destructive: #f87171;
+	--destructive-foreground: #450a0a;
+	--border: #334155;
+	--input: #475569;
+	--ring: #34d399;
+
+	--inverse: #020617;
+	--inverse-foreground: #f1f5f9;
+	--inverse-muted-foreground: #94a3b8;
+	--inverse-border: #1e293b;
+
+	--typeface-body:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+	--typeface-heading:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+
+	--radius: 0.75rem;
+}

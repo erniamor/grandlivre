@@ -53,7 +53,7 @@ Grand Livre's web app, for now: the header (language, appearance, account), sign
 - The header's appearance menu (`AppearanceMenu`, whose icon shows the current mode) holds two choices: the mode (`ModeRadioGroup`) and the theme (`ThemeRadioGroup`).
 - Mode: light, dark or system, stored in the `appearance` cookie. `getAppearance()` reads it on the server and in the browser; the root route renders the `dark` class on `<html>` so the page doesn't flash.
 - With "system", the server can't know the system's appearance: a small inline script sets the class before the first paint, and `<html>` has `suppressHydrationWarning` for that reason.
-- Theme: one of the themes offered by `@repo/themes` (`themes`), stored in the `theme` cookie, read on the server (`getTheme()`) and rendered as `data-theme` on `<html>`: no flash. A missing or no longer offered theme falls back to the default one (`stationery`).
+- Theme: one of the themes offered by `@repo/themes` (`themes`), stored in the `theme` cookie, read on the server (`getTheme()`) and rendered as `data-theme` on `<html>`: no flash. A missing or no longer offered theme falls back to the default one (`ledger`).
 - `styles.css` imports every offered theme; a theme added to `@repo/themes` needs its import there and its label (`themeLabels`, `theme_<name>` messages).
 - The choices are kept per device (cookies), not in the account.
 

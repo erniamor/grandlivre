@@ -9,11 +9,11 @@ In the app's main stylesheet, in this order:
 ```css
 @import "tailwindcss";
 @import "@repo/themes/base.css";
-@import "@repo/themes/stationery.css"; /* the default theme */
-@import "@repo/themes/synthwave.css"; /* other themes, if users can choose them */
+@import "@repo/themes/ledger.css"; /* the default theme */
+@import "@repo/themes/dusk.css"; /* other themes, if users can choose them */
 ```
 
-- Theme: `data-theme="<name>"` attribute on `<html>`. Without the attribute, the default theme (`stationery`) applies.
+- Theme: `data-theme="<name>"` attribute on `<html>`. Without the attribute, the default theme (`ledger`) applies.
 - Dark mode: `dark` class on `<html>`, independent of the theme.
 - Fonts: the theme declares the families (`--typeface-body`, `--typeface-heading`); the app loads them.
 - Browser bar color: `themeBarColors[theme].light` / `.dark` (TypeScript), the `--inverse` color of each theme, for `<meta name="theme-color">`. The tests check it matches the CSS.
@@ -33,17 +33,17 @@ All colors are hexadecimal (sRGB).
 
 ## Themes
 
-Five complete themes, light and dark, offered to the users. All use system fonts (nothing to load), so their rendering varies slightly between platforms.
+Five complete themes, light and dark, offered to the users, each in its own family of colors. All use system fonts (nothing to load), so their rendering varies slightly between platforms.
 
 | Theme | Idea | Fonts | Radius |
 | --- | --- | --- | --- |
-| `stationery` (default) | A paper notebook: cream paper, navy ink, terracotta stamp as the primary color, sage accent | Book serifs (Charter, Iowan Old Style) | `0.25rem` |
-| `synthwave` | An 80s arcade at night: lavender by day, deep indigo with neon pink and cyan by night | Avenir, monospace headings | `0.75rem` |
-| `garden` | A kitchen garden: pale sage, forest green, straw accent, terracotta for danger | Rounded (SF Pro Rounded) | `1rem` |
-| `brutalist` | Raw black and white, black borders, signal-yellow band and accent, electric blue focus | Monospace, grotesque headings | none |
-| `neutral` | Based on shadcn/ui's neutral theme, in pure grays; also a reference to check that `packages/ui` components don't depend on a colored theme | System fonts | `0.625rem` |
+| `ledger` (default) | An account ledger: a night navy band and ink, emerald to act, amber for what stands out, a bluish white page; slate night in dark mode | System sans-serif | `0.75rem` |
+| `raspberry` | Raspberry and mint: a deep berry band over a blush white page, raspberry to act, mint accents; blackcurrant night | Sans-serif body, Didone headings (Bodoni 72, Didot; Georgia elsewhere) | `0.75rem` |
+| `dusk` | The river at sunset: a pale lavender band over a warm white page, plum violet to act, coral accents; violet night | System sans-serif | `0.5rem` |
+| `ink` | Black and white at their strongest, one cobalt blue, hard borders: made to be read easily | System sans-serif | `0.125rem` |
+| `citrus` | Playful: bright orange to act, a lime band, a cream page | Rounded (SF Pro Rounded, Nunito) | `1rem` |
 
-`neutral` differs from shadcn on two values to meet WCAG AA in light mode: `--muted-foreground` (`#6b6b6b` instead of `#737373`) and `--ring` (`#8a8a8a` instead of `#a1a1a1`).
+`dusk` is the one theme whose band is light in light mode: its band's text is dark.
 
 ## Verified contrasts
 

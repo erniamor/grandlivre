@@ -1,16 +1,10 @@
 /** Themes offered to the users; the first one is the default. */
-export const themes = [
-	"stationery",
-	"synthwave",
-	"garden",
-	"brutalist",
-	"neutral",
-] as const;
+export const themes = ["ledger", "raspberry", "dusk", "ink", "citrus"] as const;
 
 export type ThemeName = (typeof themes)[number];
 
 /** Theme applied when `<html>` has no `data-theme` attribute. */
-export const defaultTheme: ThemeName = "stationery";
+export const defaultTheme: ThemeName = "ledger";
 
 export function isThemeName(value: unknown): value is ThemeName {
 	return typeof value === "string" && themes.includes(value as ThemeName);
@@ -25,9 +19,9 @@ export const themeBarColors: Record<
 	ThemeName,
 	{ light: string; dark: string }
 > = {
-	stationery: { light: "#1f2a44", dark: "#0f1424" },
-	synthwave: { light: "#1b1033", dark: "#05020d" },
-	garden: { light: "#22332a", dark: "#0a0f0b" },
-	brutalist: { light: "#ffe600", dark: "#ffe600" },
-	neutral: { light: "#171717", dark: "#000000" },
+	ledger: { light: "#0f172a", dark: "#020617" },
+	raspberry: { light: "#4a0e2c", dark: "#10080d" },
+	dusk: { light: "#e9e1f5", dark: "#0f0c14" },
+	ink: { light: "#000000", dark: "#141414" },
+	citrus: { light: "#3f6212", dark: "#1c2a07" },
 };

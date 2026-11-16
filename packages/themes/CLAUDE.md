@@ -31,7 +31,7 @@ With a single front end, this package doesn't exist to share code between apps b
 ## Structure
 
 - `src/base.css`: Tailwind mapping (`@theme inline`) from the semantic variables to Tailwind utilities. Common to all themes.
-- `src/themes/<name>.css`: one standalone file per theme, with its light and dark variants: `stationery.css` (default theme), `synthwave.css`, `garden.css`, `brutalist.css`, and `neutral.css` (from shadcn's neutral theme, also the reference theme)
+- `src/themes/<name>.css`: one standalone file per theme, with its light and dark variants: `ledger.css` (default theme, also the reference theme of the consistency test), `raspberry.css`, `dusk.css`, `ink.css` and `citrus.css`
 - `src/index.ts`: list of themes offered to users (`themes`), `ThemeName` type, default theme
 - `README.md`: intent and characteristics of each theme (main colors, usage, verified contrasts)
 
@@ -58,7 +58,7 @@ With a single front end, this package doesn't exist to share code between apps b
 
 - A theme is selected by the `data-theme="<name>"` attribute on `<html>`; dark mode by the `.dark` class on `<html>`. The two axes are independent.
 - Each theme defines its light and dark values; a theme without a dark variant is forbidden.
-- The default theme (`defaultTheme` in `src/index.ts`, currently `stationery`) is the product's, used when no attribute is present: its selectors are `:root:not([data-theme])` and `[data-theme="<name>"]`. Other themes only apply through their attribute.
+- The default theme (`defaultTheme` in `src/index.ts`, currently `ledger`) is the product's, used when no attribute is present: its selectors are `:root:not([data-theme])` and `[data-theme="<name>"]`. Other themes only apply through their attribute.
 - Use consistent color spaces across themes (for example all in `oklch` or all in `hsl`), not a mix.
 - Contrast: normal text ≥ 4.5:1 and large text ≥ 3:1 (WCAG AA), for every background/text pair, in every theme and every mode.
 - Typography: fonts referenced through variables (`--font-sans`...), loaded by the app; the theme doesn't load a font itself.
@@ -66,7 +66,7 @@ With a single front end, this package doesn't exist to share code between apps b
 ## Themes offered to users
 
 - Users choose among all the themes listed in `themes` (the app's appearance menu). Every listed theme is therefore a product theme: complete, documented in `README.md`, and checked visually.
-- A theme is named after its idea (`garden`), never after a value or a brand.
+- A theme is named after its idea (`dusk`), never after a value or a brand.
 - New variants under evaluation are complete, standalone files named plainly (`variant-a`, `variant-b`), presented in development or staging only; once kept, give them a real name and add them to `themes`; delete the rejected ones, don't leave them dead in the repository.
 - Removing or renaming an offered theme is a breaking change: the apps fall back to the default theme for a stored choice that no longer exists.
 

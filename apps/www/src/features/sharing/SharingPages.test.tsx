@@ -442,7 +442,7 @@ describe("SettlePage", () => {
 describe("the navigation", () => {
 	it("shows Sharing only to a household that shares expenses", async () => {
 		const { router } = renderWithRouter(
-			<Header appearance="system" theme="stationery" me={aliceProfile} />,
+			<Header appearance="system" theme="ledger" me={aliceProfile} />,
 		);
 		const nav = await screen.findByRole("navigation", { name: "Main" });
 		expect(

@@ -7,18 +7,18 @@ import {
 	themeBarColors,
 	themes,
 } from "./index";
-import brutalistCss from "./themes/brutalist.css?raw";
-import gardenCss from "./themes/garden.css?raw";
-import neutralCss from "./themes/neutral.css?raw";
-import stationeryCss from "./themes/stationery.css?raw";
-import synthwaveCss from "./themes/synthwave.css?raw";
+import citrusCss from "./themes/citrus.css?raw";
+import duskCss from "./themes/dusk.css?raw";
+import inkCss from "./themes/ink.css?raw";
+import ledgerCss from "./themes/ledger.css?raw";
+import raspberryCss from "./themes/raspberry.css?raw";
 
 const themeCss: Record<ThemeName, string> = {
-	stationery: stationeryCss,
-	synthwave: synthwaveCss,
-	garden: gardenCss,
-	brutalist: brutalistCss,
-	neutral: neutralCss,
+	ledger: ledgerCss,
+	raspberry: raspberryCss,
+	dusk: duskCss,
+	ink: inkCss,
+	citrus: citrusCss,
 };
 
 type Mode = "light" | "dark";
@@ -100,7 +100,7 @@ describe("index", () => {
 	});
 
 	it("only accepts known theme names", () => {
-		expect(isThemeName("garden")).toBe(true);
+		expect(isThemeName("dusk")).toBe(true);
 		expect(isThemeName("unknown")).toBe(false);
 		expect(isThemeName(undefined)).toBe(false);
 	});
