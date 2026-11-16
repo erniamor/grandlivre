@@ -2,7 +2,7 @@ import {
 	DEFAULT_HOUSEHOLD_TIME_ZONE,
 	HOUSEHOLD_CURRENCIES,
 } from "@repo/schemas";
-import { pgTable, text } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "@/db/schema/columns";
 
 // A family: everything the product stores (accounts, tags, transactions)
@@ -14,6 +14,8 @@ export const households = pgTable("households", {
 	currency: text({ enum: HOUSEHOLD_CURRENCIES }).notNull(),
 	// IANA name: where its days start and end, for its recurring transactions
 	timeZone: text().notNull().default(DEFAULT_HOUSEHOLD_TIME_ZONE),
+	// Whether its members settle the expenses they share; off by default
+	expenseSharing: boolean().notNull().default(false),
 	createdAt: createdAt(),
 	updatedAt: updatedAt(),
 });

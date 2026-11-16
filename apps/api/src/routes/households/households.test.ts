@@ -48,6 +48,8 @@ describe("POST /v1/households", () => {
 			currency: "CAD",
 			// Unless the browser sends its own
 			timeZone: "America/Toronto",
+			// Settling shared expenses is opt-in
+			expenseSharing: false,
 			role: "owner",
 			createdAt: expect.any(String),
 		});

@@ -10,6 +10,11 @@ export { recurringOccurrences } from "@/db/schema/recurring-occurrences";
 export { recurringTransactionLines } from "@/db/schema/recurring-transaction-lines";
 export { recurringTransactions } from "@/db/schema/recurring-transactions";
 export { sessions } from "@/db/schema/sessions";
+export {
+	settlements,
+	sharingWeights,
+	transactionShares,
+} from "@/db/schema/sharing";
 export { tagNames } from "@/db/schema/tag-names";
 export { tags } from "@/db/schema/tags";
 export { transactionLines } from "@/db/schema/transaction-lines";

@@ -77,7 +77,7 @@ A household is visible to its members only: anyone else gets a 404, as for a hou
 | `POST /v1/households` `{ name, currency, timeZone? }` | signed-in user | Creates a household owned by the user (201). `timeZone` is an IANA name (`America/Toronto` when missing; the front end sends the browser's), where the household's days start and end for its recurring transactions; an unknown one answers 422 `household_time_zone_invalid` |
 | `GET /v1/households` | signed-in user | Lists the user's households, with their role in each |
 | `GET /v1/households/:householdId` | member | The household |
-| `PATCH /v1/households/:householdId` `{ name?, currency?, timeZone? }` | owner | Changes the fields sent |
+| `PATCH /v1/households/:householdId` `{ name?, currency?, timeZone?, expenseSharing? }` | owner | Changes the fields sent. `expenseSharing` turns on settling shared expenses (off by default) |
 | `GET /v1/households/:householdId/members` | member | Lists the members, in the order they joined |
 | `PATCH /v1/households/:householdId/members/:userId` `{ role }` | owner | Changes a member's role (204) |
 | `DELETE /v1/households/:householdId/members/:userId` | owner, or the member themselves | Removes the member, or leaves the household (204) |
@@ -229,6 +229,21 @@ What a household means to spend on a tag, and where it stands. A budget on a tag
 - `upcoming`: what the recurring expenses still plan in the period (until the end of the year for a yearly budget), from today on, and their days waiting for a member; nothing for a month past.
 - A tag from outside the household answers 404. Codes: `budget_period_invalid`, `budget_month_invalid`, `amount_not_positive`. Deleting a tag (possible only without transactions) deletes its budgets.
 
+### Expense sharing
+
+Optional, for the households that settle between members: off by default (`expenseSharing` on the household, set by an owner). While it is off, sharing a transaction answers 409 `sharing_disabled`, and so does every route below; the data already there stays.
+
+A transaction (an expense, or an income: a refund) paid from an account with **one** holder can be shared among members: `shares` on `POST` and `PUT …/transactions`, one of `{ mode: "equal", userIds }`, `{ mode: "weights", parts: [{ userId, weight }] }`, `{ mode: "amounts", parts: [{ userId, amount }] }`. Parts are rounded to the cent and add up to the amount. On `PUT`, `shares` missing keeps the split (its parts follow the new amount), `null` stops it. The transaction then carries `sharing: { paidBy, split, parts }`; `paidBy` is its account's holder when it was shared. A joint account holds money already shared: 422 `share_account_not_personal`. Other codes, on `shares`: `share_member_invalid`, `share_members_invalid`, `share_amounts_mismatch`, `share_weight_invalid`.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/sharing` | member | `{ weights, balances, suggestions }`: the default split (a weight per member, 1 when never set); each one's balance, positive when the others owe them, with anyone who left with a balance (`isMember: false`); the fewest payments that settle everything |
+| `PUT /v1/households/:householdId/sharing/weights` `{ weights: [{ userId, weight }] }` | owner | Sets the default split, which the front ends start from |
+| `GET /v1/households/:householdId/sharing/expenses` | member | The shared transactions the user is concerned by, the most recent first: the ones they paid, have a part in, or whose account's details they see. A member with a part sees it here even on an account that only shows its balance, and nothing else of that account |
+| `GET /v1/households/:householdId/sharing/settlements` | member | The settlements, the most recent first |
+| `POST /v1/households/:householdId/sharing/settlements` `{ fromUserId, toUserId, amount, date, note?, transfer? }` | the one who pays, or is paid | Records a payment between two members (201). With `transfer: { fromAccountId, toAccountId }`, also records it as a transfer from an account the payer holds to one the other holds (422 `settlement_account_invalid` otherwise), by a holder of the first |
+| `DELETE /v1/households/:householdId/sharing/settlements/:settlementId` | the one who paid, or was paid | Deletes it (204), with its transfer, which only its account's holders can delete; deleting the transfer deletes the settlement too |
+
 ### Events (real time)
 
 `GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:
@@ -237,7 +252,7 @@ What a household means to spend on a tag, and where it stands. A budget on a tag
 data: {"topic":"transactions"}
 ```
 
-Topics: `household` (name, currency, time zone), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances), `recurring`, `budgets`. On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
+Topics: `household` (name, currency, time zone), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances), `recurring`, `budgets`, `sharing` (default split and settlements; a shared transaction's changes come as `transactions`). On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
 
 - An event is sent only once the change is saved: a refused change sends nothing.
 - The stream starts with a `ready` event (`event: ready`), sent once events are listened to: reload the data then, not on `EventSource`'s `open`, which comes a moment earlier. A `: ping` comment follows every 25 seconds so proxies keep the stream open.

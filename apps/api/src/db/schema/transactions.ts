@@ -1,5 +1,6 @@
 import {
 	type Receipt,
+	type ShareSplit,
 	TRANSACTION_ORIGINS,
 	TRANSACTION_TYPES,
 } from "@repo/schemas";
@@ -50,6 +51,11 @@ export const transactions = pgTable(
 		// What its receipt said, when it was recorded from one; the photo itself
 		// is never stored
 		receipt: jsonb().$type<Receipt>(),
+		// How it is shared among members, as given; the parts are in
+		// transaction_shares
+		shareSplit: jsonb().$type<ShareSplit>(),
+		// Who paid it (or received it), when shared: its account's holder then
+		sharePaidBy: uuid().references(() => users.id, { onDelete: "set null" }),
 		// Who recorded it; kept when they leave the household
 		createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
 		createdAt: createdAt(),

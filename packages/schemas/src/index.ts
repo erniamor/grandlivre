@@ -9,5 +9,6 @@ export * from "./profile.schema";
 export * from "./receipt.schema";
 export * from "./recurring.schema";
 export * from "./report.schema";
+export * from "./sharing.schema";
 export * from "./tag.schema";
 export * from "./transaction.schema";

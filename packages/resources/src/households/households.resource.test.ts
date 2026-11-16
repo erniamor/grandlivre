@@ -18,6 +18,7 @@ const household = {
 	name: "The Tremblays",
 	currency: "CAD",
 	timeZone: "America/Toronto",
+	expenseSharing: false,
 	role: "owner",
 	createdAt: NOW,
 };

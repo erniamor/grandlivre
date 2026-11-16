@@ -54,6 +54,17 @@ Validation messages are codes, not sentences: the front ends translate them in e
 | `transaction_payee_too_long` | The payee is over `TRANSACTION_PAYEE_MAX_LENGTH` characters |
 | `transaction_note_too_long` | The note is over `TRANSACTION_NOTE_MAX_LENGTH` characters |
 | `transfer_same_account` | A transfer goes to the account it leaves |
+| `expense_sharing_invalid` | `expenseSharing` isn't a boolean |
+| `share_mode_invalid` | The split's `mode` isn't `equal`, `weights` or `amounts` |
+| `share_members_required` | The split names no member |
+| `share_members_invalid` | Too many members (`SHARE_MAX_MEMBERS`), or the same one twice |
+| `share_member_invalid` | Answered by the API: a member isn't one of the household's |
+| `share_weight_invalid` | A weight isn't a whole number from 0 to `SHARE_MAX_WEIGHT`, or all are 0 |
+| `share_amounts_mismatch` | Answered by the API: the amounts don't add up to the transaction's |
+| `share_account_not_personal` | Answered by the API: the account doesn't have exactly one holder |
+| `settlement_same_member` | A member pays themselves |
+| `settlement_note_too_long` | The note is over `SETTLEMENT_NOTE_MAX_LENGTH` characters |
+| `settlement_account_invalid` | Answered by the API: the payer doesn't hold the account the transfer leaves, or the other the one it enters |
 | `budget_period_invalid` | The period of a budget isn't one of `BUDGET_PERIODS` |
 | `budget_month_invalid` | The month isn't a calendar month (`YYYY-MM`) |
 | `recurrence_unit_invalid` | The unit of a schedule isn't one of `RECURRENCE_UNITS` |

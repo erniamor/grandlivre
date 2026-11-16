@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { amountSchema, calendarDateSchema, dateTimeSchema } from "./common";
 import { receiptSchema } from "./receipt.schema";
+import { shareSplitSchema, transactionSharingSchema } from "./sharing.schema";
 
 /**
  * - "expense": money leaves the account;
@@ -85,6 +86,11 @@ const commonFields = {
 /** The merchant or the person paid, or who paid; one line or more. */
 const splitFields = {
 	...commonFields,
+	/**
+	 * How it is shared among members, when the household settles shared
+	 * expenses: null stops sharing it; missing keeps what it was.
+	 */
+	shares: shareSplitSchema.nullable().optional(),
 	payee: payeeSchema.optional(),
 	/** Their sum is the amount of the transaction. */
 	lines: z
@@ -137,8 +143,9 @@ export const transactionTemplateSchema = z
 	.discriminatedUnion(
 		"type",
 		[
-			expenseInputSchema.omit({ date: true }),
-			incomeInputSchema.omit({ date: true }),
+			// Sharing a recurring transaction comes later
+			expenseInputSchema.omit({ date: true, shares: true }),
+			incomeInputSchema.omit({ date: true, shares: true }),
 			transferInputSchema.omit({ date: true }),
 		],
 		"transaction_type_invalid",
@@ -218,6 +225,8 @@ export const transactionSchema = z.object({
 	lines: z.array(transactionLineSchema),
 	/** What its receipt said, when it was recorded from one. */
 	receipt: receiptSchema.nullable(),
+	/** How it is shared among members; missing when it isn't. */
+	sharing: transactionSharingSchema.optional(),
 	/** Who recorded it; null once they left the product. */
 	createdBy: z
 		.object({

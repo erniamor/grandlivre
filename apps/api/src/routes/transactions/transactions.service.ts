@@ -2,9 +2,11 @@ import type {
 	CreateTransaction,
 	Paginated,
 	Receipt,
+	ShareSplit,
 	Transaction,
 	TransactionLineInput,
 	TransactionOrigin,
+	TransactionSharing,
 	UpdateTransaction,
 } from "@repo/schemas";
 import {
@@ -34,6 +36,11 @@ import { AppError } from "@/lib/errors";
 import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf } from "@/lib/pagination";
 import type { Viewer } from "@/routes/accounts/accounts.service";
+import {
+	applySharing,
+	clearSharing,
+	sharingOf,
+} from "@/routes/sharing/transaction-sharing";
 import type { TransactionsQuery } from "@/routes/transactions/transactions.schemas";
 
 type TransactionRow = InferSelectModel<typeof transactions>;
@@ -117,6 +124,7 @@ function toTransaction(
 	row: TransactionRow,
 	lines: LineRow[],
 	creator: { name: string; email: string } | null,
+	sharing: TransactionSharing | undefined,
 ): Transaction {
 	return {
 		id: row.id,
@@ -130,6 +138,7 @@ function toTransaction(
 		note: row.note,
 		origin: row.origin,
 		receipt: row.receipt,
+		...(sharing ? { sharing } : {}),
 		lines: lines.map((line) => ({
 			id: line.id,
 			amount: line.amount,
@@ -155,7 +164,7 @@ async function withDetails(
 	const creatorIds = [
 		...new Set(rows.flatMap((row) => (row.createdBy ? [row.createdBy] : []))),
 	];
-	const [lines, creators] = await Promise.all([
+	const [lines, creators, sharing] = await Promise.all([
 		database
 			.select()
 			.from(transactionLines)
@@ -172,6 +181,7 @@ async function withDetails(
 					.select({ id: users.id, name: users.name, email: users.email })
 					.from(users)
 					.where(inArray(users.id, creatorIds)),
+		sharingOf(database, rows),
 	]);
 	const creatorById = new Map(creators.map((creator) => [creator.id, creator]));
 	return rows.map((row) =>
@@ -179,6 +189,7 @@ async function withDetails(
 			row,
 			lines.filter((line) => line.transactionId === row.id),
 			(row.createdBy && creatorById.get(row.createdBy)) || null,
+			sharing.get(row.id),
 		),
 	);
 }
@@ -482,11 +493,27 @@ export async function recordTransaction(
 		throw new Error("The transaction was not created");
 	}
 	await insertLines(tx, householdId, row.id, lines);
-	const [transaction] = await withDetails(tx, [row]);
+	const split = "shares" in input ? input.shares : undefined;
+	if (split) {
+		await applySharing(tx, viewer, row, split);
+	}
+	const [transaction] = await withDetails(tx, [await reread(tx, row.id)]);
 	if (!transaction) {
 		throw new Error("The transaction was not created");
 	}
 	return transaction;
+}
+
+/** A transaction as it is now in `tx`: after its sharing changed, say. */
+async function reread(tx: Tx, transactionId: string): Promise<TransactionRow> {
+	const [row] = await tx
+		.select()
+		.from(transactions)
+		.where(eq(transactions.id, transactionId));
+	if (!row) {
+		throw notFound();
+	}
+	return row;
 }
 
 /** Records a transaction on an account the viewer holds. */
@@ -538,6 +565,35 @@ async function lockForChange(
 	return row;
 }
 
+/**
+ * The sharing of a transaction changed as a whole: `shares` null stops it,
+ * a split replaces it, and none keeps it, its parts following the new
+ * amount. A transfer is never shared. While the household doesn't settle
+ * shared expenses, a kept split stays as it was.
+ */
+async function reshare(
+	tx: Tx,
+	viewer: Viewer,
+	row: TransactionRow,
+	input: UpdateTransaction,
+	previous: ShareSplit | null,
+): Promise<void> {
+	const split = input.type === "transfer" ? null : input.shares;
+	if (split === null) {
+		if (previous) {
+			await clearSharing(tx, row.id);
+		}
+		return;
+	}
+	if (split) {
+		await applySharing(tx, viewer, row, split);
+		return;
+	}
+	if (previous && viewer.membership.household.expenseSharing) {
+		await applySharing(tx, viewer, row, previous);
+	}
+}
+
 /** Replaces a transaction with the one sent; where it comes from is kept. */
 export async function updateTransaction(
 	viewer: Viewer,
@@ -547,7 +603,7 @@ export async function updateTransaction(
 	const householdId = viewer.membership.household.id;
 	return db.transaction(async (tx) => {
 		const access = await accountAccess(tx, viewer);
-		await lockForChange(tx, viewer, access, transactionId);
+		const previous = await lockForChange(tx, viewer, access, transactionId);
 		const { lines, ...values } = await toValues(tx, viewer, access, input);
 		const [row] = await tx
 			.update(transactions)
@@ -561,8 +617,11 @@ export async function updateTransaction(
 			.delete(transactionLines)
 			.where(eq(transactionLines.transactionId, transactionId));
 		await insertLines(tx, householdId, transactionId, lines);
+		await reshare(tx, viewer, row, input, previous.shareSplit);
 		await publishHouseholdEvent(tx, householdId, "transactions");
-		const [transaction] = await withDetails(tx, [row]);
+		const [transaction] = await withDetails(tx, [
+			await reread(tx, transactionId),
+		]);
 		if (!transaction) {
 			throw notFound();
 		}

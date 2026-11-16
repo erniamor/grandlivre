@@ -77,8 +77,13 @@ export const createHouseholdSchema = z.strictObject({
 
 export type CreateHousehold = z.infer<typeof createHouseholdSchema>;
 
-/** Every field is optional: only the ones sent are changed. */
-export const updateHouseholdSchema = createHouseholdSchema.partial();
+/**
+ * Every field is optional: only the ones sent are changed.
+ * `expenseSharing` turns on settling shared expenses between members.
+ */
+export const updateHouseholdSchema = createHouseholdSchema
+	.extend({ expenseSharing: z.boolean("expense_sharing_invalid") })
+	.partial();
 
 export type UpdateHousehold = z.infer<typeof updateHouseholdSchema>;
 
@@ -88,6 +93,8 @@ export const householdSchema = z.object({
 	name: z.string(),
 	currency: householdCurrencySchema,
 	timeZone: z.string(),
+	/** Whether its members settle the expenses they share; off by default. */
+	expenseSharing: z.boolean(),
 	/** Role of the signed-in user in this household. */
 	role: householdRoleSchema,
 	createdAt: dateTimeSchema,

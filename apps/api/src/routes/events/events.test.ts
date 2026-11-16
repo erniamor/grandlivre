@@ -163,6 +163,29 @@ describe("GET /v1/households/:householdId/events", () => {
 				call("DELETE", `/recurring-transactions/${recurringId}`),
 			),
 		).toEqual(["recurring"]);
+		// Expense sharing: turned on with the household, then its settings
+		// and its settlements
+		expect(
+			await topicsOf(() => call("PATCH", "", { expenseSharing: true })),
+		).toEqual(["household"]);
+		expect(
+			await topicsOf(() =>
+				call("PUT", "/sharing/weights", {
+					weights: [{ userId: alice.id, weight: 2 }],
+				}),
+			),
+		).toEqual(["sharing"]);
+		expect(
+			await topicsOf(() =>
+				call("POST", "/sharing/settlements", {
+					fromUserId: alice.id,
+					toUserId: bob.id,
+					amount: 100,
+					date: "2026-11-15",
+				}),
+			),
+		).toEqual(["sharing"]);
+
 		// Budgets
 		expect(
 			await topicsOf(() =>

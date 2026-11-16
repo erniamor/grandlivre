@@ -63,6 +63,8 @@ export function staleQueries(
 			];
 		case "budgets":
 			return [{ queryKey: budgetsQueryKey(householdId) }];
+		case "sharing":
+			return [{ queryKey: ["households", householdId, "sharing"] }];
 	}
 }
 

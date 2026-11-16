@@ -7,6 +7,7 @@ const household = (name: string): Household => ({
 	name,
 	currency: "CAD",
 	timeZone: "America/Toronto",
+	expenseSharing: false,
 	role: "owner",
 	createdAt: "2026-11-14T12:00:00.000Z",
 });

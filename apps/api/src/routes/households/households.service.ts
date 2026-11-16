@@ -28,6 +28,7 @@ export function toHousehold({ household, role }: Membership): Household {
 		name: household.name,
 		currency: household.currency,
 		timeZone: household.timeZone,
+		expenseSharing: household.expenseSharing,
 		role,
 		createdAt: household.createdAt.toISOString(),
 	};
@@ -99,7 +100,8 @@ export async function updateHousehold(
 	if (
 		input.name === undefined &&
 		input.currency === undefined &&
-		input.timeZone === undefined
+		input.timeZone === undefined &&
+		input.expenseSharing === undefined
 	) {
 		return toHousehold(membership);
 	}
