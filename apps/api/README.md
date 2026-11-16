@@ -133,7 +133,7 @@ An expense or an income is split into `lines`, each with an `amount` and at most
 | Route | Who | Effect |
 | --- | --- | --- |
 | `GET /v1/households/:householdId/transactions` | member | Lists the transactions the user may see, the most recent day first. Filters: `accountId` (transfers received included), `tagId` (the tags under it included), `type`, `from` and `to` (days, included) |
-| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`; `recurring` and `adjustment` are the API's own) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
+| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`; `recurring` and `adjustment` are the API's own) says where it comes from |
 | `GET /v1/households/:householdId/transactions/:transactionId` | member who may see it | The transaction, with its lines and who recorded it |
 | `PUT /v1/households/:householdId/transactions/:transactionId` | holder of its account | Replaces the transaction with the one sent, of any type and on any account the user holds; where it comes from is kept |
 | `DELETE /v1/households/:householdId/transactions/:transactionId` | holder of its account | Deletes the transaction (204) |
@@ -250,6 +250,16 @@ A transaction (an expense, or an income: a refund) paid from an account with **o
 | `POST /v1/households/:householdId/sharing/settlements` `{ fromUserId, toUserId, amount, date, note?, transfer? }` | the one who pays, or is paid | Records a payment between two members (201). With `transfer: { fromAccountId, toAccountId }`, also records it as a transfer from an account the payer holds to one the other holds (422 `settlement_account_invalid` otherwise), by a holder of the first |
 | `DELETE /v1/households/:householdId/sharing/settlements/:settlementId` | the one who paid, or was paid | Deletes it (204), with its transfer, which only its account's holders can delete; deleting the transfer deletes the settlement too |
 
+### Statement imports
+
+A bank statement file is read, then compared with the household, before anything is imported. Read formats (CSV, without header): Desjardins accounts (a statement, Windows-1252, or the history, several accounts in one file) and Desjardins cards (several cards in one file). Banks give no lasting identity to their lines: each line's `externalId` is derived from its day, its amount and the letters of its description, then its rank among the lines alike in the file, so the same line has the same one in every export.
+
+An account at the bank is recognized from an earlier import (`statement_accounts`): its number is never kept, only a hash keyed with the server's secret, with the bank's name for it and its last digits. A line tied to a transaction is kept in `statement_lines`, one per account: the two sides of a transfer can each be a line of their account's statement, and a line is never imported twice into an account.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `POST /v1/households/:householdId/imports/preview`, a multipart form with `file` (up to 1 MB, `STATEMENT_MAX_BYTES`) and `targets` (JSON, optional: `[{ index, accountId }]`) | member | Nothing is saved, the file least of all. Each account of the file (`index`, its place) with its bank name, last digits, kind, opening and closing balances (null for cards), its days, and the household's account it goes to: `targets` says so, or an earlier import (`recognized`). `writable` when the member holds that account, open: only then are its lines compared with it. Each line has a `status`: `new`, `imported` (an import brought it in), `matched` (a transaction of the account with the same amount, from 5 days before to 3 days after the line, not yet tied to a line: `match`), `recurring` (a recurring day waiting: `occurrence`); a transaction or a day goes to one line at most, the closest days first. A new line may have a `suggestion`: a transfer its description names (another account of the branch, a card known by its bank name, the member's wallet for cash taken out), or the tag its payee had the last time, from the transactions the member may see. Two lines of the file that are the same transfer between two of its accounts point to each other (`pair`). A file that can't be read: 422 on `file` (`statement_unreadable` with its `line`, `statement_empty`, `statement_too_long`, `statement_too_large`); a target the member doesn't hold, archived, or out of the file: 422 `import_account_invalid` or `import_targets_invalid` on `targets` |
+
 ### Events (real time)
 
 `GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:
@@ -299,7 +309,6 @@ Every error has the same shape:
 | 409 | `tag_in_use` | The tag has transactions: it can't be deleted |
 | 409 | `account_has_transactions` | The account has transactions: it can't be deleted, only archived |
 | 409 | `account_archived` | The account is archived: it takes no new transaction and its transactions can't change |
-| 409 | `transaction_already_imported` | A transaction with this `externalId` is already on the account |
 | 409 | `tag_limit_reached` | The household already has its maximum number of tags |
 | 409 | `currency_locked` | The household has accounts: its currency can no longer change |
 | 409 | `already_member` | The invited email already belongs to a member of the household |

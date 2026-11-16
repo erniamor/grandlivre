@@ -442,7 +442,6 @@ export async function insertLines(
 /** Where a transaction comes from, and what came with it. */
 interface Provenance {
 	origin: TransactionOrigin;
-	externalId?: string;
 	receipt?: Receipt;
 }
 
@@ -454,37 +453,17 @@ export async function recordTransaction(
 	tx: Tx,
 	viewer: Viewer,
 	input: UpdateTransaction,
-	{ origin, externalId, receipt }: Provenance,
+	{ origin, receipt }: Provenance,
 ): Promise<Transaction> {
 	const householdId = viewer.membership.household.id;
 	const access = await accountAccess(tx, viewer);
 	const { lines, ...values } = await toValues(tx, viewer, access, input);
-	if (externalId !== undefined) {
-		// The same statement line is never imported twice into an account
-		const [imported] = await tx
-			.select({ id: transactions.id })
-			.from(transactions)
-			.where(
-				and(
-					eq(transactions.accountId, values.accountId),
-					eq(transactions.externalId, externalId),
-				),
-			);
-		if (imported) {
-			throw new AppError(
-				409,
-				"transaction_already_imported",
-				"This transaction was already imported into the account",
-			);
-		}
-	}
 	const [row] = await tx
 		.insert(transactions)
 		.values({
 			...values,
 			householdId,
 			origin,
-			externalId: externalId ?? null,
 			receipt: receipt ?? null,
 			createdBy: viewer.userId,
 		})
@@ -519,14 +498,13 @@ async function reread(tx: Tx, transactionId: string): Promise<TransactionRow> {
 /** Records a transaction on an account the viewer holds. */
 export async function createTransaction(
 	viewer: Viewer,
-	{ origin = "manual", externalId, ...fields }: CreateTransaction,
+	{ origin = "manual", ...fields }: CreateTransaction,
 ): Promise<Transaction> {
 	const { receipt, ...input } =
 		"receipt" in fields ? fields : { ...fields, receipt: undefined };
 	return db.transaction(async (tx) => {
 		const transaction = await recordTransaction(tx, viewer, input, {
 			origin,
-			externalId,
 			receipt,
 		});
 		await publishHouseholdEvent(

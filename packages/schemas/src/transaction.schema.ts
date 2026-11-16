@@ -29,8 +29,6 @@ export const TRANSACTION_ORIGINS = [
 
 export const TRANSACTION_PAYEE_MAX_LENGTH = 80;
 export const TRANSACTION_NOTE_MAX_LENGTH = 500;
-export const TRANSACTION_EXTERNAL_ID_MAX_LENGTH = 200;
-
 /** Lines an expense or an income can be split into. */
 export const TRANSACTION_MAX_LINES = 50;
 
@@ -168,16 +166,6 @@ const originFields = {
 	/** "manual" when missing; "recurring" and "adjustment" are the API's own. */
 	origin: transactionOriginSchema
 		.exclude(["recurring", "adjustment"])
-		.optional(),
-	/**
-	 * Identifier of the transaction in the statement it was imported from:
-	 * the same one is never imported twice into an account.
-	 */
-	externalId: z
-		.string()
-		.trim()
-		.min(1)
-		.max(TRANSACTION_EXTERNAL_ID_MAX_LENGTH)
 		.optional(),
 };
 

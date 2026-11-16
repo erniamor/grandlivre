@@ -1,4 +1,4 @@
-import type { AccountType } from "@repo/schemas";
+import type { AccountType, STATEMENT_FORMATS } from "@repo/schemas";
 
 /** One line of a statement: money in or out of the account, on a day. */
 export interface StatementLine {
@@ -41,7 +41,7 @@ export interface StatementAccount {
 	closingBalance: number | null;
 }
 
-export type StatementFormat = "desjardins_accounts" | "desjardins_cards";
+export type StatementFormat = (typeof STATEMENT_FORMATS)[number];
 
 export interface Statement {
 	format: StatementFormat;

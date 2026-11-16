@@ -231,3 +231,46 @@ export function desjardinsCards(rows: CardRow[]): StatementAccount[] {
 function byDate(lines: Read[]): Read[] {
 	return [...lines].sort((a, b) => a.date.localeCompare(b.date));
 }
+
+/** What a line's description says of the other side of a transfer. */
+export type TransferHint =
+	/** Another account at the same branch, by its number in the statements. */
+	| { kind: "account"; number: string }
+	/** A bill paid: a card, if the bank's name for one of the cards is in it. */
+	| { kind: "card"; name: string }
+	/** Cash taken out at a teller machine: the member's wallet. */
+	| { kind: "cash" };
+
+/**
+ * What a Desjardins account line's description says of a transfer it may
+ * be: "Virement - AccèsD Internet /à 123456 EOP" (to or from another
+ * account of the branch), "Paiement facture - AccèsD Internet /Remises Visa
+ * Desjardins" (a bill, maybe a card), "Retrait au GA" (cash). Null for
+ * anything else, and for card lines.
+ */
+export function desjardinsTransferHint(
+	accountNumber: string,
+	description: string,
+): TransferHint | null {
+	const plain = description.normalize("NFKD").replace(/[̀-ͯ]/g, "");
+	const branch = /^desjardins:([^:]*):/.exec(accountNumber)?.[1];
+	if (branch === undefined) {
+		return null;
+	}
+	const transfer =
+		/^Virement - AccesD Internet \/(?:a|de) (\d+)[ -]([A-Z]{2,4})\b/i.exec(
+			plain,
+		);
+	if (transfer) {
+		const [, folio = "", kind = ""] = transfer;
+		return {
+			kind: "account",
+			number: `desjardins:${branch}:${Number(folio)}:${kind.toUpperCase()}`,
+		};
+	}
+	const bill = /^Paiement facture - AccesD Internet \/(.+)$/i.exec(plain);
+	if (bill?.[1]) {
+		return { kind: "card", name: bill[1] };
+	}
+	return /^Retrait au GA\b/i.test(plain) ? { kind: "cash" } : null;
+}

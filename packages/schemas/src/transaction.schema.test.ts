@@ -78,16 +78,9 @@ describe("createTransactionSchema", () => {
 	});
 
 	it("accepts where the transaction comes from", () => {
-		const imported = {
-			...expense,
-			origin: "import",
-			externalId: " 2026-0042 ",
-		};
+		const imported = { ...expense, origin: "import" };
 
-		expect(createTransactionSchema.parse(imported)).toEqual({
-			...imported,
-			externalId: "2026-0042",
-		});
+		expect(createTransactionSchema.parse(imported)).toEqual(imported);
 	});
 
 	it("rejects an expense without lines, or with too many", () => {

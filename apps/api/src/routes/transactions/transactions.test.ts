@@ -303,19 +303,13 @@ describe("POST /v1/households/:householdId/transactions", () => {
 		});
 	});
 
-	it("keeps where an imported transaction comes from, and never imports it twice into an account", async () => {
+	it("keeps where a transaction comes from", async () => {
 		const { alice, h, expense } = await setUp();
-		const imported = expense({ origin: "import", externalId: "2026-0042" });
 
-		const first = await h.create(alice, imported);
-		const second = await h.create(alice, imported);
+		const response = await h.create(alice, expense({ origin: "import" }));
 
-		expect(first.status).toBe(201);
-		expect(await first.json()).toMatchObject({ origin: "import" });
-		expect(second.status).toBe(409);
-		expect(await second.json()).toMatchObject({
-			error: { code: "transaction_already_imported" },
-		});
+		expect(response.status).toBe(201);
+		expect(await response.json()).toMatchObject({ origin: "import" });
 	});
 
 	it("hides the household from outsiders and requires a session", async () => {

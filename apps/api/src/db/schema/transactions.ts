@@ -15,7 +15,6 @@ import {
 	pgTable,
 	text,
 	unique,
-	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "@/db/schema/columns";
@@ -45,9 +44,9 @@ export const transactions = pgTable(
 		amount: bigint({ mode: "number" }).notNull(),
 		payee: text(),
 		note: text(),
+		// Its statement lines, when it was imported or found on one, are in
+		// statement_lines
 		origin: text({ enum: TRANSACTION_ORIGINS }).notNull().default("manual"),
-		// Identifier in the statement it was imported from
-		externalId: text(),
 		// What its receipt said, when it was recorded from one; the photo itself
 		// is never stored
 		receipt: jsonb().$type<Receipt>(),
@@ -79,10 +78,6 @@ export const transactions = pgTable(
 			columns: [table.toAccountId, table.householdId],
 			foreignColumns: [ledgerAccounts.id, ledgerAccounts.householdId],
 		}),
-		// The same statement line is never imported twice into an account
-		uniqueIndex()
-			.on(table.accountId, table.externalId)
-			.where(sql`${table.externalId} is not null`),
 		check("transactions_amount_positive", sql`${table.amount} > 0`),
 		// A transfer, and only a transfer, has a destination: another account
 		check(

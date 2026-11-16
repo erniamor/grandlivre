@@ -15,7 +15,9 @@ import { meRoutes } from "@/routes/me/me.routes";
 
 const MAX_BODY_SIZE = 1024 * 1024;
 
-const RECEIPT_ROUTE = /^\/v1\/households\/[^/]+\/transactions\/draft\/receipt$/;
+// Routes taking a file, with their own limit: a receipt's photo, a statement
+const FILE_ROUTES =
+	/^\/v1\/households\/[^/]+\/(transactions\/draft\/receipt|imports\/preview)$/;
 
 const defaultBodyLimit = bodyLimit({
 	maxSize: MAX_BODY_SIZE,
@@ -42,8 +44,8 @@ app
 	.use(cors({ origin: env.CORS_ORIGINS, credentials: true }))
 	.use(csrf({ origin: env.CORS_ORIGINS }))
 	.use((c, next) =>
-		// The photo of a receipt has its own, larger limit, on its route
-		RECEIPT_ROUTE.test(c.req.path) ? next() : defaultBodyLimit(c, next),
+		// A file has its own limit, on its route
+		FILE_ROUTES.test(c.req.path) ? next() : defaultBodyLimit(c, next),
 	)
 	.route("/v1", v1);
 

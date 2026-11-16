@@ -15,6 +15,7 @@ export {
 	sharingWeights,
 	transactionShares,
 } from "@/db/schema/sharing";
+export { statementAccounts, statementLines } from "@/db/schema/statements";
 export { tagNames } from "@/db/schema/tag-names";
 export { tags } from "@/db/schema/tags";
 export { transactionLines } from "@/db/schema/transaction-lines";

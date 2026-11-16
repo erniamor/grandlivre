@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import {
 	households,
 	ledgerAccounts,
+	statementLines,
 	tagNames,
 	tags,
 	transactionLines,
@@ -129,22 +130,34 @@ describe("transactions tables", () => {
 	});
 
 	it("doesn't import the same statement line twice into an account", async () => {
-		const { savings, expense } = await setUp();
-		const imported = {
-			...expense,
-			origin: "import",
-			externalId: "2026-0042",
-		} as const;
-		await db.insert(transactions).values(imported);
+		const { householdId, chequing, savings, transaction } = await setUp();
+		const line = {
+			householdId,
+			accountId: chequing.id,
+			externalId: "a1b2-0",
+			transactionId: transaction.id,
+		};
+		await db.insert(statementLines).values(line);
 
-		await expect(db.insert(transactions).values(imported)).rejects.toThrow();
-		// Another account, or no identifier at all: no clash
+		await expect(db.insert(statementLines).values(line)).rejects.toThrow();
+		// The same line on another account: the other side of a transfer
 		await expect(
-			db.insert(transactions).values({ ...imported, accountId: savings.id }),
+			db.insert(statementLines).values({ ...line, accountId: savings.id }),
 		).resolves.toBeDefined();
-		await expect(
-			db.insert(transactions).values([expense, expense]),
-		).resolves.toBeDefined();
+	});
+
+	it("frees a statement line when its transaction is deleted", async () => {
+		const { householdId, chequing, transaction } = await setUp();
+		await db.insert(statementLines).values({
+			householdId,
+			accountId: chequing.id,
+			externalId: "a1b2-0",
+			transactionId: transaction.id,
+		});
+
+		await db.delete(transactions).where(eq(transactions.id, transaction.id));
+
+		expect(await db.select().from(statementLines)).toEqual([]);
 	});
 
 	it("keeps an account and a tag that have transactions from being deleted", async () => {
