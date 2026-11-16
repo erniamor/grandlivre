@@ -9,7 +9,7 @@ import { tagsQueryKey, tagsQueryOptions } from "@/features/tags/tags-query";
 import { AssistantNotes } from "@/features/transactions/AssistantNotes";
 import { rememberLastAccount } from "@/features/transactions/last-account";
 import {
-	useDraftPhoto,
+	useDraftPhotos,
 	useNoteDraft,
 	useOpenDraft,
 } from "@/features/transactions/note-draft";
@@ -55,7 +55,7 @@ export function NewTransactionPage({
 	const sharing = useSharingContext(household);
 	const refresh = useTransactionChange(household.id);
 	const draft = useNoteDraft(draftId);
-	const photo = useDraftPhoto(draftId);
+	const photos = useDraftPhotos(draftId);
 	const openDraft = useOpenDraft();
 	// The tag created for this draft: a retry after a failure doesn't create it twice
 	const createdTag = useRef<string>(undefined);
@@ -101,13 +101,15 @@ export function NewTransactionPage({
 				<>
 					<QuickEntry
 						householdId={household.id}
-						onDraft={(next, photo) => openDraft(next, { replace: true, photo })}
+						onDraft={(next, photos) =>
+							openDraft(next, { replace: true, photos })
+						}
 					/>
 					{draft && <AssistantNotes draft={draft} />}
 					{draft?.receipt && (
 						<ReceiptDetails
 							receipt={draft.receipt}
-							photo={photo}
+							photos={photos}
 							currency={household.currency}
 						/>
 					)}

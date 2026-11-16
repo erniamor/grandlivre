@@ -559,5 +559,21 @@
 	"account_adjust_submit": "Registrar",
 	"toast_account_adjusted": "Ajuste registrado.",
 	"toast_account_already_right": "El saldo era correcto: no se registró nada.",
-	"transaction_adjustment": "Ajuste"
+	"transaction_adjustment": "Ajuste",
+	"photo_editor_title": "Preparar la foto",
+	"photo_editor_description": "Solo se envía la foto preparada; el original se queda en tu dispositivo.",
+	"photo_editor_hint": "Ajusta el marco al ticket y oculta lo que no quieras enviar: un número de tarjeta, un nombre, un número de fidelidad.",
+	"photo_editor_keyboard": "Con el teclado: las flechas mueven el marco o una máscara, Mayús y las flechas cambian su tamaño, Supr quita una máscara.",
+	"photo_editor_alt": "La foto por preparar",
+	"photo_editor_crop": "Marco",
+	"photo_editor_mask": "Máscara {n}",
+	"photo_editor_add_mask": "Añadir una máscara",
+	"photo_editor_remove_mask": "Quitar la máscara {n}",
+	"photo_editor_warning": "No ocultes el total ni los artículos: el asistente ya no podría leerlos.",
+	"photo_editor_cancel": "Cancelar",
+	"photo_editor_send": "Enviar la foto",
+	"receipt_photo_sent_alt": "La foto del ticket, tal como se envió",
+	"receipt_photo_original_alt": "La foto del ticket, tal como se tomó",
+	"receipt_show_original": "Ver el original",
+	"receipt_show_sent": "Ver la foto enviada"
 }

@@ -1,6 +1,8 @@
 import type { Receipt } from "@repo/schemas";
+import { Button } from "@repo/ui";
 import { ReceiptTextIcon } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
+import type { ReceiptPhotos } from "@/features/transactions/note-draft";
 import { useObjectUrl } from "@/features/transactions/use-object-url";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -8,8 +10,8 @@ import { getLocale } from "@/paraglide/runtime";
 
 interface ReceiptDetailsProps {
 	receipt: Receipt;
-	/** The photo it was read from, while it is still in memory. */
-	photo?: Blob;
+	/** Its photo, as sent and as taken, while they are still in memory. */
+	photos?: ReceiptPhotos;
 	currency: string;
 }
 
@@ -19,11 +21,13 @@ interface ReceiptDetailsProps {
  */
 export function ReceiptDetails({
 	receipt,
-	photo,
+	photos,
 	currency,
 }: ReceiptDetailsProps) {
 	const titleId = useId();
-	const photoUrl = useObjectUrl(photo);
+	// The photo sent, which the assistant read; the original on request
+	const [showOriginal, setShowOriginal] = useState(false);
+	const photoUrl = useObjectUrl(showOriginal ? photos?.original : photos?.sent);
 	const locale = getLocale();
 	const money = (amount: number) => formatAmount(amount, currency, locale);
 
@@ -41,9 +45,25 @@ export function ReceiptDetails({
 			{photoUrl && (
 				<img
 					src={photoUrl}
-					alt={m.receipt_photo_alt()}
+					alt={
+						showOriginal
+							? m.receipt_photo_original_alt()
+							: m.receipt_photo_sent_alt()
+					}
 					className="max-h-96 justify-self-center rounded-md border border-border object-contain"
 				/>
+			)}
+			{photos && photos.original !== photos.sent && (
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					className="justify-self-center"
+					aria-pressed={showOriginal}
+					onClick={() => setShowOriginal(!showOriginal)}
+				>
+					{showOriginal ? m.receipt_show_sent() : m.receipt_show_original()}
+				</Button>
 			)}
 			{receipt.items.length > 0 && (
 				<details className="text-sm">

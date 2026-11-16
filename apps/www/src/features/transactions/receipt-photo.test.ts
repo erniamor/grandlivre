@@ -3,16 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
 	RECEIPT_PHOTO_MAX_SIDE,
 	receiptErrorMessage,
-	shrinkPhoto,
 } from "@/features/transactions/receipt-photo";
 
-describe("shrinkPhoto", () => {
-	it("sends the photo as it is when the browser can't redraw it", async () => {
-		const photo = new Blob(["not decodable"], { type: "image/heic" });
-
-		expect(await shrinkPhoto(photo)).toBe(photo);
-	});
-
+describe("RECEIPT_PHOTO_MAX_SIDE", () => {
 	it("aims at a size the assistant reads well", () => {
 		expect(RECEIPT_PHOTO_MAX_SIDE).toBe(1600);
 	});

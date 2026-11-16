@@ -5,6 +5,7 @@ import { SparklesIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { TextField } from "@/components/TextField";
+import type { ReceiptPhotos } from "@/features/transactions/note-draft";
 import { ReceiptScanButton } from "@/features/transactions/ReceiptScanButton";
 import { localToday } from "@/features/transactions/use-local-today";
 import { getApi } from "@/lib/api";
@@ -17,7 +18,10 @@ interface QuickEntryProps {
 	 * Called with the draft the assistant made of a note or a receipt, to
 	 * review, and the receipt's photo.
 	 */
-	onDraft: (draft: TransactionDraft, photo?: Blob) => void | Promise<void>;
+	onDraft: (
+		draft: TransactionDraft,
+		photos?: ReceiptPhotos,
+	) => void | Promise<void>;
 }
 
 /**

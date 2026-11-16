@@ -27,10 +27,23 @@ export function useNoteDraft(
 		: undefined;
 }
 
-/** The photo of the receipt the draft under `id` was read from, if any. */
-export function useDraftPhoto(id: string | undefined): Blob | undefined {
+/**
+ * The photo of a receipt: as it was sent (cropped, masked) and as it was
+ * taken, which never left the browser.
+ */
+export interface ReceiptPhotos {
+	sent: Blob;
+	original: Blob;
+}
+
+/** The photos of the receipt the draft under `id` was read from, if any. */
+export function useDraftPhotos(
+	id: string | undefined,
+): ReceiptPhotos | undefined {
 	const queryClient = useQueryClient();
-	return id ? queryClient.getQueryData<Blob>(draftPhotoKey(id)) : undefined;
+	return id
+		? queryClient.getQueryData<ReceiptPhotos>(draftPhotoKey(id))
+		: undefined;
 }
 
 /** Opens the transaction form on a draft, to review it. */
@@ -40,12 +53,12 @@ export function useOpenDraft() {
 
 	return (
 		draft: TransactionDraft,
-		options: { replace?: boolean; photo?: Blob } = {},
+		options: { replace?: boolean; photos?: ReceiptPhotos } = {},
 	) => {
 		const id = newId();
 		queryClient.setQueryData(noteDraftKey(id), draft);
-		if (options.photo) {
-			queryClient.setQueryData(draftPhotoKey(id), options.photo);
+		if (options.photos) {
+			queryClient.setQueryData(draftPhotoKey(id), options.photos);
 		}
 		return navigate({
 			to: "/transactions/new",

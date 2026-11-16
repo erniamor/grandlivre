@@ -559,5 +559,21 @@
 	"account_adjust_submit": "Enregistrer",
 	"toast_account_adjusted": "Ajustement enregistré.",
 	"toast_account_already_right": "Le solde était juste : rien n'a été enregistré.",
-	"transaction_adjustment": "Ajustement"
+	"transaction_adjustment": "Ajustement",
+	"photo_editor_title": "Préparer la photo",
+	"photo_editor_description": "Seule la photo préparée est envoyée ; l'original reste sur votre appareil.",
+	"photo_editor_hint": "Resserrez le cadre sur le ticket, et masquez ce que vous ne voulez pas envoyer : un numéro de carte, un nom, un numéro de fidélité.",
+	"photo_editor_keyboard": "Au clavier : les flèches déplacent le cadre ou un masque, Maj et les flèches le redimensionnent, Suppr retire un masque.",
+	"photo_editor_alt": "La photo à préparer",
+	"photo_editor_crop": "Cadre",
+	"photo_editor_mask": "Masque {n}",
+	"photo_editor_add_mask": "Ajouter un masque",
+	"photo_editor_remove_mask": "Retirer le masque {n}",
+	"photo_editor_warning": "Ne masquez ni le total ni les articles : l'assistant ne pourrait plus les lire.",
+	"photo_editor_cancel": "Annuler",
+	"photo_editor_send": "Envoyer la photo",
+	"receipt_photo_sent_alt": "La photo du ticket, telle qu'envoyée",
+	"receipt_photo_original_alt": "La photo du ticket, telle que prise",
+	"receipt_show_original": "Voir l'original",
+	"receipt_show_sent": "Voir la photo envoyée"
 }

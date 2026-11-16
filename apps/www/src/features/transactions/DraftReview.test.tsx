@@ -72,7 +72,7 @@ function setUp(
 	respond: (
 		request: ApiRequest,
 	) => { status: number; body?: unknown } | undefined = () => undefined,
-	photo?: Blob,
+	photos?: { sent: Blob; original: Blob },
 ) {
 	const reads = respondWith();
 	const requests = mockApi((request) => {
@@ -91,8 +91,8 @@ function setUp(
 		defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 	});
 	queryClient.setQueryData(["note-draft", "d1"], review);
-	if (photo) {
-		queryClient.setQueryData(["note-draft", "d1", "photo"], photo);
+	if (photos) {
+		queryClient.setQueryData(["note-draft", "d1", "photo"], photos);
 	}
 	const onCreated = vi.fn();
 	const router = createRouter({
@@ -381,10 +381,14 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 				...fields,
 			});
 
-		it("shows the photo and what was read on it, to check the draft against", async () => {
-			vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:receipt");
+		it("shows the photo sent and what was read on it, the original on request", async () => {
+			const sent = new Blob(["sent"]);
+			vi.spyOn(URL, "createObjectURL").mockImplementation((blob) =>
+				blob === sent ? "blob:sent" : "blob:original",
+			);
 			vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
-			setUp(fromReceipt(), undefined, new Blob(["photo"]));
+			const user = userEvent.setup();
+			setUp(fromReceipt(), undefined, { sent, original: new Blob(["taken"]) });
 
 			const details = within(
 				await screen.findByRole("region", { name: "The receipt from IGA" }),
@@ -392,8 +396,21 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 
 			expect(
 				// The photo's address is made once the page shows, then the image appears
-				await details.findByRole("img", { name: "Photo of the receipt" }),
-			).toHaveAttribute("src", "blob:receipt");
+				await details.findByRole("img", {
+					name: "The photo of the receipt, as sent",
+				}),
+			).toHaveAttribute("src", "blob:sent");
+			await user.click(
+				details.getByRole("button", { name: "See the original" }),
+			);
+			expect(
+				await details.findByRole("img", {
+					name: "The photo of the receipt, as taken",
+				}),
+			).toHaveAttribute("src", "blob:original");
+			await user.click(
+				details.getByRole("button", { name: "See the photo sent" }),
+			);
 			expect(details.getByText("Items read on the receipt (2)")).toBeVisible();
 			expect(details.getByText("Coupon")).toBeInTheDocument();
 			expect(details.getByText("-$1.00")).toBeInTheDocument();

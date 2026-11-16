@@ -1,12 +1,26 @@
 import type { TransactionDraft } from "@repo/schemas";
-import { buttonVariants, cn } from "@repo/ui";
+import {
+	buttonVariants,
+	cn,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "@repo/ui";
 import { useMutation } from "@tanstack/react-query";
 import { CameraIcon } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import {
+	PhotoEditor,
+	type PhotoEdits,
+} from "@/features/photo-edit/PhotoEditor";
+import { decodePhoto, renderPhoto } from "@/features/photo-edit/photo-render";
+import type { ReceiptPhotos } from "@/features/transactions/note-draft";
+import {
+	RECEIPT_PHOTO_MAX_SIDE,
 	receiptErrorMessage,
-	shrinkPhoto,
 } from "@/features/transactions/receipt-photo";
 import { localToday } from "@/features/transactions/use-local-today";
 import { getApi } from "@/lib/api";
@@ -14,14 +28,25 @@ import { m } from "@/paraglide/messages";
 
 interface ReceiptScanButtonProps {
 	householdId: string;
-	/** Called with the draft read on the receipt, and the photo sent. */
-	onDraft: (draft: TransactionDraft, photo: Blob) => void | Promise<void>;
+	/** Called with the draft read on the receipt, and its photos: sent and taken. */
+	onDraft: (
+		draft: TransactionDraft,
+		photos: ReceiptPhotos,
+	) => void | Promise<void>;
+}
+
+/** A photo chosen, decoded, being prepared. */
+interface Editing {
+	file: File;
+	bitmap: ImageBitmap;
 }
 
 /**
  * Takes the photo of a receipt (the phone offers its camera or its
- * pictures), shrinks it, and has the assistant read it into a draft. The
- * photo is never kept, by the API or here once the draft is reviewed.
+ * pictures), lets the member crop it and mask what shouldn't leave the
+ * device, then has the assistant read the photo prepared into a draft. The
+ * original never leaves the browser; neither is kept, by the API or here
+ * once the draft is reviewed.
  */
 export function ReceiptScanButton({
 	householdId,
@@ -29,17 +54,44 @@ export function ReceiptScanButton({
 }: ReceiptScanButtonProps) {
 	const inputId = useId();
 	const hintId = useId();
+	const [editing, setEditing] = useState<Editing | null>(null);
+	const close = () => {
+		editing?.bitmap.close();
+		setEditing(null);
+	};
 	const scan = useMutation({
-		mutationFn: async (file: File) => {
-			const photo = await shrinkPhoto(file);
+		mutationFn: async ({
+			file,
+			bitmap,
+			edits,
+		}: {
+			file: File;
+			bitmap?: ImageBitmap;
+			edits?: PhotoEdits;
+		}) => {
+			// A photo the browser can't decode goes as it is: the API says
+			// whether it takes it
+			const sent =
+				(bitmap &&
+					(await renderPhoto({
+						source: bitmap,
+						crop: edits?.crop,
+						masks: edits?.masks,
+						maxSide: RECEIPT_PHOTO_MAX_SIDE,
+					}))) ||
+				file;
 			const draft = await getApi().transactions.draftFromReceipt(householdId, {
-				photo,
+				photo: sent,
 				today: localToday(),
 			});
-			return { draft, photo };
+			return { draft, photos: { sent, original: file } };
 		},
-		onSuccess: ({ draft, photo }) => onDraft(draft, photo),
+		onSuccess: ({ draft, photos }) => {
+			close();
+			return onDraft(draft, photos);
+		},
 	});
+	const error = scan.error ? receiptErrorMessage(scan.error) : undefined;
 
 	return (
 		<div className="grid gap-2">
@@ -61,12 +113,19 @@ export function ReceiptScanButton({
 					className="sr-only"
 					aria-describedby={hintId}
 					disabled={scan.isPending}
-					onChange={(event) => {
+					onChange={async (event) => {
 						const file = event.currentTarget.files?.[0];
 						// The same photo can be chosen again after an error
 						event.currentTarget.value = "";
-						if (file) {
-							scan.mutate(file);
+						if (!file) {
+							return;
+						}
+						scan.reset();
+						const bitmap = await decodePhoto(file);
+						if (bitmap) {
+							setEditing({ file, bitmap });
+						} else {
+							scan.mutate({ file });
 						}
 					}}
 				/>
@@ -74,9 +133,36 @@ export function ReceiptScanButton({
 			<p id={hintId} className="text-muted-foreground text-sm">
 				{m.receipt_scan_hint()}
 			</p>
-			<FormAlert
-				message={scan.error ? receiptErrorMessage(scan.error) : undefined}
-			/>
+			{!editing && <FormAlert message={error} />}
+			<Dialog open={editing !== null} onOpenChange={(open) => !open && close()}>
+				<DialogContent className="max-h-[95vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>{m.photo_editor_title()}</DialogTitle>
+						<DialogDescription>
+							{m.photo_editor_description()}
+						</DialogDescription>
+					</DialogHeader>
+					{editing && (
+						<PhotoEditor
+							photo={editing.file}
+							size={{
+								width: editing.bitmap.width,
+								height: editing.bitmap.height,
+							}}
+							sending={scan.isPending}
+							error={error}
+							onSend={(edits) =>
+								scan.mutate({
+									file: editing.file,
+									bitmap: editing.bitmap,
+									edits,
+								})
+							}
+							onCancel={close}
+						/>
+					)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

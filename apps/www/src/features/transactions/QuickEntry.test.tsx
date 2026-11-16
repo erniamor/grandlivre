@@ -1,7 +1,7 @@
 import type { TransactionDraft } from "@repo/schemas";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { QuickEntry } from "@/features/transactions/QuickEntry";
 import { base, household } from "@/features/transactions/transaction-test-data";
 import { localToday } from "@/features/transactions/use-local-today";
@@ -10,6 +10,11 @@ import { type ApiResponse, mockApi } from "@/test/mock-api";
 import { renderWithQueryClient } from "@/test/render-with-router";
 
 vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
+
+afterEach(() => {
+	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
+});
 
 const draft: TransactionDraft = {
 	type: "expense",
@@ -138,7 +143,7 @@ describe("QuickEntry", () => {
 			expect(input).toHaveAttribute("accept", "image/*");
 		});
 
-		it("sends the photo with the user's day, and hands the draft on with the photo", async () => {
+		it("sends a photo the browser can't decode as it is, and hands the draft on with it", async () => {
 			const { user, onDraft, requests } = setUp({
 				status: 200,
 				body: receiptDraft,
@@ -148,7 +153,10 @@ describe("QuickEntry", () => {
 
 			await vi.waitFor(() => expect(onDraft).toHaveBeenCalledOnce());
 			expect(onDraft.mock.calls[0]?.[0]).toEqual(receiptDraft);
-			expect(onDraft.mock.calls[0]?.[1]).toBeInstanceOf(Blob);
+			// Without a decoder (as here), nothing to prepare: sent and kept as taken
+			const photos = onDraft.mock.calls[0]?.[1];
+			expect(photos?.sent).toBe(photos?.original);
+			expect(photos?.original).toBeInstanceOf(Blob);
 			const [request] = requests;
 			expect(request).toMatchObject({
 				method: "POST",
@@ -157,6 +165,53 @@ describe("QuickEntry", () => {
 			const form = request?.body as FormData;
 			expect(form.get("today")).toBe(localToday());
 			expect(form.get("photo")).toBeInstanceOf(Blob);
+		});
+
+		it("opens the photo to prepare, then sends only the photo prepared", async () => {
+			// A browser that decodes and draws: a photo 2000 × 4000, and a canvas
+			// that records its black rectangles
+			const close = vi.fn();
+			vi.stubGlobal(
+				"createImageBitmap",
+				vi.fn(async () => ({ width: 2000, height: 4000, close })),
+			);
+			const painted: number[][] = [];
+			vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+				drawImage: vi.fn(),
+				fillRect: (...args: number[]) => painted.push(args),
+				fillStyle: "",
+			} as unknown as CanvasRenderingContext2D);
+			vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
+				(callback) => callback(new Blob(["prepared"], { type: "image/jpeg" })),
+			);
+			vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:photo");
+			vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
+			const { user, onDraft, requests } = setUp({
+				status: 200,
+				body: receiptDraft,
+			});
+			const taken = photo();
+
+			await user.upload(screen.getByLabelText("Scan a receipt"), taken);
+			const dialog = within(
+				await screen.findByRole("dialog", { name: "Prepare the photo" }),
+			);
+			expect(requests).toEqual([]);
+			await user.click(dialog.getByRole("button", { name: "Add a mask" }));
+			await user.click(dialog.getByRole("button", { name: "Send the photo" }));
+
+			await vi.waitFor(() => expect(onDraft).toHaveBeenCalledOnce());
+			const form = requests[0]?.body as FormData;
+			expect(await (form.get("photo") as Blob).text()).toBe("prepared");
+			expect(painted).toHaveLength(1);
+			const photos = onDraft.mock.calls[0]?.[1];
+			expect(photos?.original).toBe(taken);
+			expect(await photos?.sent.text()).toBe("prepared");
+			expect(close).toHaveBeenCalled();
+			expect(
+				screen.queryByRole("dialog", { name: "Prepare the photo" }),
+			).not.toBeInTheDocument();
+			vi.unstubAllGlobals();
 		});
 
 		it.each([

@@ -33,7 +33,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 			</header>
 			<QuickEntry
 				householdId={household.id}
-				onDraft={(draft, photo) => openDraft(draft, { photo })}
+				onDraft={(draft, photos) => openDraft(draft, { photos })}
 			/>
 			<PendingRecurring household={household} />
 			<HouseholdBalance household={household}>

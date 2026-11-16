@@ -559,5 +559,21 @@
 	"account_adjust_submit": "Record",
 	"toast_account_adjusted": "Adjustment recorded.",
 	"toast_account_already_right": "The balance was right: nothing recorded.",
-	"transaction_adjustment": "Adjustment"
+	"transaction_adjustment": "Adjustment",
+	"photo_editor_title": "Prepare the photo",
+	"photo_editor_description": "Only the photo prepared is sent; the original stays on your device.",
+	"photo_editor_hint": "Narrow the frame on the receipt, and mask what you don't want to send: a card number, a name, a loyalty number.",
+	"photo_editor_keyboard": "With the keyboard: the arrows move the frame or a mask, Shift and the arrows resize it, Delete removes a mask.",
+	"photo_editor_alt": "The photo to prepare",
+	"photo_editor_crop": "Frame",
+	"photo_editor_mask": "Mask {n}",
+	"photo_editor_add_mask": "Add a mask",
+	"photo_editor_remove_mask": "Remove mask {n}",
+	"photo_editor_warning": "Don't mask the total nor the items: the assistant couldn't read them anymore.",
+	"photo_editor_cancel": "Cancel",
+	"photo_editor_send": "Send the photo",
+	"receipt_photo_sent_alt": "The photo of the receipt, as sent",
+	"receipt_photo_original_alt": "The photo of the receipt, as taken",
+	"receipt_show_original": "See the original",
+	"receipt_show_sent": "See the photo sent"
 }
