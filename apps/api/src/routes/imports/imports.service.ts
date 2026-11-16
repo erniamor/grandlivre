@@ -134,6 +134,7 @@ export async function previewStatement(
 		db
 			.select({
 				id: ledgerAccounts.id,
+				name: ledgerAccounts.name,
 				type: ledgerAccounts.type,
 				archivedAt: ledgerAccounts.archivedAt,
 			})
@@ -214,7 +215,21 @@ export async function previewStatement(
 		});
 	}
 	pairWithinFile(previewed, found, destinations);
-	await findCounterparts(householdId, previewed, found, access);
+	// What each card account goes by: its name, and its names in statements
+	const cardNames = new Map(
+		accounts
+			.filter((account) => account.type === "credit_card")
+			.map((account) => [
+				account.id,
+				[
+					account.name,
+					...known
+						.filter((each) => each.accountId === account.id)
+						.map((each) => each.bankName),
+				],
+			]),
+	);
+	await findCounterparts(householdId, previewed, found, access, cardNames);
 	return { format, accounts: previewed };
 }
 
@@ -622,15 +637,19 @@ function pairWithinFile(
  * The new lines that are a transfer whose other side is already in another
  * account, entered there as an expense or an income (that account was
  * imported, or entered, alone): the same amount the other way, a close day.
- * The other account is the one the line's transfer is suggested with, or
- * for a card paid ("PAIEMENT CAISSE"), any account whose entry names the
- * card. The member holds both accounts: the other's entry is changed.
+ * The other account is the one the line's transfer is suggested with; for
+ * a card's payment seen from the card ("PAIEMENT CAISSE"), any account
+ * whose entry names the card; seen from the account ("Paiement facture …
+ * Boni Visa", "Carte de credit"), a card account the line names, whose
+ * entry is the payment come in. The member holds both accounts: the other's entry is changed.
  */
 async function findCounterparts(
 	householdId: string,
 	previewed: StatementPreviewAccount[],
 	found: StatementAccount[],
 	access: Map<string, AccountAccess>,
+	/** The names of each card account of the household. */
+	cardNames: Map<string, string[]>,
 ): Promise<void> {
 	const open = previewed.flatMap((account) =>
 		account.accountId === null || account.writable
@@ -646,11 +665,21 @@ async function findCounterparts(
 						line.suggestion?.kind === "transfer"
 							? line.suggestion.accountId
 							: null;
+					// A card's payment, seen from the card: paid from an account
 					const cardName =
 						hint?.kind === "payment"
 							? (found[account.index]?.bankName ?? "")
 							: null;
-					return other || cardName ? [{ account, line, other, cardName }] : [];
+					// Seen from the account: what it says of the card it pays
+					const paysText =
+						hint?.kind === "card"
+							? hint.name
+							: ANY_CARD.test(wordsOf(line.payee).join(" "))
+								? line.payee
+								: null;
+					return other || cardName || paysText
+						? [{ account, line, other, cardName, paysText }]
+						: [];
 				})
 			: [],
 	);
@@ -709,10 +738,22 @@ async function findCounterparts(
 			if (!access.get(candidate.accountId)?.isHolder) {
 				return false;
 			}
-			return each.other
-				? candidate.accountId === each.other
-				: each.cardName !== null &&
-						paysCard(candidate.payee ?? "", each.cardName);
+			if (each.other) {
+				return candidate.accountId === each.other;
+			}
+			if (each.cardName !== null) {
+				return paysCard(candidate.payee ?? "", each.cardName);
+			}
+			// The card's side: a payment come into a card the line names
+			const { paysText } = each;
+			return (
+				paysText !== null &&
+				candidate.type === "income" &&
+				(cardNames
+					.get(candidate.accountId)
+					?.some((name) => paysCard(paysText, name)) ??
+					false)
+			);
 		},
 	);
 	for (const [at, candidate] of matched) {

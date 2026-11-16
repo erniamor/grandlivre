@@ -1085,4 +1085,73 @@ describe("cards whose payments are named otherwise, and a card replaced", () => 
 			expect(response.status).toBe(422);
 		}
 	});
+
+	it("finds, from an account imported after its cards, the payments come into a card it names", async () => {
+		const { alice, h, everyday, knowAs, preview } = await setUp();
+		// Two cards known by the same name: an old number, and the new one
+		const boni = await h.account(alice, {
+			name: "Boni",
+			type: "credit_card",
+			openingBalance: 0,
+		});
+		const oldBoni = await h.account(alice, {
+			name: "Old Boni",
+			type: "credit_card",
+			openingBalance: 0,
+		});
+		await knowAs("desjardins-card:bonivisa:9876", boni.id, "Boni Visa");
+		await knowAs("desjardins-card:bonivisa:1111", oldBoni.id, "Boni Visa");
+		await knowAs(EVERYDAY, everyday.id);
+		const paid = await h.created(alice, {
+			type: "income",
+			accountId: boni.id,
+			date: "2026-10-06",
+			payee: "PAIEMENT CAISSE",
+			lines: [{ amount: 73_58 }],
+		});
+		const unnamed = await h.created(alice, {
+			type: "income",
+			accountId: oldBoni.id,
+			date: "2026-10-20",
+			payee: "PAIEMENT CAISSE",
+			lines: [{ amount: 600_00 }],
+		});
+		const statement = [
+			accountLine(
+				"123456",
+				"2026/10/05",
+				"Paiement facture - AccèsD Internet /Desjardins Boni Visa",
+				"73.58",
+				"",
+				"4926.42",
+			),
+			accountLine(
+				"123456",
+				"2026/10/19",
+				"Paiement /Carte de credit",
+				"600.00",
+				"",
+				"4326.42",
+			),
+			accountLine(
+				"123456",
+				"2026/10/20",
+				"Achat /CAFE",
+				"600.00",
+				"",
+				"3726.42",
+			),
+		].join("\r\n");
+
+		const { lines = [] } = (await preview(alice, statement)).accounts[0] ?? {};
+
+		expect(
+			lines.map((line) => [line.status, line.match?.transactionId ?? null]),
+		).toEqual([
+			["counterpart", paid.id],
+			["counterpart", unnamed.id],
+			// The same amount, but no card named: nothing
+			["new", null],
+		]);
+	});
 });
