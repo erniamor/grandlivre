@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ImportPage } from "@/features/imports/ImportPage";
 import { statementPreview } from "@/features/imports/import-test-data";
+import { setTestLocale } from "@/test/locale";
 import {
 	type ApiRequest,
 	type ApiResponse,
@@ -430,7 +431,7 @@ describe("ImportPage", () => {
 		);
 		await user.click(
 			within(await screen.findByRole("alertdialog")).getByRole("button", {
-				name: "Undo",
+				name: "Undo the import",
 			}),
 		);
 
@@ -442,5 +443,26 @@ describe("ImportPage", () => {
 		expect(requests.find((request) => request.method === "DELETE")?.path).toBe(
 			`/households/${household.id}/imports/${IMPORT}`,
 		);
+	});
+
+	it("names apart, in French, the button that undoes and the one that closes", async () => {
+		setTestLocale("fr");
+		const { user } = setUp({ history: [imported] });
+
+		const history = within(
+			await screen.findByRole("region", { name: "Vos imports récents" }),
+		);
+		await user.click(
+			history.getByRole("button", { name: /^Défaire l'import du / }),
+		);
+		const dialog = within(await screen.findByRole("alertdialog"));
+
+		expect(
+			dialog.getByRole("heading", { name: "Défaire cet import ?" }),
+		).toBeVisible();
+		expect(dialog.getByRole("button", { name: "Annuler" })).toBeVisible();
+		expect(
+			dialog.getByRole("button", { name: "Défaire l'import" }),
+		).toBeVisible();
 	});
 });

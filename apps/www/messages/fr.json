@@ -635,11 +635,11 @@
 	"import_again": "Importer un autre relevé",
 	"import_history_title": "Vos imports récents",
 	"import_history_item": "Importé le {date}",
-	"import_undo": "Annuler",
-	"import_undo_aria": "Annuler l'import du {date}",
-	"import_undo_title": "Annuler cet import ?",
+	"import_undo": "Défaire",
+	"import_undo_aria": "Défaire l'import du {date}",
+	"import_undo_title": "Défaire cet import ?",
 	"import_undo_description": "Les transactions qu'il a enregistrées sont supprimées, même si vous les avez modifiées depuis ; les jours récurrents qu'il a enregistrés repassent en attente. Ce que vous aviez saisi vous-même reste. Un compte qu'il a créé reste, vide.",
-	"toast_import_undone": "Import annulé",
+	"toast_import_undone": "Import défait",
 	"error_statement_file_required": "Choisissez un fichier de relevé.",
 	"error_statement_unreadable": "Ce fichier ne peut pas être lu : ce n'est pas un relevé que l'app connaît (pour l'instant, les CSV de Desjardins).",
 	"error_statement_unreadable_line": "Ce fichier ne peut pas être lu à partir de sa ligne {line} : ce n'est pas un relevé que l'app connaît (pour l'instant, les CSV de Desjardins).",
@@ -656,5 +656,6 @@
 	"import_status_recurring": "Jour récurrent en attente",
 	"import_action_join": "C'est le virement saisi dans {account} : « {payee} » du {date}",
 	"import_done_opening": "Son solde d'ouverture suit maintenant le relevé : {amount}.",
-	"error_import_join_invalid": "Cette saisie ne peut pas devenir le virement : elle doit être du même montant dans l'autre sens, sur un autre de vos comptes."
+	"error_import_join_invalid": "Cette saisie ne peut pas devenir le virement : elle doit être du même montant dans l'autre sens, sur un autre de vos comptes.",
+	"import_undo_confirm": "Défaire l'import"
 }

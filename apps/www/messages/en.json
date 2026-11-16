@@ -656,5 +656,6 @@
 	"import_status_recurring": "Recurring day waiting",
 	"import_action_join": "It's the transfer entered in {account}: “{payee}” of {date}",
 	"import_done_opening": "Its opening balance follows the statement now: {amount}.",
-	"error_import_join_invalid": "This entry can't become the transfer: it must be the same amount the other way, on another of your accounts."
+	"error_import_join_invalid": "This entry can't become the transfer: it must be the same amount the other way, on another of your accounts.",
+	"import_undo_confirm": "Undo the import"
 }

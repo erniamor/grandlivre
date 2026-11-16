@@ -82,7 +82,7 @@ export function ImportHistory({ household, accounts }: ImportHistoryProps) {
 							})}
 							title={m.import_undo_title()}
 							description={m.import_undo_description()}
-							confirmLabel={m.import_undo()}
+							confirmLabel={m.import_undo_confirm()}
 							pending={undo.isPending && undo.variables === each.id}
 							onConfirm={() => undo.mutate(each.id)}
 						/>
