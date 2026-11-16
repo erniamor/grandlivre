@@ -13,6 +13,7 @@ import {
 	gte,
 	inArray,
 	isNotNull,
+	isNull,
 	lte,
 	ne,
 	or,
@@ -90,6 +91,8 @@ type Candidate =
 			type: "expense" | "income" | "transfer";
 			date: string;
 			payee: string | null;
+			/** The account it is on, as far as the line is concerned. */
+			accountId: string;
 	  }
 	| {
 			kind: "occurrence";
@@ -211,6 +214,7 @@ export async function previewStatement(
 		});
 	}
 	pairWithinFile(previewed, found, destinations);
+	await findCounterparts(householdId, previewed, found, access);
 	return { format, accounts: previewed };
 }
 
@@ -258,6 +262,7 @@ function previewLine(
 					type: candidate.type,
 					date: candidate.date,
 					payee: candidate.payee,
+					accountId: candidate.accountId,
 				},
 			}
 		: {
@@ -311,7 +316,7 @@ async function standingOf(
 		if (row) {
 			standing.set(at, {
 				status: "imported",
-				candidate: { kind: "transaction", ...row },
+				candidate: { kind: "transaction", ...row, accountId },
 			});
 		}
 	}
@@ -403,6 +408,7 @@ async function standingOf(
 					type: row.type,
 					date: row.date,
 					payee: row.payee,
+					accountId,
 				},
 				date: row.date,
 				amount: signed(row.type, row.accountId, row.amount),
@@ -549,6 +555,10 @@ function transferAccount(
 		const ids = new Set(cards.map((card) => card.accountId));
 		return ids.size === 1 ? ([...ids][0] ?? null) : null;
 	}
+	if (hint.kind === "payment") {
+		// The account isn't named: its counterpart tells (see findCounterparts)
+		return null;
+	}
 	// The member's own wallet, when they have one
 	const wallets = household.filter(
 		(account) =>
@@ -605,5 +615,121 @@ function pairWithinFile(
 				line.suggestion = { kind: "transfer", accountId: other };
 			}
 		}
+	}
+}
+
+/**
+ * The new lines that are a transfer whose other side is already in another
+ * account, entered there as an expense or an income (that account was
+ * imported, or entered, alone): the same amount the other way, a close day.
+ * The other account is the one the line's transfer is suggested with, or
+ * for a card paid ("PAIEMENT CAISSE"), any account whose entry names the
+ * card. The member holds both accounts: the other's entry is changed.
+ */
+async function findCounterparts(
+	householdId: string,
+	previewed: StatementPreviewAccount[],
+	found: StatementAccount[],
+	access: Map<string, AccountAccess>,
+): Promise<void> {
+	const open = previewed.flatMap((account) =>
+		account.accountId === null || account.writable
+			? account.lines.flatMap((line) => {
+					if (line.status !== "new" || line.pair) {
+						return [];
+					}
+					const hint = desjardinsTransferHint(
+						found[account.index]?.number ?? "",
+						line.description,
+					);
+					const other =
+						line.suggestion?.kind === "transfer"
+							? line.suggestion.accountId
+							: null;
+					const cardName =
+						hint?.kind === "payment"
+							? descriptionKey(found[account.index]?.bankName ?? "")
+							: null;
+					return other || cardName ? [{ account, line, other, cardName }] : [];
+				})
+			: [],
+	);
+	if (open.length === 0) {
+		return;
+	}
+	const dates = open.map(({ line }) => line.date).sort();
+	const rows = await db
+		.select({
+			id: transactions.id,
+			type: transactions.type,
+			date: transactions.date,
+			accountId: transactions.accountId,
+			amount: transactions.amount,
+			payee: transactions.payee,
+		})
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.householdId, householdId),
+				inArray(transactions.type, ["expense", "income"]),
+				gte(transactions.date, addDays(dates[0] ?? "", -MATCH_DAYS_AFTER)),
+				lte(transactions.date, addDays(dates.at(-1) ?? "", MATCH_DAYS_BEFORE)),
+				ne(transactions.origin, "adjustment"),
+				// A shared expense stays one: it is no transfer
+				isNull(transactions.sharePaidBy),
+			),
+		);
+	const candidates: MatchCandidate<
+		Extract<Candidate, { kind: "transaction" }>
+	>[] = rows
+		.filter((row) => access.get(row.accountId)?.seesDetails)
+		.map((row) => ({
+			ref: {
+				kind: "transaction" as const,
+				transactionId: row.id,
+				type: row.type,
+				date: row.date,
+				payee: row.payee,
+				accountId: row.accountId,
+			},
+			date: row.date,
+			// As the line's account sees the transfer: the other way round
+			amount: row.type === "expense" ? row.amount : -row.amount,
+			rank: 0,
+		}));
+	const matched = matchLines(
+		open.map(({ line }) => line),
+		candidates,
+		(at, candidate) => {
+			const each = open[at];
+			if (!each || candidate.accountId === each.account.accountId) {
+				return false;
+			}
+			// The entry becomes the transfer: changing it is for its account's holders
+			if (!access.get(candidate.accountId)?.isHolder) {
+				return false;
+			}
+			return each.other
+				? candidate.accountId === each.other
+				: Boolean(
+						each.cardName &&
+							descriptionKey(candidate.payee ?? "").includes(each.cardName),
+					);
+		},
+	);
+	for (const [at, candidate] of matched) {
+		const each = open[at];
+		if (!each) {
+			continue;
+		}
+		each.line.status = "counterpart";
+		each.line.match = {
+			transactionId: candidate.transactionId,
+			type: candidate.type,
+			date: candidate.date,
+			payee: candidate.payee,
+			accountId: candidate.accountId,
+		};
+		each.line.suggestion = { kind: "transfer", accountId: candidate.accountId };
 	}
 }

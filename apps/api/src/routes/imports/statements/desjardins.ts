@@ -239,20 +239,26 @@ export type TransferHint =
 	/** A bill paid: a card, if the bank's name for one of the cards is in it. */
 	| { kind: "card"; name: string }
 	/** Cash taken out at a teller machine: the member's wallet. */
-	| { kind: "cash" };
+	| { kind: "cash" }
+	/** A card paid from an account, which isn't named. */
+	| { kind: "payment" };
 
 /**
- * What a Desjardins account line's description says of a transfer it may
- * be: "Virement - AccèsD Internet /à 123456 EOP" (to or from another
+ * What a Desjardins line's description says of a transfer it may be: on an
+ * account, "Virement - AccèsD Internet /à 123456 EOP" (to or from another
  * account of the branch), "Paiement facture - AccèsD Internet /Remises Visa
- * Desjardins" (a bill, maybe a card), "Retrait au GA" (cash). Null for
- * anything else, and for card lines.
+ * Desjardins" (a bill, maybe a card), "Retrait au GA" (cash); on a card,
+ * "PAIEMENT CAISSE" (the card paid from an account). Null for anything else.
  */
 export function desjardinsTransferHint(
 	accountNumber: string,
 	description: string,
 ): TransferHint | null {
+	// Without accents: "AccèsD" and "AccesD", "à" and "a" alike
 	const plain = description.normalize("NFKD").replace(/[̀-ͯ]/g, "");
+	if (accountNumber.startsWith("desjardins-card:")) {
+		return /^PAIEMENT CAISSE\b/i.test(plain) ? { kind: "payment" } : null;
+	}
 	const branch = /^desjardins:([^:]*):/.exec(accountNumber)?.[1];
 	if (branch === undefined) {
 		return null;

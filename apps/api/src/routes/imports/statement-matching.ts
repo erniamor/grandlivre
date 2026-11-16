@@ -36,6 +36,8 @@ export interface MatchCandidate<Ref> {
 export function matchLines<Ref>(
 	lines: { date: string; amount: number }[],
 	candidates: MatchCandidate<Ref>[],
+	/** Whether a line may be this candidate at all, beyond amount and day. */
+	accepts: (line: number, candidate: Ref) => boolean = () => true,
 ): Map<number, Ref> {
 	const pairs: { line: number; candidate: number; distance: number }[] = [];
 	for (const [lineAt, line] of lines.entries()) {
@@ -43,6 +45,7 @@ export function matchLines<Ref>(
 			const late = dayNumber(line.date) - dayNumber(candidate.date);
 			if (
 				candidate.amount === line.amount &&
+				accepts(lineAt, candidate.ref) &&
 				late >= -MATCH_DAYS_BEFORE &&
 				late <= MATCH_DAYS_AFTER
 			) {

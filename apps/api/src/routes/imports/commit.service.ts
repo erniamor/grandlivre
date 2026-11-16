@@ -6,9 +6,10 @@ import {
 	type StatementLineDecision,
 	TRANSACTION_PAYEE_MAX_LENGTH,
 } from "@repo/schemas";
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, lt, notInArray, or } from "drizzle-orm";
 import { db, type Transaction as Tx } from "@/db/client";
 import {
+	ledgerAccounts,
 	recurringOccurrences,
 	recurringTransactionLines,
 	recurringTransactions,
@@ -20,6 +21,7 @@ import {
 	transactions,
 	users,
 } from "@/db/schema";
+import type { JoinedBefore, OpeningChange } from "@/db/schema/statements";
 import { AppError } from "@/lib/errors";
 import { publishHouseholdEvent } from "@/lib/events";
 import { offsetOf, type PaginationQuery } from "@/lib/pagination";
@@ -129,6 +131,7 @@ export async function importStatement(
 			externalId: string;
 			transactionId: string;
 		}[] = [];
+		const joins: Join[] = [];
 		await assertTags(tx, householdId, decided);
 		for (const each of decided) {
 			const { decision, line, destination, field } = each;
@@ -144,6 +147,19 @@ export async function importStatement(
 				planned.push(transfer(viewer, access, each, source, field));
 			} else if (decision.action === "link") {
 				linked.push({ ...source, transactionId: decision.transactionId });
+			} else if (decision.action === "join") {
+				joins.push(
+					await joined(
+						tx,
+						householdId,
+						access,
+						destination,
+						line,
+						decision,
+						field,
+						joins,
+					),
+				);
 			} else {
 				planned.push(
 					await confirmed(
@@ -175,6 +191,16 @@ export async function importStatement(
 		for (const part of chunks(lines)) {
 			await tx.insert(transactionLines).values(part);
 		}
+		for (const join of joins) {
+			await tx
+				.update(transactions)
+				.set({ ...join.becomes, type: "transfer", payee: null })
+				.where(eq(transactions.id, join.transactionId));
+			// A transfer has no lines: its tags were the expense's or the income's
+			await tx
+				.delete(transactionLines)
+				.where(eq(transactionLines.transactionId, join.transactionId));
+		}
 		for (const each of planned) {
 			if (each.occurrenceId) {
 				await tx
@@ -192,16 +218,33 @@ export async function importStatement(
 				})),
 			),
 			...linked.map((each) => ({ ...each, kind: "linked" as const })),
+			...joins.map(({ accountId, externalId, transactionId, before }) => ({
+				accountId,
+				externalId,
+				transactionId,
+				kind: "joined" as const,
+				joinedBefore: before,
+			})),
 		].map((row) => ({ ...row, householdId, importId: created.id }));
 		for (const part of chunks(statementRows)) {
 			await tx.insert(statementLines).values(part);
 		}
 		await rememberAccounts(tx, householdId, destinations);
+		const openings = await followOpenings(tx, plan, destinations, created.id);
+		if (openings.length > 0) {
+			await tx
+				.update(statementImports)
+				.set({ openingBalances: openings })
+				.where(eq(statementImports.id, created.id));
+		}
 
 		if (statementRows.length > 0) {
 			await publishHouseholdEvent(tx, householdId, "transactions");
 		}
-		if (plan.accounts.some((account) => "create" in account.target)) {
+		if (
+			openings.length > 0 ||
+			plan.accounts.some((account) => "create" in account.target)
+		) {
 			await publishHouseholdEvent(tx, householdId, "accounts");
 		}
 		if (planned.some((each) => each.occurrenceId)) {
@@ -675,6 +718,153 @@ async function rememberAccounts(
 	}
 }
 
+/** An entry of another account that becomes the transfer a line is. */
+interface Join {
+	/** The line's account, and the line. */
+	accountId: string;
+	externalId: string;
+	transactionId: string;
+	/** The transfer's accounts: from the one the money leaves. */
+	becomes: { accountId: string; toAccountId: string };
+	before: JoinedBefore;
+}
+
+/**
+ * The other side of a transfer, entered in another account as an expense
+ * or an income: the same amount the other way, not shared, on an account
+ * the member holds (they change its entry), as the line's; once.
+ */
+async function joined(
+	tx: Tx,
+	householdId: string,
+	access: Map<string, AccountAccess>,
+	destination: Destination,
+	line: StatementLine,
+	decision: Extract<StatementLineDecision, { action: "join" }>,
+	field: string,
+	joins: Join[],
+): Promise<Join> {
+	const [row] = await tx
+		.select()
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.id, decision.transactionId),
+				eq(transactions.householdId, householdId),
+			),
+		)
+		.for("update");
+	const other = row?.accountId;
+	const [from, to] =
+		line.amount < 0
+			? [destination.accountId, other]
+			: [other, destination.accountId];
+	const fromRights = from ? access.get(from) : undefined;
+	const otherRights = other ? access.get(other) : undefined;
+	if (
+		!row ||
+		!other ||
+		!to ||
+		!from ||
+		(row.type !== "expense" && row.type !== "income") ||
+		other === destination.accountId ||
+		row.sharePaidBy !== null ||
+		// The other way round: what left one account came into the other
+		(row.type === "expense" ? row.amount : -row.amount) !== line.amount ||
+		// Changing an entry of an account is for its holders
+		!otherRights?.isHolder ||
+		otherRights.archived ||
+		!fromRights?.isHolder ||
+		joins.some((each) => each.transactionId === row.id)
+	) {
+		throw invalid(`${field}.transactionId`, "import_join_invalid");
+	}
+	const lines = await tx
+		.select({ amount: transactionLines.amount, tagId: transactionLines.tagId })
+		.from(transactionLines)
+		.where(eq(transactionLines.transactionId, row.id))
+		.orderBy(transactionLines.position);
+	return {
+		accountId: destination.accountId,
+		externalId: line.externalId,
+		transactionId: row.id,
+		becomes: { accountId: from, toAccountId: to },
+		before: {
+			type: row.type,
+			accountId: row.accountId,
+			payee: row.payee,
+			lines,
+		},
+	};
+}
+
+/**
+ * The opening balances that follow the statements: an account the file
+ * goes further back than anything else in it (the import's own lines left
+ * aside) starts at the file's opening balance. An account made from the
+ * file already does.
+ */
+async function followOpenings(
+	tx: Tx,
+	plan: StatementImportPlan,
+	destinations: Destination[],
+	importId: string,
+): Promise<OpeningChange[]> {
+	const changes: OpeningChange[] = [];
+	for (const [at, destination] of destinations.entries()) {
+		const opening = destination.statementAccount.openingBalance;
+		const first = destination.statementAccount.lines[0]?.date;
+		if (
+			opening === null ||
+			!first ||
+			"create" in (plan.accounts[at]?.target ?? {})
+		) {
+			continue;
+		}
+		const { accountId } = destination;
+		const [earlier] = await tx
+			.select({ id: transactions.id })
+			.from(transactions)
+			.where(
+				and(
+					or(
+						eq(transactions.accountId, accountId),
+						eq(transactions.toAccountId, accountId),
+					),
+					lt(transactions.date, first),
+					notInArray(
+						transactions.id,
+						tx
+							.select({ id: statementLines.transactionId })
+							.from(statementLines)
+							.where(eq(statementLines.importId, importId)),
+					),
+				),
+			)
+			.limit(1);
+		if (earlier) {
+			continue;
+		}
+		const [account] = await tx
+			.select({ openingBalance: ledgerAccounts.openingBalance })
+			.from(ledgerAccounts)
+			.where(eq(ledgerAccounts.id, accountId))
+			.for("update");
+		if (account && account.openingBalance !== opening) {
+			await tx
+				.update(ledgerAccounts)
+				.set({ openingBalance: opening })
+				.where(eq(ledgerAccounts.id, accountId));
+			changes.push({
+				accountId,
+				before: account.openingBalance,
+				after: opening,
+			});
+		}
+	}
+	return changes;
+}
+
 /** Imports as the API shows them: who, when, and what each did account by account. */
 async function summaries(
 	database: typeof db | Tx,
@@ -688,6 +878,7 @@ async function summaries(
 			.select({
 				id: statementImports.id,
 				format: statementImports.format,
+				openingBalances: statementImports.openingBalances,
 				createdAt: statementImports.createdAt,
 				userId: users.id,
 				name: users.name,
@@ -713,22 +904,26 @@ async function summaries(
 			),
 	]);
 	return rows.map((row) => {
-		const accounts = new Map<
-			string,
-			{ accountId: string; created: number; linked: number; confirmed: number }
-		>();
-		for (const each of counts) {
-			if (each.importId !== row.id) {
-				continue;
-			}
-			const account = accounts.get(each.accountId) ?? {
-				accountId: each.accountId,
+		const accounts = new Map<string, StatementImport["accounts"][number]>();
+		const accountOf = (accountId: string) => {
+			const account = accounts.get(accountId) ?? {
+				accountId,
 				created: 0,
 				linked: 0,
 				confirmed: 0,
+				joined: 0,
+				openingBalance: null,
 			};
-			account[each.kind] += each.total;
-			accounts.set(each.accountId, account);
+			accounts.set(accountId, account);
+			return account;
+		};
+		for (const each of counts) {
+			if (each.importId === row.id) {
+				accountOf(each.accountId)[each.kind] += each.total;
+			}
+		}
+		for (const opening of row.openingBalances) {
+			accountOf(opening.accountId).openingBalance = opening.after;
 		}
 		return {
 			id: row.id,
@@ -820,6 +1015,55 @@ export async function undoImport(
 			);
 		}
 		const ids = made.map((each) => each.id);
+		// The transfers it made of entries in another account: back as they were
+		const joins = await tx
+			.select({
+				transactionId: statementLines.transactionId,
+				before: statementLines.joinedBefore,
+			})
+			.from(statementLines)
+			.where(
+				and(
+					eq(statementLines.importId, importId),
+					eq(statementLines.kind, "joined"),
+				),
+			);
+		for (const { transactionId, before } of joins) {
+			if (!before) {
+				continue;
+			}
+			await tx
+				.update(transactions)
+				.set({
+					type: before.type,
+					accountId: before.accountId,
+					toAccountId: null,
+					payee: before.payee,
+				})
+				.where(eq(transactions.id, transactionId));
+			if (before.lines.length > 0) {
+				await tx.insert(transactionLines).values(
+					before.lines.map((line, position) => ({
+						transactionId,
+						householdId,
+						position,
+						amount: line.amount,
+						tagId: line.tagId,
+					})),
+				);
+			}
+		}
+		for (const { accountId, before } of row.openingBalances) {
+			await tx
+				.update(ledgerAccounts)
+				.set({ openingBalance: before })
+				.where(
+					and(
+						eq(ledgerAccounts.id, accountId),
+						eq(ledgerAccounts.householdId, householdId),
+					),
+				);
+		}
 		let recurring = false;
 		if (ids.length > 0) {
 			const waiting = await tx
@@ -835,6 +1079,9 @@ export async function undoImport(
 		// The lines tied to transactions already there go with the import
 		await tx.delete(statementImports).where(eq(statementImports.id, importId));
 		await publishHouseholdEvent(tx, householdId, "transactions");
+		if (row.openingBalances.length > 0) {
+			await publishHouseholdEvent(tx, householdId, "accounts");
+		}
 		if (recurring) {
 			await publishHouseholdEvent(tx, householdId, "recurring");
 		}

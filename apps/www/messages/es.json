@@ -605,7 +605,7 @@
 	"import_destination_balance_label": "Saldo hoy",
 	"import_destination_opening": "Saldo inicial, según el extracto: {amount}",
 	"import_group_new": "Para importar",
-	"import_group_matched": "Ya registradas",
+	"import_group_matched": "Ya en la app",
 	"import_group_recurring": "Días recurrentes pendientes",
 	"import_group_imported": "Ya importadas, se dejan como están: {count}",
 	"import_line_action_label": "Qué hacer con esta línea",
@@ -628,7 +628,7 @@
 	"import_saving": "Importando…",
 	"import_submit": "Importar",
 	"import_done_title": "Extracto importado",
-	"import_done_counts": "Registradas: {created} · vinculadas a un registro: {linked} · días recurrentes: {confirmed}",
+	"import_done_counts": "Registradas: {created} · vinculadas a un registro: {linked} · transferencias completadas: {joined} · días recurrentes: {confirmed}",
 	"import_done_balance_same": "Su saldo es el del banco al {date}.",
 	"import_done_balance_gap": "El banco indicaba {bank} al {date}; la app indica {app}. Ajústelo desde la página de la cuenta si hace falta.",
 	"import_done_open_account": "Abrir la cuenta",
@@ -649,5 +649,12 @@
 	"error_statement_line_already_imported": "Se importaron líneas desde que se leyó el archivo: vuelva a leerlo.",
 	"error_import_account_invalid": "Elija una de sus cuentas, todavía abierta.",
 	"error_import_changed": "Algo cambió desde que se leyó el archivo: vuelva a leerlo.",
-	"error_import_transfer_invalid": "Esta transferencia no se puede registrar: el dinero debe salir de una de sus cuentas, ambas todavía abiertas."
+	"error_import_transfer_invalid": "Esta transferencia no se puede registrar: el dinero debe salir de una de sus cuentas, ambas todavía abiertas.",
+	"import_status_imported": "Ya importada",
+	"import_status_matched": "Ya registrada",
+	"import_status_counterpart": "Ya registrada en {account}",
+	"import_status_recurring": "Día recurrente pendiente",
+	"import_action_join": "Es la transferencia registrada en {account}: «{payee}» del {date}",
+	"import_done_opening": "Su saldo inicial sigue ahora el extracto: {amount}.",
+	"error_import_join_invalid": "Este registro no puede convertirse en la transferencia: debe ser del mismo importe en sentido contrario, en otra de sus cuentas."
 }

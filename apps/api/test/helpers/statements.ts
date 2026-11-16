@@ -113,3 +113,14 @@ export function postStatement(
 		body: form,
 	});
 }
+
+/** A line of a Desjardins cards export, made up: a purchase, or a payment or credit. */
+export function cardLine(
+	card: string,
+	date: string,
+	description: string,
+	purchase: string,
+	credit: string,
+) {
+	return `${card},"","",${date},1,${description.padEnd(41)},"","","","","",${purchase || '""'},${credit || '""'}`;
+}

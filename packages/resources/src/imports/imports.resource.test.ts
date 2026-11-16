@@ -57,7 +57,16 @@ const imported = {
 	format: "desjardins_accounts",
 	createdAt: "2026-11-16T12:00:00.000Z",
 	createdBy: { userId: USER, name: "Alice" },
-	accounts: [{ accountId: ACCOUNT, created: 1, linked: 0, confirmed: 0 }],
+	accounts: [
+		{
+			accountId: ACCOUNT,
+			created: 1,
+			linked: 0,
+			confirmed: 0,
+			joined: 0,
+			openingBalance: null,
+		},
+	],
 };
 
 const plan = {

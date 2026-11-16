@@ -69,6 +69,7 @@ export function ImportHistory({ household, accounts }: ImportHistoryProps) {
 										created: counts.created,
 										linked: counts.linked,
 										confirmed: counts.confirmed,
+										joined: counts.joined,
 									})}
 								</p>
 							))}

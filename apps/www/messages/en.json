@@ -605,7 +605,7 @@
 	"import_destination_balance_label": "Balance today",
 	"import_destination_opening": "Opening balance, from the statement: {amount}",
 	"import_group_new": "To import",
-	"import_group_matched": "Already entered",
+	"import_group_matched": "Already in the app",
 	"import_group_recurring": "Recurring days waiting",
 	"import_group_imported": "Already imported, left as they are: {count}",
 	"import_line_action_label": "What to do with this line",
@@ -628,7 +628,7 @@
 	"import_saving": "Importing…",
 	"import_submit": "Import",
 	"import_done_title": "Statement imported",
-	"import_done_counts": "Recorded: {created} · tied to an entry: {linked} · recurring days: {confirmed}",
+	"import_done_counts": "Recorded: {created} · tied to an entry: {linked} · transfers completed: {joined} · recurring days: {confirmed}",
 	"import_done_balance_same": "Its balance is the bank's of {date}.",
 	"import_done_balance_gap": "The bank said {bank} on {date}; the app says {app}. Adjust it from the account's page if needed.",
 	"import_done_open_account": "Open the account",
@@ -649,5 +649,12 @@
 	"error_statement_line_already_imported": "Some lines were imported since the file was read: read it again.",
 	"error_import_account_invalid": "Choose one of your accounts, still open.",
 	"error_import_changed": "Something changed since the file was read: read it again.",
-	"error_import_transfer_invalid": "This transfer can't be recorded: the money must leave one of your accounts, both still open."
+	"error_import_transfer_invalid": "This transfer can't be recorded: the money must leave one of your accounts, both still open.",
+	"import_status_imported": "Already imported",
+	"import_status_matched": "Already entered",
+	"import_status_counterpart": "Already entered in {account}",
+	"import_status_recurring": "Recurring day waiting",
+	"import_action_join": "It's the transfer entered in {account}: “{payee}” of {date}",
+	"import_done_opening": "Its opening balance follows the statement now: {amount}.",
+	"error_import_join_invalid": "This entry can't become the transfer: it must be the same amount the other way, on another of your accounts."
 }

@@ -12,7 +12,15 @@ import {
 	signInUser,
 	type TestUser,
 } from "@test/helpers/households";
-import { october, postStatement, savingsSide } from "@test/helpers/statements";
+import {
+	accountLine,
+	cardLine,
+	EVERYDAY,
+	october,
+	postStatement,
+	SAVINGS,
+	savingsSide,
+} from "@test/helpers/statements";
 import { householdApi } from "@test/helpers/transactions";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -21,7 +29,9 @@ import {
 	recurringOccurrences,
 	recurringTransactionLines,
 	recurringTransactions,
+	statementAccounts,
 } from "@/db/schema";
+import { hashStatementNumber } from "@/routes/imports/statement-number";
 
 /**
  * Alice holds the everyday account, a savings account, a card and her
@@ -115,11 +125,25 @@ async function setUp() {
 		}
 		return day;
 	};
+	/** What an earlier import would have kept: a statement account tied to an account. */
+	const knowAs = (
+		number: string,
+		accountId: string,
+		bankName = "Caisse du Plateau",
+	) =>
+		db.insert(statementAccounts).values({
+			householdId: household.id,
+			accountId,
+			numberHash: hashStatementNumber(number),
+			bankName,
+			numberEnd: number.slice(-4),
+		});
 	return {
 		alice,
 		bob,
 		carol,
 		h,
+		knowAs,
 		everyday,
 		savings,
 		card,
@@ -549,5 +573,374 @@ describe("GET and DELETE /v1/households/:householdId/imports", () => {
 		expect(lineOf(after, "ESSENCE DU COIN").status).toBe("new");
 		expect(lineOf(after, "CAFE").status).toBe("matched");
 		expect(lineOf(after, "BANQUE EXEMPLE").status).toBe("recurring");
+	});
+});
+
+describe("an account imported after the other side of its transfers", () => {
+	it("finds a transfer's other side entered in another account, and makes it the transfer", async () => {
+		const {
+			alice,
+			h,
+			everyday,
+			savings,
+			home,
+			knowAs,
+			preview,
+			importIt,
+			balanceOf,
+		} = await setUp();
+		await knowAs(EVERYDAY, everyday.id);
+		await knowAs(SAVINGS, savings.id);
+		// The savings account, imported alone before: the transfer as an income
+		const income = await h.created(alice, {
+			type: "income",
+			accountId: savings.id,
+			date: "2026-10-15",
+			payee: "de 123456 EOP",
+			note: "Kept",
+			lines: [{ amount: 300_00, tagId: home.id }],
+		});
+		const before = await preview(alice, october);
+		const line = lineOf(before, "à 654321 EOP");
+
+		expect(line).toMatchObject({
+			status: "counterpart",
+			match: {
+				transactionId: income.id,
+				type: "income",
+				accountId: savings.id,
+			},
+			suggestion: { kind: "transfer", accountId: savings.id },
+		});
+		const response = await importIt(alice, october, {
+			accounts: [
+				{
+					index: 0,
+					target: { accountId: everyday.id },
+					lines: [
+						{
+							externalId: line.externalId,
+							action: "join",
+							transactionId: income.id,
+						},
+					],
+				},
+			],
+		});
+
+		expect(response.status).toBe(201);
+		expect(await json<StatementImport>(response)).toMatchObject({
+			accounts: [{ accountId: everyday.id, joined: 1, created: 0 }],
+		});
+		expect(
+			await json<Transaction>(await h.get(alice, income.id)),
+		).toMatchObject({
+			type: "transfer",
+			accountId: everyday.id,
+			toAccountId: savings.id,
+			amount: 300_00,
+			note: "Kept",
+			lines: [],
+		});
+		// Counted once: out of the everyday account, into the savings as before
+		expect(await balanceOf(everyday.id)).toBe(5_000_00 - 300_00);
+		expect(await balanceOf(savings.id)).toBe(10_000_00 + 300_00);
+		expect(lineOf(await preview(alice, october), "à 654321 EOP").status).toBe(
+			"imported",
+		);
+	});
+
+	it("finds a card's payment entered as an expense of an account, and undoes the transfer as it was", async () => {
+		const { alice, h, everyday, card, home, preview, importIt, balanceOf } =
+			await setUp();
+		const paid = await h.created(alice, {
+			type: "expense",
+			accountId: everyday.id,
+			date: "2026-10-05",
+			payee: "Remises Visa Desjardins",
+			lines: [{ amount: 250_00, tagId: home.id }],
+		});
+		const statement = [
+			cardLine(
+				"Remises Visa **** 1234",
+				"2026/10/02",
+				"CAFE EXEMPLE",
+				"4.25",
+				"",
+			),
+			cardLine(
+				"Remises Visa **** 1234",
+				"2026/10/06",
+				"PAIEMENT CAISSE",
+				"",
+				"250.00",
+			),
+		].join("\n");
+		const before = await preview(alice, statement, [
+			{ index: 0, accountId: card.id },
+		]);
+		const payment = lineOf(before, "PAIEMENT CAISSE");
+
+		expect(payment).toMatchObject({
+			status: "counterpart",
+			match: { transactionId: paid.id, accountId: everyday.id },
+		});
+		expect(lineOf(before, "CAFE EXEMPLE").status).toBe("new");
+		const made = await json<StatementImport>(
+			await importIt(alice, statement, {
+				accounts: [
+					{
+						index: 0,
+						target: { accountId: card.id },
+						lines: [
+							{
+								externalId: payment.externalId,
+								action: "join",
+								transactionId: paid.id,
+							},
+						],
+					},
+				],
+			}),
+		);
+		expect(await balanceOf(card.id)).toBe(250_00);
+		expect(await balanceOf(everyday.id)).toBe(5_000_00 - 250_00);
+
+		await api(`${h.base}/imports/${made.id}`, {
+			method: "DELETE",
+			cookie: alice.cookie,
+		});
+
+		expect(await json<Transaction>(await h.get(alice, paid.id))).toMatchObject({
+			type: "expense",
+			accountId: everyday.id,
+			toAccountId: null,
+			payee: "Remises Visa Desjardins",
+			lines: [expect.objectContaining({ amount: 250_00, tagId: home.id })],
+		});
+		expect(await balanceOf(card.id)).toBe(0);
+	});
+
+	it("refuses to join what isn't the other side", async () => {
+		const { alice, h, everyday, savings, bobs, preview, importIt } =
+			await setUp();
+		const line = lineOf(
+			await preview(alice, october, [{ index: 0, accountId: everyday.id }]),
+			"à 654321 EOP",
+		);
+		const cases = [
+			// Another amount
+			await h.created(alice, {
+				type: "income",
+				accountId: savings.id,
+				date: "2026-10-15",
+				lines: [{ amount: 299_00 }],
+			}),
+			// The same way: money out of both
+			await h.created(alice, {
+				type: "expense",
+				accountId: savings.id,
+				date: "2026-10-15",
+				lines: [{ amount: 300_00 }],
+			}),
+			// On the line's own account
+			await h.created(alice, {
+				type: "income",
+				accountId: everyday.id,
+				date: "2026-10-15",
+				lines: [{ amount: 300_00 }],
+			}),
+		];
+		const bob = await signInUser("bob@example.com");
+		cases.push(
+			await h.created(bob, {
+				type: "income",
+				accountId: bobs.id,
+				date: "2026-10-15",
+				lines: [{ amount: 300_00 }],
+			}),
+		);
+
+		for (const transaction of cases) {
+			const response = await importIt(alice, october, {
+				accounts: [
+					{
+						index: 0,
+						target: { accountId: everyday.id },
+						lines: [
+							{
+								externalId: line.externalId,
+								action: "join",
+								transactionId: transaction.id,
+							},
+						],
+					},
+				],
+			});
+			expect(response.status).toBe(422);
+		}
+	});
+});
+
+describe("the opening balance of an account the statements go further back in", () => {
+	/**
+	 * September, before October's statement: 4 900.00 at its start, 5 000.00
+	 * at its end, as October starts.
+	 */
+	const september = [
+		accountLine(
+			"123456",
+			"2026/09/10",
+			"Achat /LIBRAIRIE",
+			"50.00",
+			"",
+			"4850.00",
+		),
+		accountLine(
+			"123456",
+			"2026/09/25",
+			"Paie /EMPLOYEUR INC.",
+			"",
+			"150.00",
+			"5000.00",
+		),
+	].join("\r\n");
+
+	it("starts the account at the statement's opening balance, and back on undo", async () => {
+		const { alice, h, everyday, preview, importIt, balanceOf } = await setUp();
+		// The account made with October's opening balance, then October imported
+		await h.updateAccount(alice, everyday.id, { openingBalance: 5_000_00 });
+		const october_ = await preview(alice, october, [
+			{ index: 0, accountId: everyday.id },
+		]);
+		await importIt(alice, october, {
+			accounts: [
+				{
+					index: 0,
+					target: { accountId: everyday.id },
+					lines: october_.accounts[0]?.lines.map((line) => ({
+						externalId: line.externalId,
+						action: "create",
+					})),
+				},
+			],
+		});
+		const octoberEnd = await balanceOf(everyday.id);
+		const lines = (await preview(alice, september)).accounts[0]?.lines ?? [];
+
+		const made = await json<StatementImport>(
+			await importIt(alice, september, {
+				accounts: [
+					{
+						index: 0,
+						target: { accountId: everyday.id },
+						lines: lines.map((line) => ({
+							externalId: line.externalId,
+							action: "create",
+						})),
+					},
+				],
+			}),
+		);
+
+		expect(made.accounts).toEqual([
+			expect.objectContaining({
+				accountId: everyday.id,
+				created: 2,
+				openingBalance: 4_900_00,
+			}),
+		]);
+		// September's lines and its opening balance: October's end is the bank's still
+		expect(await balanceOf(everyday.id)).toBe(octoberEnd);
+		expect((await h.getAccount(alice, everyday.id)).openingBalance).toBe(
+			4_900_00,
+		);
+
+		await api(`${h.base}/imports/${made.id}`, {
+			method: "DELETE",
+			cookie: alice.cookie,
+		});
+		expect((await h.getAccount(alice, everyday.id)).openingBalance).toBe(
+			5_000_00,
+		);
+	});
+
+	it("moves the opening balance to the statement's when the file goes further back", async () => {
+		const { alice, h, everyday, preview, importIt } = await setUp();
+		// Opened at 5 000.00 before October; a September file with other balances
+		const earlier = [
+			accountLine(
+				"123456",
+				"2026/09/10",
+				"Achat /LIBRAIRIE",
+				"50.00",
+				"",
+				"4000.00",
+			),
+		].join("\r\n");
+		const lines =
+			(await preview(alice, earlier, [{ index: 0, accountId: everyday.id }]))
+				.accounts[0]?.lines ?? [];
+		const plan = {
+			accounts: [
+				{
+					index: 0,
+					target: { accountId: everyday.id },
+					lines: lines.map((line) => ({
+						externalId: line.externalId,
+						action: "create",
+					})),
+				},
+			],
+		};
+
+		const made = await json<StatementImport>(
+			await importIt(alice, earlier, plan),
+		);
+
+		expect(made.accounts[0]?.openingBalance).toBe(4_050_00);
+		expect((await h.getAccount(alice, everyday.id)).openingBalance).toBe(
+			4_050_00,
+		);
+		await api(`${h.base}/imports/${made.id}`, {
+			method: "DELETE",
+			cookie: alice.cookie,
+		});
+		expect((await h.getAccount(alice, everyday.id)).openingBalance).toBe(
+			5_000_00,
+		);
+	});
+
+	it("leaves the opening balance when the account has older transactions", async () => {
+		const { alice, h, everyday, preview, importIt } = await setUp();
+		await h.created(alice, {
+			type: "expense",
+			accountId: everyday.id,
+			date: "2026-08-01",
+			lines: [{ amount: 10_00 }],
+		});
+		const lines =
+			(await preview(alice, september, [{ index: 0, accountId: everyday.id }]))
+				.accounts[0]?.lines ?? [];
+
+		const made = await json<StatementImport>(
+			await importIt(alice, september, {
+				accounts: [
+					{
+						index: 0,
+						target: { accountId: everyday.id },
+						lines: lines.map((line) => ({
+							externalId: line.externalId,
+							action: "create",
+						})),
+					},
+				],
+			}),
+		);
+
+		expect(made.accounts[0]?.openingBalance).toBeNull();
+		expect((await h.getAccount(alice, everyday.id)).openingBalance).toBe(
+			5_000_00,
+		);
 	});
 });

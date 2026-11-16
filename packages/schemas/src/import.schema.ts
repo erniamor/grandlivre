@@ -28,13 +28,17 @@ export const STATEMENT_FORMATS = [
  * - "imported": an import already brought it in;
  * - "matched": a transaction of the account looks like it (same amount,
  *   a close day): it will be tied to it rather than recorded again;
- * - "recurring": a recurring transaction's day waits for it.
+ * - "recurring": a recurring transaction's day waits for it;
+ * - "counterpart": the line is a transfer whose other side is already in
+ *   another account, entered as an expense or an income (that account
+ *   imported or entered alone): that transaction becomes the transfer.
  */
 export const STATEMENT_LINE_STATUSES = [
 	"new",
 	"imported",
 	"matched",
 	"recurring",
+	"counterpart",
 ] as const;
 
 /**
@@ -81,13 +85,18 @@ export const statementPreviewLineSchema = z.object({
 	description: z.string(),
 	payee: z.string(),
 	status: z.enum(STATEMENT_LINE_STATUSES),
-	/** "imported" or "matched": the transaction it is, or looks like. */
+	/**
+	 * "imported", "matched": the transaction it is, or looks like;
+	 * "counterpart": the other side of the transfer, in `accountId`.
+	 */
 	match: z
 		.object({
 			transactionId: z.uuid(),
 			type: transactionTypeSchema,
 			date: calendarDateSchema,
 			payee: z.string().nullable(),
+			/** The account the transaction is on. */
+			accountId: z.uuid(),
 		})
 		.nullable(),
 	/** "recurring": the day waiting for it. */
@@ -154,10 +163,16 @@ export type StatementPreview = z.infer<typeof statementPreviewSchema>;
 
 /**
  * What an import did with a line: the transaction created ("created", a
- * transfer included), tied to one already there ("linked"), or a recurring
- * day recorded ("confirmed").
+ * transfer included), tied to one already there ("linked"), a recurring
+ * day recorded ("confirmed"), or the other side of a transfer, entered in
+ * another account, made the transfer ("joined").
  */
-export const STATEMENT_LINE_KINDS = ["created", "linked", "confirmed"] as const;
+export const STATEMENT_LINE_KINDS = [
+	"created",
+	"linked",
+	"confirmed",
+	"joined",
+] as const;
 
 const externalIdSchema = z.string().min(1).max(200);
 
@@ -178,7 +193,9 @@ const fileLineSchema = z.strictObject({
  *   the line of the file that is its other side (`pair`), which then gets
  *   no decision of its own;
  * - "link": the line is this transaction, already in the account;
- * - "confirm": the line is this recurring day, waiting: it is recorded.
+ * - "confirm": the line is this recurring day, waiting: it is recorded;
+ * - "join": the line is the other side of this expense or income, entered
+ *   in another account: it becomes the transfer between the two accounts.
  */
 export const statementLineDecisionSchema = z.discriminatedUnion(
 	"action",
@@ -220,6 +237,11 @@ export const statementLineDecisionSchema = z.discriminatedUnion(
 			externalId: externalIdSchema,
 			action: z.literal("confirm"),
 			occurrenceId: z.uuid("import_occurrence_invalid"),
+		}),
+		z.strictObject({
+			externalId: externalIdSchema,
+			action: z.literal("join"),
+			transactionId: z.uuid("import_join_invalid"),
 		}),
 	],
 	"import_action_invalid",
@@ -277,6 +299,12 @@ export const statementImportSchema = z.object({
 			created: z.number().int(),
 			linked: z.number().int(),
 			confirmed: z.number().int(),
+			joined: z.number().int(),
+			/**
+			 * Its new opening balance, when the import set it: the statement
+			 * went further back than anything in the account.
+			 */
+			openingBalance: z.number().int().nullable(),
 		}),
 	),
 });

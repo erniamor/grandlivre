@@ -189,14 +189,17 @@ describe("desjardinsTransferHint", () => {
 		).toEqual({ kind: "cash" });
 	});
 
-	it("says nothing of other lines, nor of a card's", () => {
-		expect(desjardinsTransferHint(account, "Achat /CAFE")).toBeNull();
+	it("names a card paid from an account, and nothing else", () => {
+		const card = "desjardins-card:remisesvisa:1234";
+
+		expect(desjardinsTransferHint(card, "PAIEMENT CAISSE")).toEqual({
+			kind: "payment",
+		});
 		expect(
-			desjardinsTransferHint(
-				"desjardins-card:remisesvisa:1234",
-				"PAIEMENT CAISSE",
-			),
-		).toBeNull();
+			desjardinsTransferHint(card, "PAIEMENT CAISSE - MERCI BRANCH PAYMENT"),
+		).toEqual({ kind: "payment" });
+		expect(desjardinsTransferHint(card, "CAFE EXEMPLE")).toBeNull();
+		expect(desjardinsTransferHint(account, "Achat /CAFE")).toBeNull();
 	});
 });
 

@@ -77,7 +77,16 @@ const imported: StatementImport = {
 	format: "desjardins_accounts",
 	createdAt: NOW,
 	createdBy: { userId: aliceProfile.id, name: "Alice" },
-	accounts: [{ accountId: EVERYDAY, created: 3, linked: 0, confirmed: 0 }],
+	accounts: [
+		{
+			accountId: EVERYDAY,
+			created: 3,
+			linked: 0,
+			confirmed: 0,
+			joined: 0,
+			openingBalance: null,
+		},
+	],
 };
 
 const page = <T,>(data: T[]) => ({
@@ -169,7 +178,9 @@ describe("ImportPage", () => {
 
 		expect(await screen.findByText("Statement imported")).toBeVisible();
 		expect(
-			screen.getByText("Recorded: 3 · tied to an entry: 0 · recurring days: 0"),
+			screen.getByText(
+				"Recorded: 3 · tied to an entry: 0 · transfers completed: 0 · recurring days: 0",
+			),
 		).toBeVisible();
 		expect(
 			screen.getByText(
@@ -307,6 +318,76 @@ describe("ImportPage", () => {
 			],
 		);
 		expect(savings.getByLabelText("Goes to")).toHaveValue(SAVINGS);
+	});
+
+	it("sets apart what is already in the app, and makes a transfer's other side the transfer", async () => {
+		const withCounterpart: StatementPreview = {
+			...statementPreview,
+			accounts: statementPreview.accounts.map((each) =>
+				each.index === 0
+					? {
+							...each,
+							lines: [
+								...each.lines,
+								{
+									externalId: "visa-0",
+									date: "2026-10-05",
+									amount: -250_00,
+									description:
+										"Paiement facture - AccèsD Internet /Remises Visa",
+									payee: "Remises Visa",
+									status: "counterpart",
+									match: {
+										transactionId: IMPORT,
+										type: "income",
+										date: "2026-10-06",
+										payee: "PAIEMENT CAISSE",
+										accountId: SAVINGS,
+									},
+									occurrence: null,
+									suggestion: { kind: "transfer", accountId: SAVINGS },
+									pair: null,
+								},
+							],
+						}
+					: each,
+			),
+		};
+		const { requests, user } = setUp({
+			preview: () => ({ status: 200, body: withCounterpart }),
+		});
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+		const everyday = within(
+			await screen.findByRole("region", { name: "Caisse du Plateau ···456" }),
+		);
+
+		expect(everyday.getByText("Already entered in Savings")).toBeVisible();
+		expect(
+			everyday.getByRole("option", {
+				name: "It's the transfer entered in Savings: “PAIEMENT CAISSE” of Oct 6, 2026",
+			}),
+		).toHaveProperty("selected", true);
+		// What was imported before is folded away, with its badge
+		const imported = everyday.getByText(
+			"Already imported, left as they are: 1",
+		);
+		expect(everyday.getByText("Already imported")).not.toBeVisible();
+		await user.click(imported);
+		expect(everyday.getByText("Already imported")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Import" }));
+
+		await screen.findByText("Statement imported");
+		const plan = jsonField(sent(requests, "/imports")[0], "plan") as {
+			accounts: { lines: unknown[] }[];
+		};
+		expect(plan.accounts[0]?.lines).toContainEqual({
+			externalId: "visa-0",
+			action: "join",
+			transactionId: IMPORT,
+		});
 	});
 
 	it("says why a file can't be read, and from which line", async () => {

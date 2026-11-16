@@ -52,6 +52,7 @@ describe("initialChoice", () => {
 						type: "expense",
 						date: "2026-10-01",
 						payee: null,
+						accountId: SAVINGS,
 					},
 				}),
 			),
@@ -70,6 +71,25 @@ describe("initialChoice", () => {
 			),
 		).toEqual({ action: "confirm", occurrenceId: SAVINGS });
 		expect(initialChoice(line({ status: "imported" }))).toBeNull();
+	});
+
+	it("makes a transfer's other side, entered in another account, the transfer", () => {
+		const counterpart = line({
+			status: "counterpart",
+			match: {
+				transactionId: WALLET,
+				type: "income",
+				date: "2026-10-01",
+				payee: null,
+				accountId: SAVINGS,
+			},
+			suggestion: { kind: "transfer", accountId: SAVINGS },
+		});
+
+		expect(initialChoice(counterpart)).toEqual({
+			action: "join",
+			transactionId: WALLET,
+		});
 	});
 
 	it("follows a new line's suggestion, or makes it uncategorized", () => {

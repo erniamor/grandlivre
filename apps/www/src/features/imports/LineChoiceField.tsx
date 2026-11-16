@@ -19,6 +19,8 @@ interface LineChoiceFieldProps {
 	holds: boolean;
 	/** The account the line's pair goes to, for a transfer seen from both. */
 	pairName: string | null;
+	/** The account the transaction it matches is on. */
+	matchAccountName: string | null;
 	transferAccounts: Account[];
 	tagOptions: SelectOption<string>[];
 	/** Says a transfer's account is missing. */
@@ -32,6 +34,7 @@ export function LineChoiceField({
 	choice,
 	holds,
 	pairName,
+	matchAccountName,
 	transferAccounts,
 	tagOptions,
 	missing,
@@ -47,6 +50,12 @@ export function LineChoiceField({
 		confirm: () =>
 			m.import_action_confirm({
 				payee: line.occurrence?.payee || m.transaction_uncategorized(),
+			}),
+		join: () =>
+			m.import_action_join({
+				account: matchAccountName ?? "",
+				payee: line.match?.payee || m.transaction_uncategorized(),
+				date: formatShortDay(line.match?.date ?? line.date, locale),
 			}),
 		pair: () => m.import_action_pair({ account: pairName ?? "" }),
 		create: line.amount < 0 ? m.import_action_expense : m.import_action_income,

@@ -2,6 +2,7 @@ import { STATEMENT_FORMATS, STATEMENT_LINE_KINDS } from "@repo/schemas";
 import {
 	foreignKey,
 	index,
+	jsonb,
 	pgTable,
 	text,
 	unique,
@@ -41,6 +42,21 @@ export const statementAccounts = pgTable(
 	],
 );
 
+/** A transaction as it was before an import made it a transfer: to undo it. */
+export interface JoinedBefore {
+	type: "expense" | "income";
+	accountId: string;
+	payee: string | null;
+	lines: { amount: number; tagId: string | null }[];
+}
+
+/** An account's opening balance as an import set it, and before: to undo it. */
+export interface OpeningChange {
+	accountId: string;
+	before: number;
+	after: number;
+}
+
 // A statement imported by a member: what it did can be undone, by them.
 export const statementImports = pgTable(
 	"statement_imports",
@@ -50,6 +66,8 @@ export const statementImports = pgTable(
 			.notNull()
 			.references(() => households.id, { onDelete: "cascade" }),
 		format: text({ enum: STATEMENT_FORMATS }).notNull(),
+		// The opening balances it set, and what they were before
+		openingBalances: jsonb().$type<OpeningChange[]>().notNull().default([]),
 		// Who imported it; kept when they leave the household
 		createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
 		createdAt: createdAt(),
@@ -77,6 +95,8 @@ export const statementLines = pgTable(
 		// created, tied to one already there, or a recurring day confirmed
 		importId: uuid().notNull(),
 		kind: text({ enum: STATEMENT_LINE_KINDS }).notNull(),
+		// "joined": the transaction as it was before it became the transfer
+		joinedBefore: jsonb().$type<JoinedBefore>(),
 		createdAt: createdAt(),
 	},
 	(table) => [

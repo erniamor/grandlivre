@@ -65,6 +65,7 @@ const messagesByCode: Record<string, () => string> = {
 	import_transfer_invalid: m.error_import_transfer_invalid,
 	import_link_invalid: m.error_import_changed,
 	import_occurrence_invalid: m.error_import_changed,
+	import_join_invalid: m.error_import_join_invalid,
 	household_time_zone_invalid: m.error_household_time_zone_invalid,
 	budget_tag_required: m.error_budget_tag_required,
 	sharing_disabled: m.error_sharing_disabled,

@@ -28,8 +28,10 @@ interface StatementLineListProps {
 }
 
 /**
- * An account's lines, by what the preview found: new, already entered,
- * recurring days waiting; the lines already imported only counted.
+ * An account's lines, by what the preview found: the new ones first, then
+ * those already in the app (entered, or their transfer's other side
+ * entered elsewhere), the recurring days waiting, and those imported
+ * before, folded away.
  */
 export function StatementLineList({
 	account,
@@ -43,16 +45,47 @@ export function StatementLineList({
 }: StatementLineListProps) {
 	const destination = draft.destinations[account.index];
 	const holds = standingHolds(account, destination);
-	const of = (status: StatementPreviewLine["status"]) =>
-		account.lines.filter((line) =>
-			holds ? line.status === status : status === "new",
-		);
+	// What a line is where its account goes: the preview's standing holds
+	// there, or a transfer's other side for an account still to make
+	const statusOf = (
+		line: StatementPreviewLine,
+	): StatementPreviewLine["status"] =>
+		holds || (line.status === "counterpart" && destination?.kind === "new")
+			? line.status
+			: "new";
+	const of = (...statuses: StatementPreviewLine["status"][]) =>
+		account.lines.filter((line) => statuses.includes(statusOf(line)));
 	const groups = [
 		{ title: m.import_group_new(), lines: of("new") },
-		{ title: m.import_group_matched(), lines: of("matched") },
+		{ title: m.import_group_matched(), lines: of("matched", "counterpart") },
 		{ title: m.import_group_recurring(), lines: of("recurring") },
 	];
-	const imported = holds ? of("imported").length : 0;
+	const imported = of("imported");
+	const item = (line: StatementPreviewLine) => {
+		const pair = pairedBy(draft, account.index, line);
+		return (
+			<StatementLineItem
+				key={line.externalId}
+				line={line}
+				status={statusOf(line)}
+				choice={draft.choices[account.index]?.[line.externalId] ?? null}
+				holds={holds}
+				pairedWith={pair ? (nameOf(pair.index) ?? "") : null}
+				pairName={line.pair ? nameOf(line.pair.index) : null}
+				matchAccountName={
+					accounts.find((each) => each.id === line.match?.accountId)?.name ??
+					null
+				}
+				currency={currency}
+				transferAccounts={transferAccounts(accounts, line, destination)}
+				tagOptions={tagOptions}
+				missing={
+					missing.has(line.externalId) ? m.import_transfer_missing() : undefined
+				}
+				onChange={(choice) => onChoice(line.externalId, choice)}
+			/>
+		);
+	};
 
 	return (
 		<div className="grid gap-4">
@@ -63,43 +96,17 @@ export function StatementLineList({
 							<h3 className="font-medium text-sm">
 								{title} ({lines.length})
 							</h3>
-							<ul>
-								{lines.map((line) => {
-									const pair = pairedBy(draft, account.index, line);
-									return (
-										<StatementLineItem
-											key={line.externalId}
-											line={line}
-											choice={
-												draft.choices[account.index]?.[line.externalId] ?? null
-											}
-											holds={holds}
-											pairedWith={pair ? (nameOf(pair.index) ?? "") : null}
-											pairName={line.pair ? nameOf(line.pair.index) : null}
-											currency={currency}
-											transferAccounts={transferAccounts(
-												accounts,
-												line,
-												destination,
-											)}
-											tagOptions={tagOptions}
-											missing={
-												missing.has(line.externalId)
-													? m.import_transfer_missing()
-													: undefined
-											}
-											onChange={(choice) => onChoice(line.externalId, choice)}
-										/>
-									);
-								})}
-							</ul>
+							<ul>{lines.map(item)}</ul>
 						</section>
 					),
 			)}
-			{imported > 0 && (
-				<p className="text-muted-foreground text-sm">
-					{m.import_group_imported({ count: imported })}
-				</p>
+			{imported.length > 0 && (
+				<details className="grid gap-1">
+					<summary className="cursor-pointer text-muted-foreground text-sm">
+						{m.import_group_imported({ count: imported.length })}
+					</summary>
+					<ul>{imported.map(item)}</ul>
+				</details>
 			)}
 		</div>
 	);

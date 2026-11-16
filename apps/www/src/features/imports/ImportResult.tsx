@@ -54,8 +54,16 @@ export function ImportResult({
 									created: counts.created,
 									linked: counts.linked,
 									confirmed: counts.confirmed,
+									joined: counts.joined,
 								})}
 							</p>
+							{counts.openingBalance !== null && (
+								<p className="text-sm">
+									{m.import_done_opening({
+										amount: money(counts.openingBalance),
+									})}
+								</p>
+							)}
 							{account && statement && bank !== null && (
 								<p className="text-muted-foreground text-sm">
 									{bank === account.balance

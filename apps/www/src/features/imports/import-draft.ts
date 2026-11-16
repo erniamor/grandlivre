@@ -33,7 +33,9 @@ export type LineChoice =
 	/** With `pair`, the transfer is the one of the line's pair, in the file. */
 	| { action: "transfer"; accountId: string | null; pair?: boolean }
 	| { action: "link"; transactionId: string }
-	| { action: "confirm"; occurrenceId: string };
+	| { action: "confirm"; occurrenceId: string }
+	/** The other side, entered in another account, becomes the transfer. */
+	| { action: "join"; transactionId: string };
 
 /** The member's decisions on a previewed file: per account, by its place. */
 export interface ImportDraft {
@@ -57,6 +59,9 @@ export function initialChoice(line: StatementPreviewLine): LineChoice | null {
 	}
 	if (line.status === "recurring" && line.occurrence) {
 		return { action: "confirm", occurrenceId: line.occurrence.id };
+	}
+	if (line.status === "counterpart" && line.match) {
+		return { action: "join", transactionId: line.match.transactionId };
 	}
 	if (line.pair) {
 		// The side the money leaves records the transfer; the other is its pair
@@ -145,7 +150,7 @@ export function choicesFor(
 	return Object.fromEntries(
 		account.lines.flatMap((line) => {
 			const choice = initialChoice(
-				holds
+				holds || (line.status === "counterpart" && destination?.kind === "new")
 					? line
 					: { ...line, status: "new", match: null, occurrence: null },
 			);
@@ -347,6 +352,12 @@ function decisionOf(
 				action: "confirm",
 				occurrenceId: choice.occurrenceId,
 			};
+		case "join":
+			return {
+				externalId,
+				action: "join",
+				transactionId: choice.transactionId,
+			};
 		case "transfer": {
 			const pair = line.pair;
 			if (
@@ -374,6 +385,7 @@ export function countChoices(
 		transfer: 0,
 		link: 0,
 		confirm: 0,
+		join: 0,
 		paired: 0,
 	};
 	for (const line of account.lines) {
@@ -424,6 +436,7 @@ export function lineActions(
 			? (["link"] as const)
 			: []),
 		...(holds && line.occurrence ? (["confirm"] as const) : []),
+		...(line.status === "counterpart" && line.match ? (["join"] as const) : []),
 		...(line.pair && line.amount < 0 ? (["pair"] as const) : []),
 		"create",
 		"transfer",
@@ -449,6 +462,10 @@ export function choiceForAction(
 		case "confirm":
 			return line.occurrence
 				? { action: "confirm", occurrenceId: line.occurrence.id }
+				: { action: "skip" };
+		case "join":
+			return line.match
+				? { action: "join", transactionId: line.match.transactionId }
 				: { action: "skip" };
 		case "pair":
 			return { action: "transfer", accountId: null, pair: true };
