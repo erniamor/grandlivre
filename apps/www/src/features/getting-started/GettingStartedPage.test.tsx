@@ -74,7 +74,7 @@ describe("GettingStartedPage", () => {
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Getting started" }),
 		).toBeVisible();
-		expect(screen.getByText("Steps done: 1 of 7")).toBeVisible();
+		expect(screen.getByText("Steps done: 1 of 8")).toBeVisible();
 		const steps = screen.getAllByRole("listitem");
 		expect(
 			steps.map((step) => within(step).getByRole("heading").textContent),
@@ -84,6 +84,7 @@ describe("GettingStartedPage", () => {
 			"Make your wallet",
 			"Invite your household",
 			"Import your history",
+			"Sort your history",
 			"Note what comes back",
 			"Set budgets",
 		]);
@@ -104,11 +105,27 @@ describe("GettingStartedPage", () => {
 		).toHaveAttribute("href", "/accounts/new?redirect=%2Fgetting-started");
 	});
 
+	it("says how many transactions are left to sort, and leads to sorting them", async () => {
+		const { household: owner } = setUp({
+			...started({ accounts: true, imported: true, categorized: false }),
+			uncategorized: 12,
+		});
+		renderWithRouter(<GettingStartedPage household={owner} />);
+
+		const step = (
+			await screen.findByRole("heading", { name: "Sort your history" })
+		).closest("li") as HTMLElement;
+		expect(within(step).getByText("Left without a tag: 12")).toBeVisible();
+		expect(
+			within(step).getByRole("link", { name: "Sort by payee" }),
+		).toHaveAttribute("href", "/categorize");
+	});
+
 	it("leaves inviting members to the owners", async () => {
 		const { household: member } = setUp(started(), "member");
 		renderWithRouter(<GettingStartedPage household={member} />);
 
-		expect(await screen.findByText("Steps done: 1 of 6")).toBeVisible();
+		expect(await screen.findByText("Steps done: 1 of 7")).toBeVisible();
 		expect(screen.queryByText("Invite your household")).not.toBeInTheDocument();
 	});
 
@@ -165,7 +182,7 @@ describe("GettingStartedCard", () => {
 		const card = within(
 			await screen.findByRole("region", { name: "Getting started" }),
 		);
-		expect(card.getByText("Steps done: 2 of 7")).toBeVisible();
+		expect(card.getByText("Steps done: 2 of 8")).toBeVisible();
 		// The needed steps first, the optional ones after
 		expect(card.getByText("Next: Add your accounts")).toBeVisible();
 		expect(card.getByRole("link", { name: "Continue" })).toHaveAttribute(

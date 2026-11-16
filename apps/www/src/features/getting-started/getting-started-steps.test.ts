@@ -32,6 +32,7 @@ describe("gettingStartedSteps", () => {
 			"wallet",
 			"members",
 			"imported",
+			"categorized",
 			"recurring",
 			"budgets",
 		]);
@@ -46,7 +47,7 @@ describe("gettingStartedSteps", () => {
 			"member",
 		);
 
-		expect(progressOf(steps)).toEqual({ done: 2, total: 6 });
+		expect(progressOf(steps)).toEqual({ done: 2, total: 7 });
 		expect(nextStep(steps)?.key).toBe("accounts");
 		expect(
 			nextStep(
@@ -71,5 +72,18 @@ describe("gettingStartedSteps", () => {
 				),
 			),
 		).toBeNull();
+	});
+});
+
+describe("the categorizing step", () => {
+	it("is done once a history came in and nothing is left to tag", () => {
+		const categorized = (steps: Partial<GettingStarted["steps"]>) =>
+			gettingStartedSteps(status(steps), "member").find(
+				(step) => step.key === "categorized",
+			)?.done;
+
+		expect(categorized({ imported: false, categorized: true })).toBe(false);
+		expect(categorized({ imported: true, categorized: false })).toBe(false);
+		expect(categorized({ imported: true, categorized: true })).toBe(true);
 	});
 });

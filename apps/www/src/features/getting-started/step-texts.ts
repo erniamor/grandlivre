@@ -26,6 +26,10 @@ export const stepTexts: Record<
 		title: m.getting_started_imported_title,
 		hint: m.getting_started_imported_hint,
 	},
+	categorized: {
+		title: m.getting_started_categorized_title,
+		hint: m.getting_started_categorized_hint,
+	},
 	recurring: {
 		title: m.getting_started_recurring_title,
 		hint: m.getting_started_recurring_hint,

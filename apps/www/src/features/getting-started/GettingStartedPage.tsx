@@ -50,6 +50,7 @@ export function GettingStartedPage({ household }: GettingStartedPageProps) {
 						step={step}
 						number={index + 1}
 						household={household}
+						uncategorized={status.uncategorized}
 					/>
 				))}
 			</ol>

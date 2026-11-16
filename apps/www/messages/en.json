@@ -698,5 +698,20 @@
 	"getting_started_budgets_hint": "How much for groceries, outings: the app says where you stand, month by month.",
 	"getting_started_budgets_action": "Set budgets",
 	"toast_wallet_created": "Wallet made",
-	"import_continue": "Continue"
+	"import_continue": "Continue",
+	"getting_started_categorized_title": "Sort your history",
+	"getting_started_categorized_hint": "A history imported comes without tags: sort it by payee, all of a payee's transactions at once. The next imports learn from it.",
+	"getting_started_categorized_action": "Sort by payee",
+	"getting_started_categorized_left": "Left without a tag: {count}",
+	"categorize_title": "Sort by payee",
+	"categorize_intro": "Your expenses and incomes without a tag, by payee, the most frequent first. Choose a tag: all of the payee's take it, and the next imports will suggest it.",
+	"categorize_back": "Back to getting started",
+	"categorize_empty": "Nothing left to sort: every expense and income of your accounts has a tag.",
+	"categorize_count": "Payees to sort: {count}",
+	"categorize_tag_choose": "Choose a tag",
+	"categorize_tag_label": "Tag for {payee}",
+	"categorize_submit": "Sort",
+	"categorize_group_expenses": "Expenses: {count} · from {from} to {to}",
+	"categorize_group_incomes": "Incomes and refunds: {count} · from {from} to {to}",
+	"toast_categorized": "{payee}: transactions sorted: {count}"
 }

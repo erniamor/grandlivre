@@ -698,5 +698,20 @@
 	"getting_started_budgets_hint": "Combien pour l'épicerie, les sorties : l'app vous dit où vous en êtes, mois par mois.",
 	"getting_started_budgets_action": "Fixer des budgets",
 	"toast_wallet_created": "Portefeuille créé",
-	"import_continue": "Continuer"
+	"import_continue": "Continuer",
+	"getting_started_categorized_title": "Classer votre historique",
+	"getting_started_categorized_hint": "Un historique importé arrive sans étiquettes : classez-le par bénéficiaire, toutes les transactions d'un bénéficiaire d'un coup. Les prochains imports en tiennent compte.",
+	"getting_started_categorized_action": "Classer par bénéficiaire",
+	"getting_started_categorized_left": "Encore sans étiquette : {count}",
+	"categorize_title": "Classer par bénéficiaire",
+	"categorize_intro": "Vos dépenses et revenus sans étiquette, par bénéficiaire, les plus fréquents d'abord. Choisissez une étiquette : toutes les transactions du bénéficiaire la prennent, et les prochains imports la proposeront.",
+	"categorize_back": "Retour à Bien démarrer",
+	"categorize_empty": "Plus rien à classer : chaque dépense et revenu de vos comptes a une étiquette.",
+	"categorize_count": "Bénéficiaires à classer : {count}",
+	"categorize_tag_choose": "Choisir une étiquette",
+	"categorize_tag_label": "Étiquette pour {payee}",
+	"categorize_submit": "Classer",
+	"categorize_group_expenses": "Dépenses : {count} · du {from} au {to}",
+	"categorize_group_incomes": "Revenus et remboursements : {count} · du {from} au {to}",
+	"toast_categorized": "{payee} : transactions classées : {count}"
 }

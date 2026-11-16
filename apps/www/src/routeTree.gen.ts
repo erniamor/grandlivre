@@ -18,6 +18,7 @@ import { Route as AuthenticatedHouseholdRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
+import { Route as AuthenticatedHouseholdCategorizeRouteImport } from './routes/_authenticated/_household/categorize'
 import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
 import { Route as AuthenticatedHouseholdGettingStartedRouteImport } from './routes/_authenticated/_household/getting-started'
 import { Route as AuthenticatedHouseholdHouseholdRouteImport } from './routes/_authenticated/_household/household'
@@ -86,6 +87,12 @@ const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHouseholdCategorizeRoute =
+  AuthenticatedHouseholdCategorizeRouteImport.update({
+    id: '/categorize',
+    path: '/categorize',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 const AuthenticatedHouseholdDashboardRoute =
   AuthenticatedHouseholdDashboardRouteImport.update({
     id: '/dashboard',
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
@@ -272,6 +280,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
@@ -308,6 +317,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/_household/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/_authenticated/_household/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
   '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRoute
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/welcome'
+    | '/categorize'
     | '/dashboard'
     | '/getting-started'
     | '/household'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/welcome'
+    | '/categorize'
     | '/dashboard'
     | '/getting-started'
     | '/household'
@@ -411,6 +423,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/setup'
     | '/_authenticated/welcome'
+    | '/_authenticated/_household/categorize'
     | '/_authenticated/_household/dashboard'
     | '/_authenticated/_household/getting-started'
     | '/_authenticated/_household/household'
@@ -509,6 +522,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/welcome'
       preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_household/categorize': {
+      id: '/_authenticated/_household/categorize'
+      path: '/categorize'
+      fullPath: '/categorize'
+      preLoaderRoute: typeof AuthenticatedHouseholdCategorizeRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
     }
     '/_authenticated/_household/dashboard': {
       id: '/_authenticated/_household/dashboard'
@@ -682,6 +702,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedHouseholdRouteChildren {
+  AuthenticatedHouseholdCategorizeRoute: typeof AuthenticatedHouseholdCategorizeRoute
   AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
   AuthenticatedHouseholdGettingStartedRoute: typeof AuthenticatedHouseholdGettingStartedRoute
   AuthenticatedHouseholdHouseholdRoute: typeof AuthenticatedHouseholdHouseholdRoute
@@ -710,6 +731,8 @@ interface AuthenticatedHouseholdRouteChildren {
 
 const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
   {
+    AuthenticatedHouseholdCategorizeRoute:
+      AuthenticatedHouseholdCategorizeRoute,
     AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
     AuthenticatedHouseholdGettingStartedRoute:
       AuthenticatedHouseholdGettingStartedRoute,

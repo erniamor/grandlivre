@@ -1,12 +1,13 @@
 import type { GettingStarted, HouseholdRole } from "@repo/schemas";
 
-/** The steps shown, in order: the categorizing of the history comes with its page. */
+/** The steps shown, in order. */
 export const SHOWN_STEPS = [
 	"tags",
 	"accounts",
 	"wallet",
 	"members",
 	"imported",
+	"categorized",
 	"recurring",
 	"budgets",
 ] as const;
@@ -38,7 +39,11 @@ export function gettingStartedSteps(
 	return SHOWN_STEPS.filter((key) => key !== "members" || role === "owner").map(
 		(key) => ({
 			key,
-			done: status.steps[key],
+			// Nothing left to tag before a history came in is nothing done yet
+			done:
+				key === "categorized"
+					? status.steps.categorized && status.steps.imported
+					: status.steps[key],
 			optional: OPTIONAL.includes(key),
 		}),
 	);

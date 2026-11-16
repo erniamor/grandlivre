@@ -62,6 +62,12 @@ export function StepActions({ step, household }: StepActionsProps) {
 					{m.getting_started_imported_action()}
 				</Link>
 			);
+		case "categorized":
+			return (
+				<Link to="/categorize" className={style}>
+					{m.getting_started_categorized_action()}
+				</Link>
+			);
 		case "recurring":
 			return (
 				<Link to="/recurring" className={style}>

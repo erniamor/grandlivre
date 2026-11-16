@@ -698,5 +698,20 @@
 	"getting_started_budgets_hint": "Cuánto para la compra, las salidas: la app le dice cómo va, mes a mes.",
 	"getting_started_budgets_action": "Fijar presupuestos",
 	"toast_wallet_created": "Cartera creada",
-	"import_continue": "Continuar"
+	"import_continue": "Continuar",
+	"getting_started_categorized_title": "Clasificar su historial",
+	"getting_started_categorized_hint": "Un historial importado llega sin etiquetas: clasifíquelo por beneficiario, todas las transacciones de un beneficiario a la vez. Las próximas importaciones lo tienen en cuenta.",
+	"getting_started_categorized_action": "Clasificar por beneficiario",
+	"getting_started_categorized_left": "Todavía sin etiqueta: {count}",
+	"categorize_title": "Clasificar por beneficiario",
+	"categorize_intro": "Sus gastos e ingresos sin etiqueta, por beneficiario, los más frecuentes primero. Elija una etiqueta: todas las transacciones del beneficiario la toman, y las próximas importaciones la propondrán.",
+	"categorize_back": "Volver a Primeros pasos",
+	"categorize_empty": "Nada más que clasificar: cada gasto e ingreso de sus cuentas tiene una etiqueta.",
+	"categorize_count": "Beneficiarios por clasificar: {count}",
+	"categorize_tag_choose": "Elegir una etiqueta",
+	"categorize_tag_label": "Etiqueta para {payee}",
+	"categorize_submit": "Clasificar",
+	"categorize_group_expenses": "Gastos: {count} · del {from} al {to}",
+	"categorize_group_incomes": "Ingresos y reembolsos: {count} · del {from} al {to}",
+	"toast_categorized": "{payee}: transacciones clasificadas: {count}"
 }

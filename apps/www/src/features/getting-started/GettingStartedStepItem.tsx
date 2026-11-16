@@ -12,6 +12,8 @@ interface GettingStartedStepItemProps {
 	/** Its place in the list, from 1. */
 	number: number;
 	household: Household;
+	/** The user's transactions left without a tag. */
+	uncategorized: number;
 }
 
 /** A step: done or to do (in words, not only by its mark), what it is for, and where it leads. */
@@ -19,6 +21,7 @@ export function GettingStartedStepItem({
 	step,
 	number,
 	household,
+	uncategorized,
 }: GettingStartedStepItemProps) {
 	const titleId = useId();
 	const { title, hint } = stepTexts[step.key];
@@ -54,6 +57,11 @@ export function GettingStartedStepItem({
 							: m.getting_started_step_todo()}
 				</p>
 				<p className="text-sm">{hint()}</p>
+				{step.key === "categorized" && uncategorized > 0 && (
+					<p className="text-sm">
+						{m.getting_started_categorized_left({ count: uncategorized })}
+					</p>
+				)}
 			</div>
 			<div className="col-start-2 flex flex-wrap gap-2">
 				<StepActions step={step} household={household} />
