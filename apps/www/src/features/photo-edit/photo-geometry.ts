@@ -103,6 +103,50 @@ export function relativeTo(rect: Rect, frame: Rect): Rect {
 	};
 }
 
+/** The inverse of `relativeTo`: a rectangle given inside `frame`, in proportions of the photo. */
+export function absoluteFrom(rect: Rect, frame: Rect): Rect {
+	return {
+		x: frame.x + rect.x * frame.width,
+		y: frame.y + rect.y * frame.height,
+		width: rect.width * frame.width,
+		height: rect.height * frame.height,
+	};
+}
+
+/** A number of quarter turns, clockwise, brought back to 0, 1, 2 or 3. */
+export function normalizeTurns(turns: number): number {
+	return ((turns % 4) + 4) % 4;
+}
+
+/**
+ * A rectangle on the photo, where it falls once the photo is turned by
+ * `turns` quarter turns, clockwise (negative: anticlockwise). The crop and
+ * the masks turn with the photo, so nothing drawn is lost.
+ */
+export function rotateRect(rect: Rect, turns: number): Rect {
+	let turned = rect;
+	for (let turn = 0; turn < normalizeTurns(turns); turn++) {
+		// A quarter turn clockwise: the left side becomes the top
+		turned = {
+			x: 1 - turned.y - turned.height,
+			y: turned.x,
+			width: turned.height,
+			height: turned.width,
+		};
+	}
+	return turned;
+}
+
+/** The size of an image once turned by `turns` quarter turns. */
+export function rotatedSize(
+	size: { width: number; height: number },
+	turns: number,
+): { width: number; height: number } {
+	return normalizeTurns(turns) % 2 === 0
+		? size
+		: { width: size.height, height: size.width };
+}
+
 /**
  * A rectangle in pixels of an image of `width` × `height`, widened to whole
  * pixels: a mask always covers at least what it was drawn over.

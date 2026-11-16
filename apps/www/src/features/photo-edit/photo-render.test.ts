@@ -15,6 +15,9 @@ function fakeCanvas() {
 			calls.push(["drawImage", ...args.slice(1)]),
 		fillRect: (...args: unknown[]) =>
 			calls.push(["fillRect", context.fillStyle, ...args]),
+		translate: (...args: unknown[]) => calls.push(["translate", ...args]),
+		rotate: (angle: number) => calls.push(["rotate", angle]),
+		resetTransform: () => calls.push(["resetTransform"]),
 	};
 	const canvas = {
 		width: 0,
@@ -79,6 +82,60 @@ describe("renderPhoto", () => {
 		expect(calls).toEqual([
 			["drawImage", 1000, 0, 1000, 4000, 0, 0, 400, 1600],
 			["fillRect", "#000", 0, 800, 200, 160],
+		]);
+	});
+
+	it("turns the photo a quarter, then keeps the crop drawn on it, with its masks", async () => {
+		const { canvas, calls } = fakeCanvas();
+
+		const blob = await renderPhoto({
+			source: photo,
+			turns: 1,
+			// The top half of the photo turned: the left half of the one stored
+			crop: { x: 0, y: 0, width: 1, height: 0.5 },
+			// On the right of the photo turned, in the crop's top half
+			masks: [{ x: 0.5, y: 0, width: 0.25, height: 0.25 }],
+			maxSide: 1600,
+			createCanvas: () => canvas,
+		});
+
+		// 1000 × 4000 pixels kept, lying down once turned: 1600 × 400
+		expect(await blob?.text()).toBe("1600x400");
+		expect(calls).toEqual([
+			["translate", 800, 200],
+			["rotate", Math.PI / 2],
+			["drawImage", 0, 0, 1000, 4000, -200, -800, 400, 1600],
+			["resetTransform"],
+			["fillRect", "#000", 800, 0, 400, 200],
+		]);
+	});
+
+	it("turns the photo the other way, and half a turn", async () => {
+		const left = fakeCanvas();
+		const upsideDown = fakeCanvas();
+
+		await renderPhoto({
+			source: photo,
+			turns: -1,
+			maxSide: 1600,
+			createCanvas: () => left.canvas,
+		});
+		await renderPhoto({
+			source: photo,
+			turns: 2,
+			maxSide: 1600,
+			createCanvas: () => upsideDown.canvas,
+		});
+
+		expect(left.calls.slice(0, 3)).toEqual([
+			["translate", 800, 400],
+			["rotate", (3 * Math.PI) / 2],
+			["drawImage", 0, 0, 2000, 4000, -400, -800, 800, 1600],
+		]);
+		expect(upsideDown.calls.slice(0, 3)).toEqual([
+			["translate", 400, 800],
+			["rotate", Math.PI],
+			["drawImage", 0, 0, 2000, 4000, -400, -800, 800, 1600],
 		]);
 	});
 
