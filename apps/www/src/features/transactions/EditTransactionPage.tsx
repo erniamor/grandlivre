@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { RepeatIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
+import { useSharingContext } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { DeleteTransactionButton } from "@/features/transactions/DeleteTransactionButton";
 import { TransactionForm } from "@/features/transactions/TransactionForm";
@@ -38,6 +39,7 @@ export function EditTransactionPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const sharing = useSharingContext(household);
 	const refresh = useTransactionChange(household.id);
 	const finish = async (message: string) => {
 		// Leave first: the page must not reload a transaction that no longer exists
@@ -58,6 +60,7 @@ export function EditTransactionPage({
 						currency={household.currency}
 						accounts={accounts.items}
 						tags={tags}
+						sharing={sharing}
 						transaction={transaction}
 						submitLabel={m.save_button()}
 						save={(input) =>

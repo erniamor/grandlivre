@@ -30,6 +30,8 @@ import { Route as AuthenticatedHouseholdBudgetsNewRouteImport } from './routes/_
 import { Route as AuthenticatedHouseholdRecurringIndexRouteImport } from './routes/_authenticated/_household/recurring/index'
 import { Route as AuthenticatedHouseholdRecurringRecurringIdRouteImport } from './routes/_authenticated/_household/recurring/$recurringId'
 import { Route as AuthenticatedHouseholdRecurringNewRouteImport } from './routes/_authenticated/_household/recurring/new'
+import { Route as AuthenticatedHouseholdSharedIndexRouteImport } from './routes/_authenticated/_household/shared/index'
+import { Route as AuthenticatedHouseholdSharedSettleRouteImport } from './routes/_authenticated/_household/shared/settle'
 import { Route as AuthenticatedHouseholdTagsIndexRouteImport } from './routes/_authenticated/_household/tags/index'
 import { Route as AuthenticatedHouseholdTagsTagIdRouteImport } from './routes/_authenticated/_household/tags/$tagId'
 import { Route as AuthenticatedHouseholdTagsNewRouteImport } from './routes/_authenticated/_household/tags/new'
@@ -154,6 +156,18 @@ const AuthenticatedHouseholdRecurringNewRoute =
     path: '/recurring/new',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
+const AuthenticatedHouseholdSharedIndexRoute =
+  AuthenticatedHouseholdSharedIndexRouteImport.update({
+    id: '/shared/',
+    path: '/shared/',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdSharedSettleRoute =
+  AuthenticatedHouseholdSharedSettleRouteImport.update({
+    id: '/shared/settle',
+    path: '/shared/settle',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
 const AuthenticatedHouseholdTagsIndexRoute =
   AuthenticatedHouseholdTagsIndexRouteImport.update({
     id: '/tags/',
@@ -220,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
   '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
+  '/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
@@ -228,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/budgets/': typeof AuthenticatedHouseholdBudgetsIndexRoute
   '/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
+  '/shared/': typeof AuthenticatedHouseholdSharedIndexRoute
   '/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
   '/recurring/pending/$occurrenceId': typeof AuthenticatedHouseholdRecurringPendingOccurrenceIdRoute
@@ -249,6 +265,7 @@ export interface FileRoutesByTo {
   '/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
   '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
+  '/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
   '/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
@@ -257,6 +274,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/budgets': typeof AuthenticatedHouseholdBudgetsIndexRoute
   '/recurring': typeof AuthenticatedHouseholdRecurringIndexRoute
+  '/shared': typeof AuthenticatedHouseholdSharedIndexRoute
   '/tags': typeof AuthenticatedHouseholdTagsIndexRoute
   '/transactions': typeof AuthenticatedHouseholdTransactionsIndexRoute
   '/recurring/pending/$occurrenceId': typeof AuthenticatedHouseholdRecurringPendingOccurrenceIdRoute
@@ -281,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/_household/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
   '/_authenticated/_household/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/_authenticated/_household/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
+  '/_authenticated/_household/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
   '/_authenticated/_household/tags/$tagId': typeof AuthenticatedHouseholdTagsTagIdRoute
   '/_authenticated/_household/tags/new': typeof AuthenticatedHouseholdTagsNewRoute
   '/_authenticated/_household/tags/suggested': typeof AuthenticatedHouseholdTagsSuggestedRoute
@@ -289,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/_authenticated/_household/budgets/': typeof AuthenticatedHouseholdBudgetsIndexRoute
   '/_authenticated/_household/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
+  '/_authenticated/_household/shared/': typeof AuthenticatedHouseholdSharedIndexRoute
   '/_authenticated/_household/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
   '/_authenticated/_household/transactions/': typeof AuthenticatedHouseholdTransactionsIndexRoute
   '/_authenticated/_household/recurring/pending/$occurrenceId': typeof AuthenticatedHouseholdRecurringPendingOccurrenceIdRoute
@@ -312,6 +332,7 @@ export interface FileRouteTypes {
     | '/budgets/new'
     | '/recurring/$recurringId'
     | '/recurring/new'
+    | '/shared/settle'
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
@@ -320,6 +341,7 @@ export interface FileRouteTypes {
     | '/accounts/'
     | '/budgets/'
     | '/recurring/'
+    | '/shared/'
     | '/tags/'
     | '/transactions/'
     | '/recurring/pending/$occurrenceId'
@@ -341,6 +363,7 @@ export interface FileRouteTypes {
     | '/budgets/new'
     | '/recurring/$recurringId'
     | '/recurring/new'
+    | '/shared/settle'
     | '/tags/$tagId'
     | '/tags/new'
     | '/tags/suggested'
@@ -349,6 +372,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/recurring'
+    | '/shared'
     | '/tags'
     | '/transactions'
     | '/recurring/pending/$occurrenceId'
@@ -372,6 +396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/budgets/new'
     | '/_authenticated/_household/recurring/$recurringId'
     | '/_authenticated/_household/recurring/new'
+    | '/_authenticated/_household/shared/settle'
     | '/_authenticated/_household/tags/$tagId'
     | '/_authenticated/_household/tags/new'
     | '/_authenticated/_household/tags/suggested'
@@ -380,6 +405,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/accounts/'
     | '/_authenticated/_household/budgets/'
     | '/_authenticated/_household/recurring/'
+    | '/_authenticated/_household/shared/'
     | '/_authenticated/_household/tags/'
     | '/_authenticated/_household/transactions/'
     | '/_authenticated/_household/recurring/pending/$occurrenceId'
@@ -542,6 +568,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHouseholdRecurringNewRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
+    '/_authenticated/_household/shared/': {
+      id: '/_authenticated/_household/shared/'
+      path: '/shared'
+      fullPath: '/shared/'
+      preLoaderRoute: typeof AuthenticatedHouseholdSharedIndexRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/shared/settle': {
+      id: '/_authenticated/_household/shared/settle'
+      path: '/shared/settle'
+      fullPath: '/shared/settle'
+      preLoaderRoute: typeof AuthenticatedHouseholdSharedSettleRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
     '/_authenticated/_household/tags/': {
       id: '/_authenticated/_household/tags/'
       path: '/tags'
@@ -611,6 +651,7 @@ interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdBudgetsNewRoute: typeof AuthenticatedHouseholdBudgetsNewRoute
   AuthenticatedHouseholdRecurringRecurringIdRoute: typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   AuthenticatedHouseholdRecurringNewRoute: typeof AuthenticatedHouseholdRecurringNewRoute
+  AuthenticatedHouseholdSharedSettleRoute: typeof AuthenticatedHouseholdSharedSettleRoute
   AuthenticatedHouseholdTagsTagIdRoute: typeof AuthenticatedHouseholdTagsTagIdRoute
   AuthenticatedHouseholdTagsNewRoute: typeof AuthenticatedHouseholdTagsNewRoute
   AuthenticatedHouseholdTagsSuggestedRoute: typeof AuthenticatedHouseholdTagsSuggestedRoute
@@ -619,6 +660,7 @@ interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdAccountsIndexRoute: typeof AuthenticatedHouseholdAccountsIndexRoute
   AuthenticatedHouseholdBudgetsIndexRoute: typeof AuthenticatedHouseholdBudgetsIndexRoute
   AuthenticatedHouseholdRecurringIndexRoute: typeof AuthenticatedHouseholdRecurringIndexRoute
+  AuthenticatedHouseholdSharedIndexRoute: typeof AuthenticatedHouseholdSharedIndexRoute
   AuthenticatedHouseholdTagsIndexRoute: typeof AuthenticatedHouseholdTagsIndexRoute
   AuthenticatedHouseholdTransactionsIndexRoute: typeof AuthenticatedHouseholdTransactionsIndexRoute
   AuthenticatedHouseholdRecurringPendingOccurrenceIdRoute: typeof AuthenticatedHouseholdRecurringPendingOccurrenceIdRoute
@@ -641,6 +683,8 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
       AuthenticatedHouseholdRecurringRecurringIdRoute,
     AuthenticatedHouseholdRecurringNewRoute:
       AuthenticatedHouseholdRecurringNewRoute,
+    AuthenticatedHouseholdSharedSettleRoute:
+      AuthenticatedHouseholdSharedSettleRoute,
     AuthenticatedHouseholdTagsTagIdRoute: AuthenticatedHouseholdTagsTagIdRoute,
     AuthenticatedHouseholdTagsNewRoute: AuthenticatedHouseholdTagsNewRoute,
     AuthenticatedHouseholdTagsSuggestedRoute:
@@ -655,6 +699,8 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
       AuthenticatedHouseholdBudgetsIndexRoute,
     AuthenticatedHouseholdRecurringIndexRoute:
       AuthenticatedHouseholdRecurringIndexRoute,
+    AuthenticatedHouseholdSharedIndexRoute:
+      AuthenticatedHouseholdSharedIndexRoute,
     AuthenticatedHouseholdTagsIndexRoute: AuthenticatedHouseholdTagsIndexRoute,
     AuthenticatedHouseholdTransactionsIndexRoute:
       AuthenticatedHouseholdTransactionsIndexRoute,

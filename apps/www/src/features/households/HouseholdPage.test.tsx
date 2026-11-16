@@ -220,6 +220,27 @@ describe("HouseholdPage", () => {
 			);
 		});
 
+		it("turns on settling shared expenses between members", async () => {
+			const { user, writes } = setUp({
+				respond: () => ({
+					status: 200,
+					body: { ...household, expenseSharing: true },
+				}),
+			});
+
+			const toggle = await screen.findByRole("checkbox", {
+				name: "Settle shared expenses between members",
+			});
+			expect(toggle).not.toBeChecked();
+			await user.click(toggle);
+
+			await vi.waitFor(() =>
+				expect(writes()).toEqual([
+					{ method: "PATCH", path: base, body: { expenseSharing: true } },
+				]),
+			);
+		});
+
 		it("makes another member an owner", async () => {
 			const { user, writes, onMembershipChanged } = setUp({
 				respond: () => ({ status: 204 }),

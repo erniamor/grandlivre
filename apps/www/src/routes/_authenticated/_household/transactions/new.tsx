@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
+import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { NewTransactionPage } from "@/features/transactions/NewTransactionPage";
 
@@ -20,6 +21,10 @@ export const Route = createFileRoute(
 		return Promise.all([
 			queryClient.ensureQueryData(accountsQueryOptions(household.id)),
 			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
+			// The members and the default split, to share it
+			household.expenseSharing
+				? queryClient.ensureQueryData(sharingOverviewQueryOptions(household.id))
+				: undefined,
 		]);
 	},
 	component: NewTransactionRoute,

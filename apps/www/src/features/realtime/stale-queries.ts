@@ -7,6 +7,7 @@ import { householdMembersQueryKey } from "@/features/households/household-member
 import { householdsQueryKey } from "@/features/households/households-query";
 import { recurringQueryKey } from "@/features/recurring/recurring-query";
 import { reportsQueryKey } from "@/features/reports/reports-query";
+import { sharingQueryKey } from "@/features/sharing/sharing-query";
 import { tagsQueryKey } from "@/features/tags/tags-query";
 import { transactionsQueryKey } from "@/features/transactions/transactions-query";
 
@@ -52,8 +53,9 @@ export function staleQueries(
 				{ queryKey: transactionsQueryKey(householdId) },
 				{ queryKey: accountsQueryKey(householdId) },
 				{ queryKey: reportsQueryKey(householdId) },
-				// What the budgets spent
+				// What the budgets spent, and who owes whom
 				{ queryKey: budgetsQueryKey(householdId) },
+				{ queryKey: sharingQueryKey(householdId) },
 			];
 		case "recurring":
 			// What the budgets plan
@@ -64,7 +66,7 @@ export function staleQueries(
 		case "budgets":
 			return [{ queryKey: budgetsQueryKey(householdId) }];
 		case "sharing":
-			return [{ queryKey: ["households", householdId, "sharing"] }];
+			return [{ queryKey: sharingQueryKey(householdId) }];
 	}
 }
 

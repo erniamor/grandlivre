@@ -22,6 +22,7 @@ const cached = [
 	["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 	["households", HOME, "recurring", "list"],
 	["households", HOME, "budgets", "month", "2026-11"],
+	["households", HOME, "sharing", "overview"],
 	["households", "elsewhere", "transactions", "list", { page: 1 }],
 	["me"],
 	["invitations", "received"],
@@ -74,6 +75,7 @@ describe("staleQueries", () => {
 				["households", HOME, "transactions", "list", { page: 1 }],
 				["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 				["households", HOME, "budgets", "month", "2026-11"],
+				["households", HOME, "sharing", "overview"],
 			],
 		],
 		[
@@ -84,6 +86,7 @@ describe("staleQueries", () => {
 			],
 		],
 		["budgets", [["households", HOME, "budgets", "month", "2026-11"]]],
+		["sharing", [["households", HOME, "sharing", "overview"]]],
 	] as const)(
 		"reloads after a change of %s what shows it, and nothing else",
 		(topic, keys) => {
@@ -112,6 +115,7 @@ describe("allHouseholdQueries", () => {
 			["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 			["households", HOME, "recurring", "list"],
 			["households", HOME, "budgets", "month", "2026-11"],
+			["households", HOME, "sharing", "overview"],
 		]);
 	});
 });

@@ -4,6 +4,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
+import { useSharingContext } from "@/features/sharing/sharing-query";
 import { tagsQueryKey, tagsQueryOptions } from "@/features/tags/tags-query";
 import { AssistantNotes } from "@/features/transactions/AssistantNotes";
 import { rememberLastAccount } from "@/features/transactions/last-account";
@@ -51,6 +52,7 @@ export function NewTransactionPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const sharing = useSharingContext(household);
 	const refresh = useTransactionChange(household.id);
 	const draft = useNoteDraft(draftId);
 	const photo = useDraftPhoto(draftId);
@@ -115,6 +117,7 @@ export function NewTransactionPage({
 						currency={household.currency}
 						accounts={accounts.items}
 						tags={tags}
+						sharing={sharing}
 						draft={draft}
 						defaultAccountId={draft?.accountId ?? accountId}
 						submitLabel={m.transaction_create_button()}

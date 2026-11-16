@@ -12,6 +12,9 @@ import { useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import type { SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
+import { SharesField } from "@/features/sharing/SharesField";
+import { shareStateOf, toShareSplit } from "@/features/sharing/share-form";
+import type { SharingContext } from "@/features/sharing/sharing-query";
 import { useLastAccountId } from "@/features/transactions/last-account";
 import { ProposedTagPanel } from "@/features/transactions/ProposedTagPanel";
 import { TransactionFields } from "@/features/transactions/TransactionFields";
@@ -52,6 +55,8 @@ interface TransactionFormProps {
 		proposedTag: ProposedTag | null,
 	) => Promise<Transaction>;
 	onSaved: (transaction: Transaction) => void | Promise<void>;
+	/** The members and the default split, when the household shares expenses. */
+	sharing?: SharingContext;
 }
 
 // A select's value is a string: this one stands for "nothing chosen"
@@ -71,6 +76,7 @@ export function TransactionForm({
 	submitLabel,
 	save,
 	onSaved,
+	sharing,
 }: TransactionFormProps) {
 	const locale = getLocale();
 	const [draft, setDraft] = useState<TransactionFormState>(() =>
@@ -87,6 +93,14 @@ export function TransactionForm({
 						note: "",
 						lines: [emptyLine()],
 					},
+	);
+	const [shares, setShares] = useState(() =>
+		shareStateOf(
+			transaction?.sharing,
+			sharing?.weights ?? [],
+			currency,
+			locale,
+		),
 	);
 	// The tag the assistant proposed, until the user turns it down
 	const [proposal, setProposal] = useState(noteDraft?.proposedTag ?? null);
@@ -129,6 +143,12 @@ export function TransactionForm({
 	};
 	const change = (fields: Partial<TransactionFormState>) =>
 		setDraft({ ...current, ...fields });
+	// Shared: an expense or a refund paid from one member's own account
+	const shareable =
+		sharing !== undefined &&
+		current.type !== "transfer" &&
+		accounts.find((account) => account.id === current.accountId)?.holders
+			.length === 1;
 
 	const proposedTagOption: SelectOption<string>[] = proposal
 		? [
@@ -151,7 +171,7 @@ export function TransactionForm({
 	// names, its parent): said for the whole form
 	const unshownError = Object.entries(apiErrors.fields).find(
 		([field]) =>
-			!/^(lines\.|amount$|accountId$|toAccountId$|date$|payee$|note$)/.test(
+			!/^(lines\.|amount$|accountId$|toAccountId$|date$|payee$|note$|shares$)/.test(
 				field,
 			),
 	)?.[1];
@@ -174,9 +194,28 @@ export function TransactionForm({
 					);
 					return;
 				}
+				let input = result.input;
+				if (input.type !== "transfer" && sharing) {
+					if (shareable && shares.on) {
+						const split = toShareSplit(
+							shares,
+							sharing.members.map((member) => member.userId),
+							currency,
+							locale,
+						);
+						if (!split.ok) {
+							setLocalErrors({ shares: errorMessage(split.error) });
+							return;
+						}
+						input = { ...input, shares: split.split };
+					} else if (transaction?.sharing) {
+						// Shared before, no longer
+						input = { ...input, shares: null };
+					}
+				}
 				setLocalErrors({});
 				mutation.mutate({
-					input: result.input,
+					input,
 					proposedTag: proposal && usesProposedTag(current) ? proposal : null,
 				});
 			}}
@@ -211,6 +250,29 @@ export function TransactionForm({
 					/>
 				}
 			/>
+			{shareable && sharing && (
+				<SharesField
+					value={shares}
+					onChange={(next) =>
+						setShares(
+							// Turned on: from the default split, as it is now
+							next.on && !shares.on && !transaction?.sharing
+								? {
+										...shareStateOf(
+											undefined,
+											sharing.weights,
+											currency,
+											locale,
+										),
+										on: true,
+									}
+								: next,
+						)
+					}
+					context={sharing}
+					error={errors.shares}
+				/>
+			)}
 			<FormAlert message={apiErrors.form ?? unshownError} />
 			<Button type="submit" disabled={mutation.isPending}>
 				{submitLabel}

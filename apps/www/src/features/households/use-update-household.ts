@@ -7,7 +7,7 @@ import { getApi } from "@/lib/api";
 import { actionErrorMessage } from "@/lib/error-messages";
 
 /**
- * Changes the name, the currency or the time zone of a household, then refreshes what the
+ * Changes the name, the currency, the time zone or the sharing of a household, then refreshes what the
  * routes hold of it. A refused change is said in a toast.
  */
 export function useUpdateHousehold(household: Household) {

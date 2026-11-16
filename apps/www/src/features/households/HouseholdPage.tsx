@@ -2,6 +2,7 @@ import type { Household, Profile } from "@repo/schemas";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { HouseholdCurrencyField } from "@/features/households/HouseholdCurrencyField";
 import { HouseholdNameField } from "@/features/households/HouseholdNameField";
+import { HouseholdSharingField } from "@/features/households/HouseholdSharingField";
 import { HouseholdTimeZoneField } from "@/features/households/HouseholdTimeZoneField";
 import {
 	householdInvitationsQueryKey,
@@ -54,6 +55,7 @@ export function HouseholdPage({
 				<HouseholdNameField household={household} />
 				<HouseholdCurrencyField household={household} />
 				<HouseholdTimeZoneField household={household} />
+				<HouseholdSharingField household={household} />
 			</div>
 			<MemberList
 				household={household}
