@@ -187,7 +187,7 @@ describe("budgets", () => {
 		expect((await month(alice, "?month=2027-06")).budgets).toEqual([]);
 	});
 
-	it("counts a yearly budget over the month's whole year, after the monthly ones", async () => {
+	it("counts a yearly budget over its year up to the end of the month, after the monthly ones", async () => {
 		const { alice, chequing, food, insurance, set, month, spend } =
 			await setUp();
 		await set(alice, insurance.id, {
@@ -207,6 +207,11 @@ describe("budgets", () => {
 		expect((await month(alice, "?month=2026-11")).budgets).toMatchObject([
 			{ tagId: food.id, period: "month", spent: 0 },
 			{ tagId: insurance.id, period: "year", amount: 120_000, spent: 50_000 },
+		]);
+		// As it stood in June: November hadn't come
+		expect((await month(alice, "?month=2026-06")).budgets).toMatchObject([
+			{ tagId: food.id },
+			{ tagId: insurance.id, spent: 30_000, upcoming: 0 },
 		]);
 	});
 
@@ -240,6 +245,13 @@ describe("budgets", () => {
 			(await month(alice, `?month=${m}`)).budgets[0]?.upcoming;
 		expect(await upcomingIn("2026-11")).toBe(145_000);
 		expect(await upcomingIn("2026-12")).toBe(145_000);
+		// Yearly: what is planned until the end of the year, from today
+		await set(alice, home.id, {
+			period: "year",
+			amount: 2_000_000,
+			from: "2026-11",
+		});
+		expect(await upcomingIn("2026-11")).toBe(290_000);
 		// Past: nothing to come
 		await set(alice, home.id, {
 			period: "month",

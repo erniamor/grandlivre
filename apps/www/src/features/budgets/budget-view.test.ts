@@ -51,14 +51,45 @@ describe("monthlyTotal", () => {
 			upcoming: 100,
 		});
 
+		const tag = (id: string, parentId: string | null = null) => ({
+			id,
+			parentId,
+		});
+
 		expect(
-			monthlyTotal([
-				budget("month", 50_000, 10_000),
-				budget("month", 20_000, 5_000),
-				budget("year", 120_000, 60_000),
-			]),
+			monthlyTotal(
+				[
+					{ ...budget("month", 50_000, 10_000), tagId: "food" },
+					{ ...budget("month", 20_000, 5_000), tagId: "home" },
+					{ ...budget("year", 120_000, 60_000), tagId: "insurance" },
+				],
+				[tag("food"), tag("home"), tag("insurance")],
+			),
 		).toEqual({ amount: 70_000, spent: 15_000, upcoming: 200 });
-		expect(monthlyTotal([budget("year", 1, 1)])).toBeNull();
+		expect(monthlyTotal([budget("year", 1, 1)], [])).toBeNull();
+	});
+
+	it("counts a budget under a budgeted tag once, in its parent's", () => {
+		const tags = [
+			{ id: "food", parentId: null },
+			{ id: "eating-out", parentId: "food" },
+			{ id: "restaurants", parentId: "eating-out" },
+		];
+		const budget = (tagId: string, amount: number, spent: number) => ({
+			tagId,
+			period: "month" as const,
+			amount,
+			since: "2026-11",
+			spent,
+			upcoming: 0,
+		});
+
+		expect(
+			monthlyTotal(
+				[budget("food", 50_000, 14_000), budget("restaurants", 2_000, 3_000)],
+				tags,
+			),
+		).toEqual({ amount: 50_000, spent: 14_000, upcoming: 0 });
 	});
 });
 

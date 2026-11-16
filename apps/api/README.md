@@ -225,8 +225,8 @@ What a household means to spend on a tag, and where it stands. A budget on a tag
 | `DELETE /v1/households/:householdId/budgets/:tagId?from=2027-01` | member | Stops it from that month on; the months before keep it (204) |
 | `GET /v1/households/:householdId/budgets/:tagId/suggestion?month=2026-11` | member | What the tag usually costs before the month: `{ month }`, the average of the 3 previous months, and `{ year }`, the sum of the 12 previous ones |
 
-- `spent`: the expenses on the tag and the tags under it over the period (the month, or the month's calendar year for a yearly budget), refunds (incomes on them) taken off, never below zero. Transfers and uncategorized lines don't count. Every account counts, including the ones that only show their balance, as in the reports: only totals come out.
-- `upcoming`: what the recurring expenses still plan in the period, from today on, and their days waiting for a member.
+- `spent`: the expenses on the tag and the tags under it over the period (the month; for a yearly budget, its calendar year up to the end of the month, as it stood then), refunds (incomes on them) taken off, never below zero. Transfers and uncategorized lines don't count. Every account counts, including the ones that only show their balance, as in the reports: only totals come out.
+- `upcoming`: what the recurring expenses still plan in the period (until the end of the year for a yearly budget), from today on, and their days waiting for a member; nothing for a month past.
 - A tag from outside the household answers 404. Codes: `budget_period_invalid`, `budget_month_invalid`, `amount_not_positive`. Deleting a tag (possible only without transactions) deletes its budgets.
 
 ### Events (real time)

@@ -32,7 +32,7 @@ export function BudgetsPage({ household, month }: BudgetsPageProps) {
 			path,
 		]),
 	);
-	const total = monthlyTotal(data.budgets);
+	const total = monthlyTotal(data.budgets, tags);
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-6 px-4 py-12">

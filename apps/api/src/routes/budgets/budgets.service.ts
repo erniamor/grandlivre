@@ -1,6 +1,5 @@
 import type {
 	Budget,
-	BudgetPeriod,
 	BudgetStatus,
 	BudgetSuggestion,
 	BudgetsMonth,
@@ -240,7 +239,8 @@ function currentMonth(viewer: Viewer): string {
 
 /**
  * The budgets in force in a month, and where they stand: a monthly budget
- * over the month, a yearly one over the month's year.
+ * over the month; a yearly one over its year up to the end of the month,
+ * with what is planned until the end of the year.
  */
 export async function listBudgets(
 	viewer: Viewer,
@@ -273,32 +273,25 @@ export async function listBudgets(
 	}
 
 	const year = month.slice(0, 4);
-	const periods: Record<BudgetPeriod, { from: string; to: string }> = {
-		month: { from: firstDayOf(month), to: lastDayOf(month) },
-		year: { from: `${year}-01-01`, to: `${year}-12-31` },
-	};
+	const monthStart = firstDayOf(month);
+	const monthEnd = lastDayOf(month);
+	const yearEnd = `${year}-12-31`;
 	const today = todayIn(household.timeZone);
 	const hasYearly = inForce.some((version) => version.period === "year");
 	const [tagRows, spentInMonth, spentInYear, plannedInMonth, plannedInYear] =
 		await Promise.all([
 			tagsOf(household.id),
-			spentByTag(household.id, periods.month.from, periods.month.to),
+			spentByTag(household.id, monthStart, monthEnd),
+			// A yearly budget, as it stood at the end of the month: what the
+			// year spent up to then
 			hasYearly
-				? spentByTag(household.id, periods.year.from, periods.year.to)
+				? spentByTag(household.id, `${year}-01-01`, monthEnd)
 				: new Map<string, number>(),
-			plannedExpenses(
-				household.id,
-				today,
-				periods.month.from,
-				periods.month.to,
-			),
-			hasYearly
-				? plannedExpenses(
-						household.id,
-						today,
-						periods.year.from,
-						periods.year.to,
-					)
+			plannedExpenses(household.id, today, monthStart, monthEnd),
+			// ...and what is still planned until the end of the year, unless
+			// the month is past
+			hasYearly && monthEnd >= today
+				? plannedExpenses(household.id, today, monthStart, yearEnd)
 				: [],
 		]);
 

@@ -50,8 +50,9 @@ export type Budget = z.infer<typeof budgetSchema>;
 
 /**
  * Where a budget stands, in a month: what was spent over its period (the
- * month, or the year of the month), and what the recurring transactions
- * still plan to spend in it. Amounts in minor units.
+ * month; for a yearly budget, its year up to the end of the month), and
+ * what the recurring transactions still plan to spend in it (until the end
+ * of the year, for a yearly budget). Amounts in minor units.
  */
 export const budgetStatusSchema = z.object({
 	tagId: z.uuid(),

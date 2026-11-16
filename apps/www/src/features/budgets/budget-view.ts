@@ -1,4 +1,4 @@
-import type { BudgetStatus } from "@repo/schemas";
+import type { BudgetStatus, Tag } from "@repo/schemas";
 
 /**
  * - "under": spent and planned fit in the budget;
@@ -39,11 +39,35 @@ export function budgetProgress({
 	return { left: amount - spent, spentShare, plannedShare, state };
 }
 
-/** The sum of the monthly budgets: a yearly one doesn't add up with them. */
+/**
+ * The sum of the monthly budgets. A yearly one doesn't add up with them, and
+ * a budget under a tag that has its own is already in it: counted once.
+ */
 export function monthlyTotal(
 	budgets: BudgetStatus[],
+	tags: Pick<Tag, "id" | "parentId">[],
 ): Pick<BudgetStatus, "amount" | "spent" | "upcoming"> | null {
-	const monthly = budgets.filter((budget) => budget.period === "month");
+	const parentOf = new Map(tags.map((tag) => [tag.id, tag.parentId]));
+	const budgeted = new Set(
+		budgets
+			.filter((budget) => budget.period === "month")
+			.map((budget) => budget.tagId),
+	);
+	const hasBudgetedAncestor = (tagId: string) => {
+		let parent = parentOf.get(tagId) ?? null;
+		const seen = new Set<string>();
+		while (parent !== null && !seen.has(parent)) {
+			if (budgeted.has(parent)) {
+				return true;
+			}
+			seen.add(parent);
+			parent = parentOf.get(parent) ?? null;
+		}
+		return false;
+	};
+	const monthly = budgets.filter(
+		(budget) => budget.period === "month" && !hasBudgetedAncestor(budget.tagId),
+	);
 	if (monthly.length === 0) {
 		return null;
 	}
