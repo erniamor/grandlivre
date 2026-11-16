@@ -10,6 +10,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
+	CircleHelpIcon,
 	CircleUserRoundIcon,
 	DownloadIcon,
 	HouseIcon,
@@ -71,6 +72,12 @@ export function UserMenu({ me }: UserMenuProps) {
 						<Link to="/household">
 							<HouseIcon aria-hidden className="size-4" />
 							{m.household_link()}
+						</Link>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Link to="/help">
+							<CircleHelpIcon aria-hidden className="size-4" />
+							{m.help_link()}
 						</Link>
 					</DropdownMenuItem>
 					{installation.installable && (

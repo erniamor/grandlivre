@@ -1,6 +1,8 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@repo/ui";
+import { Link } from "@tanstack/react-router";
 import { CircleHelpIcon } from "lucide-react";
 import { type HelpTopicKey, helpTopics } from "@/features/help/help-topics";
+import { m } from "@/paraglide/messages";
 
 interface HelpHintProps {
 	topic: HelpTopicKey;
@@ -12,7 +14,7 @@ interface HelpHintProps {
  * or a click elsewhere closes it.
  */
 export function HelpHint({ topic }: HelpHintProps) {
-	const { label, title, text } = helpTopics[topic];
+	const { label, title, text, section } = helpTopics[topic];
 
 	return (
 		<Popover>
@@ -30,6 +32,13 @@ export function HelpHint({ topic }: HelpHintProps) {
 			<PopoverContent className="grid gap-1 text-left font-normal">
 				<p className="font-medium">{title()}</p>
 				<p className="text-muted-foreground">{text()}</p>
+				<Link
+					to="/help"
+					hash={section}
+					className="justify-self-start text-primary underline-offset-4 hover:underline"
+				>
+					{m.help_learn_more()}
+				</Link>
 			</PopoverContent>
 		</Popover>
 	);

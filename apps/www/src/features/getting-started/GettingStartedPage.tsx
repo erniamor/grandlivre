@@ -1,5 +1,6 @@
 import type { Household } from "@repo/schemas";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 import { GettingStartedStepItem } from "@/features/getting-started/GettingStartedStepItem";
 import { gettingStartedQueryOptions } from "@/features/getting-started/getting-started-query";
@@ -32,7 +33,15 @@ export function GettingStartedPage({ household }: GettingStartedPageProps) {
 				<h1 className="font-heading font-semibold text-2xl">
 					{m.getting_started_title()}
 				</h1>
-				<p className="text-muted-foreground">{m.getting_started_intro()}</p>
+				<p className="text-muted-foreground">
+					{m.getting_started_intro()}{" "}
+					<Link
+						to="/help"
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						{m.getting_started_help()}
+					</Link>
+				</p>
 				<p id={progressId} className="text-sm">
 					{m.getting_started_progress({ done, total })}
 				</p>

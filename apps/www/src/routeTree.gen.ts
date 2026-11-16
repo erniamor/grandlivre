@@ -15,6 +15,7 @@ import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthenticatedHouseholdRouteImport } from './routes/_authenticated/_household'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
@@ -70,6 +71,11 @@ const SignInRoute = SignInRouteImport.update({
 } as any)
 const AuthenticatedHouseholdRoute = AuthenticatedHouseholdRouteImport.update({
   id: '/_household',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/offline': typeof OfflineRoute
   '/sign-in': typeof SignInRoute
   '/_authenticated/_household': typeof AuthenticatedHouseholdRouteWithChildren
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/offline'
     | '/sign-in'
+    | '/help'
     | '/profile'
     | '/setup'
     | '/welcome'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/offline'
     | '/sign-in'
+    | '/help'
     | '/profile'
     | '/setup'
     | '/welcome'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/offline'
     | '/sign-in'
     | '/_authenticated/_household'
+    | '/_authenticated/help'
     | '/_authenticated/profile'
     | '/_authenticated/setup'
     | '/_authenticated/welcome'
@@ -500,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedHouseholdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -783,6 +802,7 @@ const AuthenticatedHouseholdRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedHouseholdRoute: typeof AuthenticatedHouseholdRouteWithChildren
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
@@ -790,6 +810,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHouseholdRoute: AuthenticatedHouseholdRouteWithChildren,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
