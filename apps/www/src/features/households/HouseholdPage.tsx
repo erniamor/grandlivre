@@ -1,5 +1,8 @@
 import type { Household, Profile } from "@repo/schemas";
+import { buttonVariants } from "@repo/ui";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { ListChecksIcon } from "lucide-react";
 import { HouseholdCurrencyField } from "@/features/households/HouseholdCurrencyField";
 import { HouseholdNameField } from "@/features/households/HouseholdNameField";
 import { HouseholdSharingField } from "@/features/households/HouseholdSharingField";
@@ -50,6 +53,16 @@ export function HouseholdPage({
 					{m.household_title()}
 				</h1>
 				<p className="text-muted-foreground">{m.household_intro()}</p>
+				<Link
+					to="/getting-started"
+					className={buttonVariants({
+						variant: "outline",
+						className: "justify-self-start",
+					})}
+				>
+					<ListChecksIcon aria-hidden />
+					{m.getting_started_link()}
+				</Link>
 			</header>
 			<div className="grid gap-4">
 				<HouseholdNameField household={household} />

@@ -62,7 +62,11 @@ describe("GET /v1/households/:householdId/events", () => {
 		await stream.close();
 	});
 
-	it("names what each kind of change touches", async () => {
+	// Every kind of change, each followed by a pause for a second event: longer
+	// than the default limit, and longer with each kind added
+	it("names what each kind of change touches", {
+		timeout: 20_000,
+	}, async () => {
 		const { alice, bob, carol, household, h } = await setUp();
 		const stream = await openEvents(household.id, bob.cookie);
 		/** Runs a change, and returns the topics it published. */

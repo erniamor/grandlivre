@@ -2,6 +2,7 @@ import type { Household, Profile } from "@repo/schemas";
 import { Link } from "@tanstack/react-router";
 import { HouseholdBalance } from "@/features/accounts/HouseholdBalance";
 import { BudgetsOverview } from "@/features/budgets/BudgetsOverview";
+import { GettingStartedCard } from "@/features/getting-started/GettingStartedCard";
 import { InstallCard } from "@/features/pwa/InstallCard";
 import { PendingRecurring } from "@/features/recurring/PendingRecurring";
 import { UpcomingRecurring } from "@/features/recurring/UpcomingRecurring";
@@ -31,6 +32,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 					{m.dashboard_household({ name: household.name })}
 				</p>
 			</header>
+			<GettingStartedCard household={household} />
 			<QuickEntry
 				householdId={household.id}
 				onDraft={(draft, photos) => openDraft(draft, { photos })}

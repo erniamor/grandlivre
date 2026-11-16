@@ -14,6 +14,8 @@ interface ImportPageProps {
 	household: Household;
 	/** The account the page was opened from: a file of one account goes there. */
 	fromAccountId?: string;
+	/** Where to go on once imported: the first steps, say. */
+	returnTo?: string;
 }
 
 /**
@@ -21,7 +23,11 @@ interface ImportPageProps {
  * household; the member reviews where each account goes and what each line
  * becomes; then the import, and what it did. Their recent imports below.
  */
-export function ImportPage({ household, fromAccountId }: ImportPageProps) {
+export function ImportPage({
+	household,
+	fromAccountId,
+	returnTo,
+}: ImportPageProps) {
 	const { data: accounts } = useSuspenseQuery(
 		accountsQueryOptions(household.id),
 	);
@@ -46,6 +52,7 @@ export function ImportPage({ household, fromAccountId }: ImportPageProps) {
 					accounts={accounts.items}
 					currency={household.currency}
 					onAgain={importer.restart}
+					returnTo={returnTo}
 				/>
 			) : importer.reviewing ? (
 				<StatementReview

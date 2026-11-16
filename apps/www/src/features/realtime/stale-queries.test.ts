@@ -1,6 +1,7 @@
 import { HOUSEHOLD_EVENT_TOPICS } from "@repo/schemas";
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
+import { gettingStartedQueryKey } from "@/features/getting-started/getting-started-query";
 import {
 	allHouseholdQueries,
 	changesRouteContext,
@@ -125,5 +126,26 @@ describe("changesRouteContext", () => {
 		expect(
 			HOUSEHOLD_EVENT_TOPICS.filter((topic) => changesRouteContext(topic)),
 		).toEqual(["household", "members"]);
+	});
+});
+
+describe("staleQueries and the first steps", () => {
+	it("reloads a household's first steps on the topics telling whether each is done", () => {
+		const firstSteps = { queryKey: gettingStartedQueryKey(HOME) };
+
+		for (const topic of [
+			"members",
+			"invitations",
+			"accounts",
+			"tags",
+			"transactions",
+			"recurring",
+			"budgets",
+		] as const) {
+			expect(staleQueries(HOME, topic)).toContainEqual(firstSteps);
+		}
+		for (const topic of ["household", "sharing"] as const) {
+			expect(staleQueries(HOME, topic)).not.toContainEqual(firstSteps);
+		}
 	});
 });

@@ -9,6 +9,8 @@ import { useHouseholdChange } from "@/features/households/use-household-change";
 import { redirectSearchSchema } from "@/lib/redirect";
 
 const DEFAULT_TARGET = "/dashboard";
+/** Where a household just made starts: its first steps. */
+const NEW_HOUSEHOLD_TARGET = "/getting-started";
 
 export const Route = createFileRoute("/_authenticated/setup")({
 	validateSearch: redirectSearchSchema,
@@ -27,8 +29,16 @@ export const Route = createFileRoute("/_authenticated/setup")({
 });
 
 function SetupRoute() {
-	const target = Route.useSearch().redirect ?? DEFAULT_TARGET;
+	const { redirect: target } = Route.useSearch();
 	const household = useHouseholdChange();
 
-	return <SetupPage onReady={() => household.refresh(target)} />;
+	return (
+		<SetupPage
+			onReady={(how) =>
+				household.refresh(
+					target ?? (how === "created" ? NEW_HOUSEHOLD_TARGET : DEFAULT_TARGET),
+				)
+			}
+		/>
+	);
 }

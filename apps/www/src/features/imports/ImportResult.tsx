@@ -1,6 +1,6 @@
 import type { Account } from "@repo/schemas";
 import { Button, buttonVariants, cn } from "@repo/ui";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { statementAccountName } from "@/features/imports/import-draft";
 import type { Imported } from "@/features/imports/use-statement-import";
 import { formatDay } from "@/lib/dates";
@@ -13,6 +13,8 @@ interface ImportResultProps {
 	accounts: Account[];
 	currency: string;
 	onAgain: () => void;
+	/** Where to go on, when the page was opened from elsewhere. */
+	returnTo?: string;
 }
 
 /**
@@ -24,8 +26,10 @@ export function ImportResult({
 	accounts,
 	currency,
 	onAgain,
+	returnTo,
 }: ImportResultProps) {
 	const locale = getLocale();
+	const navigate = useNavigate();
 	const money = (amount: number) => formatAmount(amount, currency, locale);
 
 	return (
@@ -93,14 +97,16 @@ export function ImportResult({
 					);
 				})}
 			</ul>
-			<Button
-				type="button"
-				variant="outline"
-				className="justify-self-start"
-				onClick={onAgain}
-			>
-				{m.import_again()}
-			</Button>
+			<div className="flex flex-wrap gap-2">
+				{returnTo && (
+					<Button type="button" onClick={() => navigate({ href: returnTo })}>
+						{m.import_continue()}
+					</Button>
+				)}
+				<Button type="button" variant="outline" onClick={onAgain}>
+					{m.import_again()}
+				</Button>
+			</div>
 		</section>
 	);
 }

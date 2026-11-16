@@ -2,6 +2,7 @@ import type { HouseholdEventTopic } from "@repo/schemas";
 import type { InvalidateQueryFilters } from "@tanstack/react-query";
 import { accountsQueryKey } from "@/features/accounts/accounts-query";
 import { budgetsQueryKey } from "@/features/budgets/budgets-query";
+import { gettingStartedQueryKey } from "@/features/getting-started/getting-started-query";
 import { householdInvitationsQueryKey } from "@/features/households/household-invitations-query";
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
@@ -24,8 +25,29 @@ const householdsFilter: InvalidateQueryFilters = {
 	refetchType: "all",
 };
 
+/** The topics a household's first steps follow: what tells whether each is done. */
+const FIRST_STEPS_TOPICS: readonly HouseholdEventTopic[] = [
+	"members",
+	"invitations",
+	"accounts",
+	"tags",
+	"transactions",
+	"recurring",
+	"budgets",
+];
+
 /** What a change of `topic` makes out of date, in the household's cache. */
 export function staleQueries(
+	householdId: string,
+	topic: HouseholdEventTopic,
+): InvalidateQueryFilters[] {
+	const stale = staleOfTopic(householdId, topic);
+	return FIRST_STEPS_TOPICS.includes(topic)
+		? [...stale, { queryKey: gettingStartedQueryKey(householdId) }]
+		: stale;
+}
+
+function staleOfTopic(
 	householdId: string,
 	topic: HouseholdEventTopic,
 ): InvalidateQueryFilters[] {

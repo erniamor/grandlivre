@@ -1,6 +1,10 @@
 import {
+	type CategorizePayee,
+	type CategorizeResult,
 	type CreateDraft,
 	type CreateTransaction,
+	categorizePayeeSchema,
+	categorizeResultSchema,
 	createDraftSchema,
 	createTransactionSchema,
 	paginatedSchema,
@@ -10,7 +14,9 @@ import {
 	type TransactionType,
 	transactionDraftSchema,
 	transactionSchema,
+	type UncategorizedPayee,
 	type UpdateTransaction,
+	uncategorizedPayeeSchema,
 	updateTransactionSchema,
 } from "@repo/schemas";
 import {
@@ -24,6 +30,7 @@ import { ValidationError } from "../errors";
 import { type ApiClient, parseInput } from "../http/client";
 
 const transactionsPageSchema = paginatedSchema(transactionSchema);
+const uncategorizedPageSchema = paginatedSchema(uncategorizedPayeeSchema);
 
 const transactionsPath = (householdId: string) =>
 	`/households/${segment(householdId)}/transactions`;
@@ -203,6 +210,39 @@ export function createTransactionsResource(client: ApiClient) {
 			await client.request({
 				method: "DELETE",
 				path: transactionPath(householdId, transactionId),
+			});
+		},
+
+		/**
+		 * The user's expenses and incomes without a tag, by payee (payees
+		 * alike in their letters together), the most transactions first.
+		 */
+		async uncategorized(
+			householdId: string,
+			{ page, pageSize, signal }: PageOptions = {},
+		): Promise<Page<UncategorizedPayee>> {
+			return toPage(
+				await client.request({
+					path: withQuery(`${transactionsPath(householdId)}/uncategorized`, {
+						page,
+						pageSize,
+					}),
+					response: uncategorizedPageSchema,
+					signal,
+				}),
+			);
+		},
+
+		/** Tags every expense (or income) without a tag of a payee, on the user's accounts. */
+		async categorize(
+			householdId: string,
+			input: CategorizePayee,
+		): Promise<CategorizeResult> {
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/categorize`,
+				body: parseInput(categorizePayeeSchema, input),
+				response: categorizeResultSchema,
 			});
 		},
 	};

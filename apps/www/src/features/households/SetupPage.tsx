@@ -10,7 +10,8 @@ import { m } from "@/paraglide/messages";
 
 interface SetupPageProps {
 	/** Called once the user has a household: created, or joined by invitation. */
-	onReady: () => void | Promise<void>;
+	/** Called once in a household: one it made, or one it joined. */
+	onReady: (how: "created" | "joined") => void | Promise<void>;
 }
 
 /**
@@ -35,7 +36,7 @@ export function SetupPage({ onReady }: SetupPageProps) {
 			{invitations.items.length > 0 && (
 				<ReceivedInvitations
 					invitations={invitations.items}
-					onAccepted={onReady}
+					onAccepted={() => onReady("joined")}
 					onDeclined={() =>
 						queryClient.invalidateQueries({
 							queryKey: receivedInvitationsQueryKey,
@@ -47,7 +48,7 @@ export function SetupPage({ onReady }: SetupPageProps) {
 				<h2 id={createTitleId} className="font-heading font-semibold text-lg">
 					{m.create_household_title()}
 				</h2>
-				<CreateHouseholdForm onCreated={onReady} />
+				<CreateHouseholdForm onCreated={() => onReady("created")} />
 			</section>
 		</section>
 	);

@@ -1,6 +1,8 @@
 import {
 	type CreateHousehold,
 	createHouseholdSchema,
+	type GettingStarted,
+	gettingStartedSchema,
 	type Household,
 	type HouseholdInvitation,
 	type HouseholdMember,
@@ -10,8 +12,10 @@ import {
 	type InviteHouseholdMember,
 	inviteHouseholdMemberSchema,
 	paginatedSchema,
+	type UpdateGettingStarted,
 	type UpdateHousehold,
 	type UpdateHouseholdMember,
+	updateGettingStartedSchema,
 	updateHouseholdMemberSchema,
 	updateHouseholdSchema,
 } from "@repo/schemas";
@@ -176,6 +180,35 @@ export function createHouseholdsResource(client: ApiClient) {
 					path: `${householdPath(householdId)}/invitations/${segment(invitationId)}`,
 				});
 			},
+		},
+
+		/**
+		 * Where the household stands in its first steps, as the user sees it:
+		 * each step done or not, how many of their transactions are left
+		 * without a tag, and whether they hid it.
+		 */
+		async gettingStarted(
+			householdId: string,
+			options: { signal?: AbortSignal } = {},
+		): Promise<GettingStarted> {
+			return client.request({
+				path: `${householdPath(householdId)}/getting-started`,
+				response: gettingStartedSchema,
+				signal: options.signal,
+			});
+		},
+
+		/** Hides the first steps from the user's dashboard, or shows them again. */
+		async updateGettingStarted(
+			householdId: string,
+			input: UpdateGettingStarted,
+		): Promise<GettingStarted> {
+			return client.request({
+				method: "PUT",
+				path: `${householdPath(householdId)}/getting-started`,
+				body: parseInput(updateGettingStartedSchema, input),
+				response: gettingStartedSchema,
+			});
 		},
 	};
 }

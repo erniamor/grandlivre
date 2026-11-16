@@ -4,8 +4,9 @@ import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { ImportPage } from "@/features/imports/ImportPage";
 import { importsQueryOptions } from "@/features/imports/imports-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
+import { redirectSearchSchema } from "@/lib/redirect";
 
-const importSearchSchema = z.object({
+const importSearchSchema = redirectSearchSchema.extend({
 	/** The account the page was opened from. */
 	accountId: z.uuid().optional().catch(undefined),
 });
@@ -25,7 +26,13 @@ export const Route = createFileRoute("/_authenticated/_household/import")({
 
 function ImportRoute() {
 	const { household } = Route.useRouteContext();
-	const { accountId } = Route.useSearch();
+	const { accountId, redirect } = Route.useSearch();
 
-	return <ImportPage household={household} fromAccountId={accountId} />;
+	return (
+		<ImportPage
+			household={household}
+			fromAccountId={accountId}
+			returnTo={redirect}
+		/>
+	);
 }

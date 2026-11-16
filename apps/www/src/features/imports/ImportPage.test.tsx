@@ -98,9 +98,10 @@ const page = <T,>(data: T[]) => ({
 interface SetUpOptions {
 	preview?: (request: ApiRequest) => ApiResponse;
 	history?: StatementImport[];
+	returnTo?: string;
 }
 
-function setUp({ preview, history = [] }: SetUpOptions = {}) {
+function setUp({ preview, history = [], returnTo }: SetUpOptions = {}) {
 	const requests = mockApi((request) => {
 		const { method, path } = request;
 		if (path.endsWith("/accounts")) {
@@ -123,8 +124,10 @@ function setUp({ preview, history = [] }: SetUpOptions = {}) {
 		}
 		return undefined;
 	});
-	renderWithRouter(<ImportPage household={household} />);
-	return { requests, user: userEvent.setup() };
+	const { router } = renderWithRouter(
+		<ImportPage household={household} returnTo={returnTo} />,
+	);
+	return { requests, router, user: userEvent.setup() };
 }
 
 const file = new File(
@@ -217,6 +220,22 @@ describe("ImportPage", () => {
 				},
 			],
 		});
+	});
+
+	it("goes back where the page was opened from, once imported", async () => {
+		const { router, user } = setUp({ returnTo: "/getting-started" });
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+		await screen.findByRole("region", { name: "Caisse du Plateau ···456" });
+		await user.click(screen.getByRole("button", { name: "Import" }));
+
+		await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+		await vi.waitFor(() =>
+			expect(router.state.location.pathname).toBe("/getting-started"),
+		);
 	});
 
 	it("lets each line be changed: its tag, a transfer, left out", async () => {
