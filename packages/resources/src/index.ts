@@ -8,6 +8,7 @@ import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
 import { createRecurringResource } from "./recurring/recurring.resource";
 import { createReportsResource } from "./reports/reports.resource";
+import { createSharingResource } from "./sharing/sharing.resource";
 import { createTagsResource } from "./tags/tags.resource";
 import { createTransactionsResource } from "./transactions/transactions.resource";
 
@@ -38,6 +39,7 @@ export type {
 	ReportPeriod,
 	ReportsResource,
 } from "./reports/reports.resource";
+export type { SharingResource } from "./sharing/sharing.resource";
 export type { TagsResource } from "./tags/tags.resource";
 export type {
 	CreateReceiptDraft,
@@ -58,6 +60,7 @@ export function createApi(config: ApiClientConfig) {
 		me: createMeResource(client),
 		recurring: createRecurringResource(client),
 		reports: createReportsResource(client),
+		sharing: createSharingResource(client),
 		tags: createTagsResource(client),
 		transactions: createTransactionsResource(client),
 	};

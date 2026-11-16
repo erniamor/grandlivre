@@ -239,6 +239,28 @@ describe("transactions", () => {
 		});
 	});
 
+	it("shares a transaction among members, and gives how it is shared", async () => {
+		const sharing = {
+			paidBy: ACCOUNT_ID,
+			split: { mode: "equal", userIds: [ACCOUNT_ID, TAG_ID] },
+			parts: [
+				{ userId: ACCOUNT_ID, amount: 3_600 },
+				{ userId: TAG_ID, amount: 3_600 },
+			],
+		};
+		const { api, requests } = fakeApi(201, { ...transaction, sharing });
+
+		const created = await api.transactions.create(HOUSEHOLD_ID, {
+			...expense,
+			shares: { mode: "equal", userIds: [ACCOUNT_ID, TAG_ID] },
+		});
+
+		expect(created.sharing).toEqual(sharing);
+		expect(requests[0]?.body).toMatchObject({
+			shares: { mode: "equal", userIds: [ACCOUNT_ID, TAG_ID] },
+		});
+	});
+
 	it("can't change where a transaction comes from", async () => {
 		const { api, fetch } = fakeApi(200, transaction);
 

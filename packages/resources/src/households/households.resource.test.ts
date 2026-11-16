@@ -138,6 +138,18 @@ describe("households", () => {
 		expect(fetch).toHaveBeenCalledOnce();
 	});
 
+	it("turns on settling shared expenses", async () => {
+		const { api, requests } = fakeApi(200, {
+			...household,
+			expenseSharing: true,
+		});
+
+		expect(
+			await api.households.update(HOUSEHOLD_ID, { expenseSharing: true }),
+		).toMatchObject({ expenseSharing: true });
+		expect(requests[0]?.body).toEqual({ expenseSharing: true });
+	});
+
 	it("rejects an invalid household before sending", async () => {
 		const { api, fetch } = fakeApi(201, household);
 
