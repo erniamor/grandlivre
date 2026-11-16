@@ -660,5 +660,6 @@
 	"import_undo_confirm": "Défaire l'import",
 	"import_destination_with": "Avec {account}",
 	"import_destination_with_hint": "Le même compte sous un autre numéro (une carte remplacée, par exemple) : ses lignes vont dans le compte créé pour l'autre.",
-	"import_destination_with_invalid": "Le compte qu'il accompagne doit aller dans un compte à lui."
+	"import_destination_with_invalid": "Le compte qu'il accompagne doit aller dans un compte à lui.",
+	"import_go_to_correction": "Aller à la première correction"
 }

@@ -660,5 +660,6 @@
 	"import_undo_confirm": "Deshacer la importación",
 	"import_destination_with": "Con {account}",
 	"import_destination_with_hint": "La misma cuenta con otro número (una tarjeta sustituida, por ejemplo): sus líneas van a la cuenta creada para la otra.",
-	"import_destination_with_invalid": "La cuenta a la que acompaña debe ir a una cuenta propia."
+	"import_destination_with_invalid": "La cuenta a la que acompaña debe ir a una cuenta propia.",
+	"import_go_to_correction": "Ir a la primera corrección"
 }

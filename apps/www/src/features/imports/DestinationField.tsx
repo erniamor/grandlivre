@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/FormAlert";
 import { SelectField } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { accountTypeOptions } from "@/features/accounts/account-options";
+import { correctionMark } from "@/features/imports/first-correction";
 import {
 	type Destination,
 	statementAccountName,
@@ -84,15 +85,17 @@ export function DestinationField({
 
 	return (
 		<div className="grid gap-3">
-			<SelectField
-				label={m.import_destination_label()}
-				value={value}
-				options={options}
-				onChange={choose}
-				tone="default"
-				disabled={disabled}
-			/>
-			<FormAlert message={errors.with} />
+			<div className="grid gap-1" {...correctionMark(Boolean(errors.with))}>
+				<SelectField
+					label={m.import_destination_label()}
+					value={value}
+					options={options}
+					onChange={choose}
+					tone="default"
+					disabled={disabled}
+				/>
+				<FormAlert message={errors.with} />
+			</div>
 			{destination.kind === "with" && (
 				<p className="text-muted-foreground text-sm">
 					{m.import_destination_with_hint()}
@@ -110,15 +113,17 @@ export function DestinationField({
 			)}
 			{destination.kind === "new" && (
 				<div className="grid gap-3 rounded-md border border-border p-3">
-					<TextField
-						label={m.account_name_label()}
-						value={destination.name}
-						maxLength={60}
-						error={errors.name}
-						onChange={(event) =>
-							onChange({ ...destination, name: event.currentTarget.value })
-						}
-					/>
+					<div {...correctionMark(Boolean(errors.name))}>
+						<TextField
+							label={m.account_name_label()}
+							value={destination.name}
+							maxLength={60}
+							error={errors.name}
+							onChange={(event) =>
+								onChange({ ...destination, name: event.currentTarget.value })
+							}
+						/>
+					</div>
 					<SelectField<AccountType>
 						label={m.account_type_label()}
 						value={destination.type}
@@ -127,19 +132,21 @@ export function DestinationField({
 						tone="default"
 					/>
 					{account.openingBalance === null ? (
-						<TextField
-							label={
-								ACCOUNT_DEBT_TYPES.includes(destination.type)
-									? m.import_destination_owed_label()
-									: m.import_destination_balance_label()
-							}
-							inputMode="decimal"
-							value={destination.owed}
-							error={errors.owed}
-							onChange={(event) =>
-								onChange({ ...destination, owed: event.currentTarget.value })
-							}
-						/>
+						<div {...correctionMark(Boolean(errors.owed))}>
+							<TextField
+								label={
+									ACCOUNT_DEBT_TYPES.includes(destination.type)
+										? m.import_destination_owed_label()
+										: m.import_destination_balance_label()
+								}
+								inputMode="decimal"
+								value={destination.owed}
+								error={errors.owed}
+								onChange={(event) =>
+									onChange({ ...destination, owed: event.currentTarget.value })
+								}
+							/>
+						</div>
 					) : (
 						<p className="text-sm">
 							{m.import_destination_opening({

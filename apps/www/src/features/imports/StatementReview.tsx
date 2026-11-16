@@ -1,6 +1,9 @@
 import type { Account, Tag } from "@repo/schemas";
 import { Button } from "@repo/ui";
+import { ArrowUpIcon } from "lucide-react";
+import { useRef } from "react";
 import { FormAlert } from "@/components/FormAlert";
+import { goToFirstCorrection } from "@/features/imports/first-correction";
 import { statementAccountName } from "@/features/imports/import-draft";
 import { StatementAccountReview } from "@/features/imports/StatementAccountReview";
 import type { StatementImporter } from "@/features/imports/use-statement-import";
@@ -23,6 +26,7 @@ export function StatementReview({
 	tags,
 	currency,
 }: StatementReviewProps) {
+	const review = useRef<HTMLDivElement>(null);
 	const { reviewing, problems } = importer;
 	if (!reviewing) {
 		return null;
@@ -57,7 +61,7 @@ export function StatementReview({
 	const saveError = importer.saveError ? formErrors(importer.saveError) : null;
 
 	return (
-		<div className="grid gap-6">
+		<div ref={review} className="grid gap-6">
 			{preview.accounts.map((account) => (
 				<StatementAccountReview
 					key={account.index}
@@ -87,15 +91,29 @@ export function StatementReview({
 					}
 				/>
 			))}
-			<FormAlert
-				message={
-					problems.some((problem) => problem.kind === "nothing")
-						? m.import_nothing()
-						: problems.length > 0
-							? m.import_problems()
-							: (saveError?.form ?? Object.values(saveError?.fields ?? {})[0])
-				}
-			/>
+			<div className="grid gap-2">
+				<FormAlert
+					message={
+						problems.some((problem) => problem.kind === "nothing")
+							? m.import_nothing()
+							: problems.length > 0
+								? m.import_problems()
+								: (saveError?.form ?? Object.values(saveError?.fields ?? {})[0])
+					}
+				/>
+				{problems.some((problem) => problem.kind !== "nothing") && (
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="justify-self-start"
+						onClick={() => goToFirstCorrection(review.current)}
+					>
+						<ArrowUpIcon aria-hidden />
+						{m.import_go_to_correction()}
+					</Button>
+				)}
+			</div>
 			<div className="flex flex-wrap justify-end gap-2">
 				<Button type="button" variant="outline" onClick={importer.restart}>
 					{m.import_other_file()}

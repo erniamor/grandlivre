@@ -1,6 +1,7 @@
 import type { Account, StatementPreviewLine } from "@repo/schemas";
 import { FormAlert } from "@/components/FormAlert";
 import { SelectField, type SelectOption } from "@/components/SelectField";
+import { correctionMark } from "@/features/imports/first-correction";
 import {
 	actionOf,
 	choiceForAction,
@@ -90,7 +91,7 @@ export function LineChoiceField({
 				/>
 			)}
 			{choice.action === "transfer" && !choice.pair && (
-				<div className="grid gap-1">
+				<div className="grid gap-1" {...correctionMark(Boolean(missing))}>
 					<SelectField
 						label={
 							line.amount < 0

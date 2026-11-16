@@ -312,6 +312,14 @@ describe("ImportPage", () => {
 			),
 		).toBeVisible();
 		expect(sent(requests, "/imports")).toEqual([]);
+
+		// Far below, among many lines: the first correction is brought to focus
+		await user.click(
+			screen.getByRole("button", { name: "Go to the first correction" }),
+		);
+		expect(
+			everyday.getByRole("combobox", { name: "Transfer to" }),
+		).toHaveFocus();
 	});
 
 	it("reads the file again when an account goes to another account", async () => {

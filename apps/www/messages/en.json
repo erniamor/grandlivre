@@ -660,5 +660,6 @@
 	"import_undo_confirm": "Undo the import",
 	"import_destination_with": "With {account}",
 	"import_destination_with_hint": "The same account under another number (a card replaced, say): its lines go into the account made for the other.",
-	"import_destination_with_invalid": "The account it goes with must go to an account of its own."
+	"import_destination_with_invalid": "The account it goes with must go to an account of its own.",
+	"import_go_to_correction": "Go to the first correction"
 }
