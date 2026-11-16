@@ -1,4 +1,4 @@
-import { RECURRENCE_MODES, type RecurrenceMode } from "@repo/schemas";
+import type { RecurrenceMode } from "@repo/schemas";
 import { useId } from "react";
 import { m } from "@/paraglide/messages";
 
@@ -11,6 +11,9 @@ const labels: Record<RecurrenceMode, () => string> = {
 	confirm: m.recurring_mode_confirm,
 	automatic: m.recurring_mode_automatic,
 };
+
+// The default first: the safer choice for a real balance
+const order: RecurrenceMode[] = ["confirm", "automatic"];
 
 const hints: Record<RecurrenceMode, () => string> = {
 	confirm: m.recurring_mode_confirm_hint,
@@ -27,7 +30,7 @@ export function RecurringModeField({
 	return (
 		<fieldset className="grid gap-2">
 			<legend className="mb-2 font-medium">{m.recurring_mode_label()}</legend>
-			{RECURRENCE_MODES.map((mode) => (
+			{order.map((mode) => (
 				<label
 					key={mode}
 					className="flex cursor-pointer gap-3 rounded-lg border border-border p-3 has-[:checked]:border-primary has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2"

@@ -223,6 +223,19 @@ describe("NewRecurringPage", () => {
 		]);
 	});
 
+	it("offers to confirm each time first, its default", async () => {
+		setUp();
+
+		const modes = await screen.findAllByRole("radio", {
+			name: /^(To confirm|Automatic)/,
+		});
+		expect(modes.map((radio) => radio.getAttribute("value"))).toEqual([
+			"confirm",
+			"automatic",
+		]);
+		expect(modes[0]).toBeChecked();
+	});
+
 	it("starts today, and refuses a first date already past", async () => {
 		const { requests, user } = setUp();
 
