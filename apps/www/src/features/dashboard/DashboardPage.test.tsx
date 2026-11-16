@@ -1,11 +1,13 @@
 import type { RecurringTransaction } from "@repo/schemas";
 import { screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import {
 	base,
 	bobsCard,
 	chequing,
+	food,
+	gas,
 	household,
 	page,
 	respondWith,
@@ -238,6 +240,93 @@ describe("DashboardPage", () => {
 			).not.toBeInTheDocument();
 			expect(
 				screen.queryByRole("region", { name: "In the next 30 days" }),
+			).not.toBeInTheDocument();
+		});
+	});
+
+	describe("the budgets of the month", () => {
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
+		const budget = (tagId: string, spent: number) => ({
+			tagId,
+			period: "month",
+			amount: 10_000,
+			since: "2026-11",
+			spent,
+			upcoming: 0,
+		});
+
+		function mockBudgets(budgets: unknown[]) {
+			// November 15th in Montreal
+			vi.useFakeTimers({ toFake: ["Date"] });
+			vi.setSystemTime(new Date("2026-11-15T17:00:00Z"));
+			const reads = respondWith();
+			const urls: URL[] = [];
+			mockApi((request, url) => {
+				urls.push(url);
+				if (request.path === `${base}/budgets`) {
+					return { status: 200, body: { month: "2026-11", budgets } };
+				}
+				return reads(request);
+			});
+			return urls;
+		}
+
+		it("shows the ones the closest to their end first, with a link to all of them", async () => {
+			const urls = mockBudgets([
+				budget(food.id, 2_000),
+				budget(gas.id, 12_000),
+			]);
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			const section = within(
+				await screen.findByRole("region", { name: "Budgets this month" }),
+			);
+			expect(
+				section.getAllByRole("listitem").map((item) => item.textContent),
+			).toEqual([
+				expect.stringMatching(/^Gas.*Over by \$20\.00/),
+				expect.stringMatching(/^Food.*\$80\.00 left/),
+			]);
+			expect(
+				section.getByRole("link", { name: "See the budgets" }),
+			).toHaveAttribute("href", "/budgets?month=2026-11");
+			expect(
+				urls.find((url) => url.pathname.endsWith("/budgets"))?.search,
+			).toBe("?month=2026-11");
+		});
+
+		it("says how many more there are", async () => {
+			mockBudgets(
+				Array.from({ length: 6 }, (_, index) =>
+					budget(`00000000-0000-4000-8000-00000000009${index}`, 1_000),
+				),
+			);
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			expect(
+				await screen.findByRole("link", { name: "See the budgets (2 more)" }),
+			).toBeVisible();
+		});
+
+		it("shows nothing without a budget", async () => {
+			mockSummary();
+
+			renderWithRouter(
+				<DashboardPage me={aliceProfile} household={household} />,
+			);
+
+			await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+			expect(
+				screen.queryByRole("region", { name: "Budgets this month" }),
 			).not.toBeInTheDocument();
 		});
 	});

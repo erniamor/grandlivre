@@ -63,3 +63,25 @@ export function shiftMonth(month: string, step: number): string {
 	const total = year * 12 + (monthNumber - 1) + step;
 	return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
 }
+
+const riskOrder: Record<BudgetState, number> = {
+	over: 0,
+	planned_over: 1,
+	near: 2,
+	under: 3,
+};
+
+/**
+ * The budgets the closest to their end first: the ones over, then the ones
+ * planned over, then near, then the rest; within each, the most spent first.
+ */
+export function byRisk(budgets: BudgetStatus[]): BudgetStatus[] {
+	return [...budgets].sort((a, b) => {
+		const first = budgetProgress(a);
+		const second = budgetProgress(b);
+		return (
+			riskOrder[first.state] - riskOrder[second.state] ||
+			b.spent / b.amount - a.spent / a.amount
+		);
+	});
+}

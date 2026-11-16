@@ -177,6 +177,10 @@ export function respondWith(
 		if (request.path === `${base}/transactions`) {
 			return page(items, pagination);
 		}
+		// No budget this month
+		if (request.path === `${base}/budgets`) {
+			return { status: 200, body: { month: "2026-11", budgets: [] } };
+		}
 		// No recurring transaction waits or comes
 		if (
 			request.path === `${base}/recurring-transactions/pending` ||

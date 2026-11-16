@@ -465,5 +465,8 @@
 	"error_budget_period_invalid": "Elige cada mes o cada año.",
 	"error_budget_month_invalid": "Elige un mes.",
 	"budgets_previous_month": "Mes anterior",
-	"budgets_next_month": "Mes siguiente"
+	"budgets_next_month": "Mes siguiente",
+	"budgets_overview_title": "Presupuestos del mes",
+	"budgets_overview_link": "Ver los presupuestos",
+	"budgets_overview_link_more": "Ver los presupuestos ({count} más)"
 }

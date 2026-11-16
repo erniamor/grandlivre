@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	budgetProgress,
+	byRisk,
 	monthlyTotal,
 	shiftMonth,
 } from "@/features/budgets/budget-view";
@@ -66,5 +67,29 @@ describe("shiftMonth", () => {
 		expect(shiftMonth("2026-11", 1)).toBe("2026-12");
 		expect(shiftMonth("2026-12", 1)).toBe("2027-01");
 		expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+	});
+});
+
+describe("byRisk", () => {
+	it("puts the budgets the closest to their end first", () => {
+		const budget = (tagId: string, spent: number, upcoming = 0) => ({
+			tagId,
+			period: "month" as const,
+			amount: 10_000,
+			since: "2026-01",
+			spent,
+			upcoming,
+		});
+
+		expect(
+			byRisk([
+				budget("calm", 1_000),
+				budget("near", 8_500),
+				budget("over", 11_000),
+				budget("half", 5_000),
+				budget("planned", 6_000, 5_000),
+				budget("far over", 15_000),
+			]).map((each) => each.tagId),
+		).toEqual(["far over", "over", "planned", "near", "half", "calm"]);
 	});
 });
