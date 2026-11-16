@@ -1,5 +1,6 @@
 import { createAccountsResource } from "./accounts/accounts.resource";
 import { createAuthResource } from "./auth/auth.resource";
+import { createBudgetsResource } from "./budgets/budgets.resource";
 import { createEventsResource } from "./events/events.resource";
 import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
@@ -13,6 +14,7 @@ import { createTransactionsResource } from "./transactions/transactions.resource
 export type { AccountsResource } from "./accounts/accounts.resource";
 export type { Page, PageOptions } from "./api/page";
 export type { AuthResource } from "./auth/auth.resource";
+export type { BudgetsResource } from "./budgets/budgets.resource";
 export {
 	ApiError,
 	ForbiddenError,
@@ -49,6 +51,7 @@ export function createApi(config: ApiClientConfig) {
 	return {
 		accounts: createAccountsResource(client),
 		auth: createAuthResource(client),
+		budgets: createBudgetsResource(client),
 		events: createEventsResource(client),
 		households: createHouseholdsResource(client),
 		invitations: createInvitationsResource(client),
