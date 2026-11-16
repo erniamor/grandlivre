@@ -1,101 +1,28 @@
 import type { StatementPreview, StatementPreviewLine } from "@repo/schemas";
-import { WEB_ORIGIN } from "@test/helpers/auth";
 import {
 	addTestMember,
 	createTestHousehold,
 	signInUser,
 	type TestUser,
 } from "@test/helpers/households";
+import {
+	EVERYDAY,
+	october,
+	postStatement,
+	SAVINGS,
+	savingsSide,
+} from "@test/helpers/statements";
 import { householdApi } from "@test/helpers/transactions";
 import { describe, expect, it } from "vitest";
-import { app } from "@/app";
 import { db } from "@/db/client";
 import {
 	recurringOccurrences,
 	recurringTransactions,
 	statementAccounts,
+	statementImports,
 	statementLines,
 } from "@/db/schema";
 import { hashStatementNumber } from "@/routes/imports/statement-number";
-
-/** A line of a Desjardins account statement (see statements/desjardins.ts), made up. */
-function accountLine(
-	folio: string,
-	date: string,
-	description: string,
-	out: string,
-	into: string,
-	balance: string,
-) {
-	return `"Caisse du Plateau","${folio}","EOP","${date}",1,"${description}","",${out ? out : '""'},${into ? into : '""'},"","","","",${balance}`;
-}
-
-/** October on the everyday account (folio 123456): 5 000.00 before. */
-const october = [
-	accountLine(
-		"123456",
-		"2026/10/01",
-		"Achat préautorisé /ESSENCE DU COIN",
-		"60.50",
-		"",
-		"4939.50",
-	),
-	accountLine(
-		"123456",
-		"2026/10/02",
-		"Retrait au GA /CD PLATEAU",
-		"100.00",
-		"",
-		"4839.50",
-	),
-	accountLine(
-		"123456",
-		"2026/10/05",
-		"Paiement facture - AccèsD Internet /Remises Visa Desjardins",
-		"250.00",
-		"",
-		"4589.50",
-	),
-	accountLine(
-		"123456",
-		"2026/10/15",
-		"Virement - AccèsD Internet /à 654321 EOP",
-		"300.00",
-		"",
-		"4289.50",
-	),
-	accountLine(
-		"123456",
-		"2026/10/15",
-		"Paie /EMPLOYEUR INC.",
-		"",
-		"2000.00",
-		"6289.50",
-	),
-	accountLine(
-		"123456",
-		"2026/10/20",
-		"Hypothèque /BANQUE EXEMPLE",
-		"1500.00",
-		"",
-		"4789.50",
-	),
-	accountLine("123456", "2026/10/22", "Achat /CAFE", "4.25", "", "4785.25"),
-	accountLine("123456", "2026/10/22", "Achat /CAFE", "4.25", "", "4781.00"),
-].join("\r\n");
-
-/** The other side of October's transfer, on the second account (folio 654321). */
-const savingsSide = accountLine(
-	"654321",
-	"2026/10/15",
-	"Virement - AccèsD Internet /de 123456 EOP",
-	"",
-	"300.00",
-	"10300.00",
-);
-
-const EVERYDAY = "desjardins:caisseduplateau:123456:EOP";
-const SAVINGS = "desjardins:caisseduplateau:654321:EOP";
 
 /**
  * Alice holds the everyday account, a savings account, a card and her
@@ -123,34 +50,11 @@ async function setUp() {
 	const bobs = await h.account(bob, { name: "Bob's" });
 	const fuel = await h.tag(alice, "Fuel");
 
-	/** Sends a file as the browser does: a multipart form. */
 	const preview = (
 		user: TestUser | undefined,
 		file: string | Blob | null,
 		targets?: unknown,
-	) => {
-		const form = new FormData();
-		if (file !== null) {
-			form.set(
-				"file",
-				typeof file === "string"
-					? new Blob([Buffer.from(file, "latin1")], { type: "text/csv" })
-					: file,
-				"releve.csv",
-			);
-		}
-		if (targets !== undefined) {
-			form.set(
-				"targets",
-				typeof targets === "string" ? targets : JSON.stringify(targets),
-			);
-		}
-		return app.request(`${h.base}/imports/preview`, {
-			method: "POST",
-			headers: { Origin: WEB_ORIGIN, ...(user ? { Cookie: user.cookie } : {}) },
-			body: form,
-		});
-	};
+	) => postStatement(`${h.base}/imports/preview`, user, file, { targets });
 	const previewed = async (
 		user: TestUser,
 		file: string,
@@ -272,11 +176,21 @@ describe("POST /v1/households/:householdId/imports/preview", () => {
 			first.accounts[0]?.lines ?? [],
 			"EMPLOYEUR INC.",
 		)[0];
+		const [earlier] = await db
+			.insert(statementImports)
+			.values({
+				householdId: household.id,
+				format: "desjardins_accounts",
+				createdBy: alice.id,
+			})
+			.returning();
 		await db.insert(statementLines).values({
 			householdId: household.id,
 			accountId: everyday.id,
 			externalId: payLine?.externalId ?? "",
 			transactionId: pay.id,
+			importId: earlier?.id ?? "",
+			kind: "created",
 		});
 		// The mortgage's day, waiting for a member
 		const [mortgage] = await db

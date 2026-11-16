@@ -17,7 +17,7 @@ const MAX_BODY_SIZE = 1024 * 1024;
 
 // Routes taking a file, with their own limit: a receipt's photo, a statement
 const FILE_ROUTES =
-	/^\/v1\/households\/[^/]+\/(transactions\/draft\/receipt|imports\/preview)$/;
+	/^\/v1\/households\/[^/]+\/(transactions\/draft\/receipt|imports(\/preview)?)$/;
 
 const defaultBodyLimit = bodyLimit({
 	maxSize: MAX_BODY_SIZE,

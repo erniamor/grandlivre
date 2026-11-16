@@ -1,8 +1,6 @@
+import { STATEMENT_MAX_LINES } from "@repo/schemas";
 import { describe, expect, it } from "vitest";
-import {
-	readStatement,
-	STATEMENT_MAX_LINES,
-} from "@/routes/imports/statements/read-statement";
+import { readStatement } from "@/routes/imports/statements/read-statement";
 import type { Statement } from "@/routes/imports/statements/statement";
 
 /*
@@ -193,6 +191,19 @@ describe("readStatement: what can't be read", () => {
 				),
 			),
 		).toEqual({ ok: false, error: "statement_too_long" });
+	});
+
+	it("reads nothing of a file that isn't a statement: a PDF, an image", () => {
+		const pdf = Buffer.concat([
+			Buffer.from("%PDF-1.7\n5 0 obj\n<</Filter/FlateDecode>>stream\n"),
+			Buffer.from([0x78, 0x9c, 0xe3, 0x02, 0x00, 0xff, 0xfe, 0x0a, 0x2c]),
+		]);
+		const png = Buffer.from([
+			0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+		]);
+
+		expect(readStatement(pdf)).toMatchObject({ error: "statement_unreadable" });
+		expect(readStatement(png)).toMatchObject({ error: "statement_unreadable" });
 	});
 
 	it("names the first line it can't read", () => {

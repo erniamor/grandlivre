@@ -1,4 +1,4 @@
-import type { HouseholdInvitation } from "@repo/schemas";
+import type { HouseholdInvitation, StatementPreview } from "@repo/schemas";
 import { api, json } from "@test/helpers/api";
 import { captureEmails } from "@test/helpers/auth";
 import { openEvents } from "@test/helpers/events";
@@ -7,6 +7,7 @@ import {
 	createTestHousehold,
 	signInUser,
 } from "@test/helpers/households";
+import { october, postStatement } from "@test/helpers/statements";
 import { householdApi } from "@test/helpers/transactions";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -199,6 +200,44 @@ describe("GET /v1/households/:householdId/events", () => {
 					date: "2026-11-15",
 				}),
 			),
+		).toEqual(["transactions"]);
+
+		// A statement imported into an account it makes, then undone
+		let importId = "";
+		expect(
+			await topicsOf(async () => {
+				const preview = await json<StatementPreview>(
+					await postStatement(`${base}/imports/preview`, alice, october),
+				);
+				const [line] = preview.accounts[0]?.lines ?? [];
+				const response = await postStatement(
+					`${base}/imports`,
+					alice,
+					october,
+					{
+						plan: {
+							accounts: [
+								{
+									index: 0,
+									target: {
+										create: {
+											name: "Plateau",
+											type: "checking",
+											visibility: "details",
+											openingBalance: 0,
+										},
+									},
+									lines: [{ externalId: line?.externalId, action: "create" }],
+								},
+							],
+						},
+					},
+				);
+				importId = (await json<{ id: string }>(response)).id;
+			}),
+		).toEqual(["transactions", "accounts"]);
+		expect(
+			await topicsOf(() => call("DELETE", `/imports/${importId}`)),
 		).toEqual(["transactions"]);
 
 		// Budgets

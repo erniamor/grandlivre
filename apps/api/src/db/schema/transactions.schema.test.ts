@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import {
 	households,
 	ledgerAccounts,
+	statementImports,
 	statementLines,
 	tagNames,
 	tags,
@@ -60,6 +61,18 @@ async function setUp() {
 		tagId: tag.id,
 	});
 	return { alice, householdId, chequing, savings, tag, transaction, expense };
+}
+
+/** An import, which statement lines come with. */
+async function anImport(householdId: string, userId: string): Promise<string> {
+	const [row] = await db
+		.insert(statementImports)
+		.values({ householdId, format: "desjardins_accounts", createdBy: userId })
+		.returning();
+	if (!row) {
+		throw new Error("The test data was not created");
+	}
+	return row.id;
 }
 
 describe("transactions tables", () => {
@@ -130,13 +143,16 @@ describe("transactions tables", () => {
 	});
 
 	it("doesn't import the same statement line twice into an account", async () => {
-		const { householdId, chequing, savings, transaction } = await setUp();
+		const { alice, householdId, chequing, savings, transaction } =
+			await setUp();
 		const line = {
 			householdId,
 			accountId: chequing.id,
 			externalId: "a1b2-0",
 			transactionId: transaction.id,
-		};
+			importId: await anImport(householdId, alice.id),
+			kind: "linked",
+		} as const;
 		await db.insert(statementLines).values(line);
 
 		await expect(db.insert(statementLines).values(line)).rejects.toThrow();
@@ -147,12 +163,14 @@ describe("transactions tables", () => {
 	});
 
 	it("frees a statement line when its transaction is deleted", async () => {
-		const { householdId, chequing, transaction } = await setUp();
+		const { alice, householdId, chequing, transaction } = await setUp();
 		await db.insert(statementLines).values({
 			householdId,
 			accountId: chequing.id,
 			externalId: "a1b2-0",
 			transactionId: transaction.id,
+			importId: await anImport(householdId, alice.id),
+			kind: "created",
 		});
 
 		await db.delete(transactions).where(eq(transactions.id, transaction.id));

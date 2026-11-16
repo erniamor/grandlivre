@@ -257,6 +257,22 @@ export async function getAccount(
  * household: whoever creates an account holds it.
  */
 export async function createAccount(
+	viewer: Viewer,
+	input: CreateAccount,
+): Promise<Account> {
+	return db.transaction(async (tx) => {
+		const account = await insertAccount(tx, viewer, input);
+		await publishHouseholdEvent(tx, viewer.membership.household.id, "accounts");
+		return account;
+	});
+}
+
+/**
+ * Creates an account inside `tx`, as `createAccount` does; the caller
+ * publishes the event once everything it does is written.
+ */
+export async function insertAccount(
+	tx: Transaction,
 	{ userId, membership }: Viewer,
 	{ holderIds = [userId], ...fields }: CreateAccount,
 ): Promise<Account> {
@@ -264,27 +280,24 @@ export async function createAccount(
 		throw invalidHolders();
 	}
 	const householdId = membership.household.id;
-	return db.transaction(async (tx) => {
-		await assertMembers(tx, householdId, holderIds);
-		const [row] = await tx
-			.insert(ledgerAccounts)
-			.values({ ...fields, householdId })
-			.returning();
-		if (!row) {
-			throw new Error("The account was not created");
-		}
-		await tx.insert(ledgerAccountHolders).values(
-			holderIds.map((holderId) => ({
-				accountId: row.id,
-				householdId,
-				userId: holderId,
-			})),
-		);
-		await publishHouseholdEvent(tx, householdId, "accounts");
-		const holders = await holdersOf([row.id], tx);
-		// A new account has no transactions yet
-		return toAccount(row, holders.get(row.id) ?? [], userId, 0);
-	});
+	await assertMembers(tx, householdId, holderIds);
+	const [row] = await tx
+		.insert(ledgerAccounts)
+		.values({ ...fields, householdId })
+		.returning();
+	if (!row) {
+		throw new Error("The account was not created");
+	}
+	await tx.insert(ledgerAccountHolders).values(
+		holderIds.map((holderId) => ({
+			accountId: row.id,
+			householdId,
+			userId: holderId,
+		})),
+	);
+	const holders = await holdersOf([row.id], tx);
+	// A new account has no transactions yet
+	return toAccount(row, holders.get(row.id) ?? [], userId, 0);
 }
 
 /**

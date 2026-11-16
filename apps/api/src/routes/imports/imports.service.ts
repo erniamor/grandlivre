@@ -93,6 +93,7 @@ type Candidate =
 	  }
 	| {
 			kind: "occurrence";
+			id: string;
 			recurringId: string;
 			date: string;
 			payee: string | null;
@@ -263,6 +264,7 @@ function previewLine(
 				...base,
 				status: "recurring",
 				occurrence: {
+					id: candidate.id,
 					recurringId: candidate.recurringId,
 					date: candidate.date,
 					payee: candidate.payee,
@@ -359,6 +361,7 @@ async function standingOf(
 			),
 		db
 			.select({
+				id: recurringOccurrences.id,
 				recurringId: recurringOccurrences.recurringId,
 				date: recurringOccurrences.date,
 				type: recurringTransactions.type,
@@ -408,6 +411,7 @@ async function standingOf(
 		...waiting.map((row) => ({
 			ref: {
 				kind: "occurrence" as const,
+				id: row.id,
 				recurringId: row.recurringId,
 				date: row.date,
 				payee: row.payee,

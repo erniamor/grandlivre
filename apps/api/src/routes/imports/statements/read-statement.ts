@@ -1,3 +1,4 @@
+import { STATEMENT_MAX_LINES } from "@repo/schemas";
 import { parseCsv } from "@/routes/imports/statements/csv";
 import { decodeStatement } from "@/routes/imports/statements/decode";
 import {
@@ -11,9 +12,6 @@ import type {
 	StatementFormat,
 	StatementResult,
 } from "@/routes/imports/statements/statement";
-
-/** The most lines a statement file may hold. */
-export const STATEMENT_MAX_LINES = 2000;
 
 /**
  * Every row read by `read`, then made into accounts; or the number of the
