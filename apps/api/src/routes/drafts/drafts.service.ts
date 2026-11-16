@@ -86,6 +86,7 @@ async function accountsFor({ userId, membership }: Viewer) {
 			.select({
 				id: ledgerAccounts.id,
 				name: ledgerAccounts.name,
+				type: ledgerAccounts.type,
 				visibility: ledgerAccounts.visibility,
 				archivedAt: ledgerAccounts.archivedAt,
 			})
@@ -106,6 +107,7 @@ async function accountsFor({ userId, membership }: Viewer) {
 	return rows.map((row) => ({
 		id: row.id,
 		name: row.name,
+		type: row.type,
 		archived: row.archivedAt !== null,
 		writable: heldIds.has(row.id) && row.archivedAt === null,
 		seesDetails: heldIds.has(row.id) || row.visibility === "details",
@@ -331,7 +333,7 @@ async function contextFor(viewer: Viewer, locale: Locale) {
 		locale,
 		accounts: accounts
 			.filter((account) => !account.archived)
-			.map(({ id, name, writable }) => ({ id, name, writable })),
+			.map(({ id, name, type, writable }) => ({ id, name, type, writable })),
 		tags: householdTags,
 		payees,
 	});

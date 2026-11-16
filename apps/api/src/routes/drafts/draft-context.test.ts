@@ -30,8 +30,9 @@ const build = () =>
 		currency: "CAD",
 		locale: "fr",
 		accounts: [
-			{ id: "chequing", name: "Courant", writable: true },
-			{ id: "card", name: "Visa de Bob", writable: false },
+			{ id: "chequing", name: "Courant", type: "checking", writable: true },
+			{ id: "wallet", name: "Portefeuille", type: "cash", writable: true },
+			{ id: "card", name: "Visa de Bob", type: "credit_card", writable: false },
 		],
 		tags,
 		payees: [
@@ -48,8 +49,10 @@ describe("buildDraftContext", () => {
 				"Member's language: fr",
 				"",
 				"Accounts:",
-				"a1 | Courant | yours",
-				"a2 | Visa de Bob",
+				// Its type tells the assistant which account is a wallet
+				"a1 | Courant | checking | yours",
+				"a2 | Portefeuille | cash | yours",
+				"a3 | Visa de Bob | credit_card",
 				"",
 				"Tags:",
 				"t1 | Maison",
@@ -65,7 +68,7 @@ describe("buildDraftContext", () => {
 	it("keeps the references to find the accounts and tags back", () => {
 		const { references } = build();
 
-		expect(references.accounts.get("a2")).toBe("card");
+		expect(references.accounts.get("a3")).toBe("card");
 		expect(references.tags.get("t3")).toBe("gas");
 		expect(references.tags.get("t9")).toBeUndefined();
 	});

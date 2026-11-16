@@ -1,4 +1,8 @@
-import { createAccountSchema, updateAccountSchema } from "@repo/schemas";
+import {
+	adjustAccountSchema,
+	createAccountSchema,
+	updateAccountSchema,
+} from "@repo/schemas";
 import { type Context, Hono } from "hono";
 import { validate } from "@/lib/validator";
 import type { HouseholdVariables } from "@/middlewares/require-household";
@@ -15,6 +19,7 @@ import {
 	updateAccount,
 	type Viewer,
 } from "@/routes/accounts/accounts.service";
+import { adjustAccount } from "@/routes/accounts/adjust.service";
 
 type Env = { Variables: HouseholdVariables };
 
@@ -48,6 +53,20 @@ export const accountRoutes = new Hono<Env>()
 		async (c) =>
 			c.json(
 				await updateAccount(
+					viewerOf(c),
+					c.req.valid("param").accountId,
+					c.req.valid("json"),
+				),
+			),
+	)
+	// What the account really holds on a day: the gap is recorded
+	.post(
+		"/:accountId/adjust",
+		validate("param", accountParamSchema),
+		validate("json", adjustAccountSchema),
+		async (c) =>
+			c.json(
+				await adjustAccount(
 					viewerOf(c),
 					c.req.valid("param").accountId,
 					c.req.valid("json"),

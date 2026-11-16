@@ -14,6 +14,7 @@ import {
 	type InferSelectModel,
 	inArray,
 	isNotNull,
+	lte,
 	notInArray,
 	or,
 	sql,
@@ -86,8 +87,13 @@ function toAccount(
 export async function movementsOf(
 	householdId: string,
 	database: typeof db | Transaction = db,
+	/** Up to this day, included: the balances as they stood then. */
+	{ until }: { until?: string } = {},
 ): Promise<Map<string, number>> {
-	const ofHousehold = eq(transactions.householdId, householdId);
+	const ofHousehold = and(
+		eq(transactions.householdId, householdId),
+		until ? lte(transactions.date, until) : undefined,
+	);
 	// Sums of bigint come back as numeric strings, hence mapWith(Number)
 	const [own, received] = await Promise.all([
 		database

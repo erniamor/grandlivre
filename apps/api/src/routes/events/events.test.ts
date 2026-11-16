@@ -186,6 +186,21 @@ describe("GET /v1/households/:householdId/events", () => {
 			),
 		).toEqual(["sharing"]);
 
+		// Counting what an account holds records the gap: on a wallet of its
+		// own, the account above is deleted further down
+		let wallet = { id: "" };
+		await topicsOf(async () => {
+			wallet = await h.account(alice, { name: "Wallet", type: "cash" });
+		});
+		expect(
+			await topicsOf(() =>
+				call("POST", `/accounts/${wallet.id}/adjust`, {
+					balance: 1,
+					date: "2026-11-15",
+				}),
+			),
+		).toEqual(["transactions"]);
+
 		// Budgets
 		expect(
 			await topicsOf(() =>

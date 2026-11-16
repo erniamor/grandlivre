@@ -158,8 +158,8 @@ describe("POST /v1/households/:householdId/transactions/draft", () => {
 		expect(request?.entry).toBe("Today: 2026-11-15\n<entry>essence 72</entry>");
 		expect(request?.context).toContain("Household currency: CAD");
 		expect(request?.context).toContain("Member's language: fr");
-		expect(request?.context).toMatch(/a\d \| Chequing \| yours/);
-		expect(request?.context).toMatch(/a\d \| Bob's Visa\n/);
+		expect(request?.context).toMatch(/a\d \| Chequing \| checking \| yours/);
+		expect(request?.context).toMatch(/a\d \| Bob's Visa \| credit_card\n/);
 		expect(request?.context).toMatch(/t\d \| Car › Gas/);
 		expect(request?.context).toMatch(/Shell → t\d/);
 	});

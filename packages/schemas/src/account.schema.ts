@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { amountSchema, dateTimeSchema } from "./common";
+import { amountSchema, calendarDateSchema, dateTimeSchema } from "./common";
+import { transactionSchema } from "./transaction.schema";
 
 export const ACCOUNT_NAME_MAX_LENGTH = 60;
 
@@ -126,3 +127,26 @@ export const accountsSummarySchema = z.object({
 });
 
 export type AccountsSummary = z.infer<typeof accountsSummarySchema>;
+
+/**
+ * What an account really holds on a day (the cash counted in a wallet, the
+ * balance a bank shows), in minor units, negative for money owed. The gap
+ * with its balance in the app is recorded as an adjustment: an expense when
+ * it holds less, an income when it holds more.
+ */
+export const adjustAccountSchema = z.strictObject({
+	balance: amountSchema,
+	date: calendarDateSchema,
+	/** The tag of the adjustment; uncategorized when missing. */
+	tagId: z.uuid("transaction_tag_invalid").nullable().optional(),
+});
+
+export type AdjustAccount = z.infer<typeof adjustAccountSchema>;
+
+/** An account adjusted: the adjustment recorded, if there was a gap, and its new balance. */
+export const adjustAccountResultSchema = z.object({
+	adjustment: transactionSchema.nullable(),
+	balance: z.number().int(),
+});
+
+export type AdjustAccountResult = z.infer<typeof adjustAccountResultSchema>;

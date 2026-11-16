@@ -19,6 +19,12 @@ export const TRANSACTION_ORIGINS = [
 	"import",
 	/** Recorded by a recurring transaction: never sent by a client. */
 	"recurring",
+	/**
+	 * The gap between an account's balance and what it really holds (the
+	 * cash counted in a wallet, a bank's balance): through `adjust`, never
+	 * sent as such.
+	 */
+	"adjustment",
 ] as const;
 
 export const TRANSACTION_PAYEE_MAX_LENGTH = 80;
@@ -159,8 +165,10 @@ export type TransactionTemplate = z.infer<typeof transactionTemplateSchema>;
 
 /** Where the transaction comes from; a plain form sends neither field. */
 const originFields = {
-	/** "manual" when missing; "recurring" is the API's own. */
-	origin: transactionOriginSchema.exclude(["recurring"]).optional(),
+	/** "manual" when missing; "recurring" and "adjustment" are the API's own. */
+	origin: transactionOriginSchema
+		.exclude(["recurring", "adjustment"])
+		.optional(),
 	/**
 	 * Identifier of the transaction in the statement it was imported from:
 	 * the same one is never imported twice into an account.

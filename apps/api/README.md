@@ -103,6 +103,10 @@ A member who leaves the household stops holding its accounts. An account left wi
 
 An archived account (`archived: true`) keeps its transactions and still counts in the consolidated view, but takes no new transaction, and its transactions can no longer be changed or deleted (409 `account_archived`).
 
+`POST /v1/households/:householdId/accounts/:accountId/adjust` `{ balance, date, tagId? }` (holders of the account) brings its balance to what it really holds on a day: the cash counted in a wallet, the balance a bank shows (negative for money owed). The gap with its balance as it stood that day is recorded as a transaction of origin `adjustment`: an expense when the account holds less (what was spent and not noted), an income when it holds more, on one line, uncategorized unless `tagId` says. Answers `{ adjustment, balance }`; `adjustment` is null when there was no gap. An archived account answers 409 `account_archived`; a tag from elsewhere, 422 `transaction_tag_invalid` on `tagId`.
+
+A `cash` account is a wallet: a withdrawal is a transfer to it, not an expense. The assistant knows each account's type, so "retrait 100 $" makes a transfer to the member's cash account, and something paid "cash" or "comptant" (a receipt saying so too) goes on it.
+
 Once a household has an account, its currency can't change: `PATCH /v1/households/:householdId` with another `currency` answers 409 `currency_locked`.
 
 ### Tags
@@ -129,7 +133,7 @@ An expense or an income is split into `lines`, each with an `amount` and at most
 | Route | Who | Effect |
 | --- | --- | --- |
 | `GET /v1/households/:householdId/transactions` | member | Lists the transactions the user may see, the most recent day first. Filters: `accountId` (transfers received included), `tagId` (the tags under it included), `type`, `from` and `to` (days, included) |
-| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`; `recurring` is the API's own) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
+| `POST /v1/households/:householdId/transactions` | holder of `accountId` | Records a transaction (201). `origin` (`manual` by default, `voice`, `receipt`, `import`; `recurring` and `adjustment` are the API's own) and `externalId` say where it comes from; the same `externalId` is never recorded twice on an account (409 `transaction_already_imported`) |
 | `GET /v1/households/:householdId/transactions/:transactionId` | member who may see it | The transaction, with its lines and who recorded it |
 | `PUT /v1/households/:householdId/transactions/:transactionId` | holder of its account | Replaces the transaction with the one sent, of any type and on any account the user holds; where it comes from is kept |
 | `DELETE /v1/households/:householdId/transactions/:transactionId` | holder of its account | Deletes the transaction (204) |

@@ -181,6 +181,14 @@ describe("createTransactionSchema", () => {
 		).toBe(false);
 	});
 
+	it("keeps the origins of the API's own to the API", () => {
+		for (const origin of ["recurring", "adjustment"]) {
+			expect(
+				createTransactionSchema.safeParse({ ...expense, origin }).success,
+			).toBe(false);
+		}
+	});
+
 	it("keeps each type to its own fields", () => {
 		// A transfer has no lines, an expense no destination
 		expect(

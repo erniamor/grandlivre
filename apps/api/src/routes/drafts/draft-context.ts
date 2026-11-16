@@ -1,8 +1,15 @@
-import { type Locale, type Tag, tagDisplayName } from "@repo/schemas";
+import {
+	type AccountType,
+	type Locale,
+	type Tag,
+	tagDisplayName,
+} from "@repo/schemas";
 
 export interface ContextAccount {
 	id: string;
 	name: string;
+	/** What it is: a "cash" account is a wallet. */
+	type: AccountType;
 	/** The member holds it, and it takes transactions. */
 	writable: boolean;
 }
@@ -69,7 +76,7 @@ export function buildDraftContext({
 	const accountLines = accounts.map((account, index) => {
 		const reference = `a${index + 1}`;
 		references.accounts.set(reference, account.id);
-		return `${reference} | ${account.name}${account.writable ? " | yours" : ""}`;
+		return `${reference} | ${account.name} | ${account.type}${account.writable ? " | yours" : ""}`;
 	});
 	const payeeLines = payees.flatMap(({ payee, tagId }) => {
 		const reference = idOfTag.get(tagId);
