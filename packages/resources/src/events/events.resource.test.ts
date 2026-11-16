@@ -80,7 +80,7 @@ describe("events", () => {
 		const { source, onEvent } = subscribe();
 
 		source.emit("not json");
-		source.emit('{"topic":"budgets"}');
+		source.emit('{"topic":"not-a-topic"}');
 		source.emit('{"topic":"tags"}');
 
 		expect(onEvent.mock.calls).toEqual([[{ topic: "tags" }]]);

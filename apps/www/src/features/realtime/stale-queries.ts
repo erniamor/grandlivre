@@ -50,6 +50,8 @@ export function staleQueries(
 			];
 		case "recurring":
 			return [{ queryKey: recurringQueryKey(householdId) }];
+		case "budgets":
+			return [{ queryKey: ["households", householdId, "budgets"] }];
 	}
 }
 

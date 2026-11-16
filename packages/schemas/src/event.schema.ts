@@ -17,6 +17,8 @@ export const HOUSEHOLD_EVENT_TOPICS = [
 	"transactions",
 	/** Its recurring transactions. */
 	"recurring",
+	/** Its budgets (what they stand at follows the transactions too). */
+	"budgets",
 ] as const;
 
 export const householdEventTopicSchema = z.enum(HOUSEHOLD_EVENT_TOPICS);

@@ -163,6 +163,19 @@ describe("GET /v1/households/:householdId/events", () => {
 				call("DELETE", `/recurring-transactions/${recurringId}`),
 			),
 		).toEqual(["recurring"]);
+		// Budgets
+		expect(
+			await topicsOf(() =>
+				call("PUT", `/budgets/${tag.id}`, {
+					period: "month",
+					amount: 1_000,
+					from: "2999-01",
+				}),
+			),
+		).toEqual(["budgets"]);
+		expect(
+			await topicsOf(() => call("DELETE", `/budgets/${tag.id}?from=2999-02`)),
+		).toEqual(["budgets"]);
 		expect(await topicsOf(() => call("DELETE", `/tags/${tag.id}`))).toEqual([
 			"tags",
 		]);

@@ -1,5 +1,6 @@
 export * from "./account.schema";
 export * from "./auth.schema";
+export * from "./budget.schema";
 export * from "./common";
 export * from "./draft.schema";
 export * from "./event.schema";

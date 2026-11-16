@@ -36,7 +36,7 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 - `src/index.ts`: entry point; starts the Node server with the app built in `app.ts`
 - `src/app.ts`: builds the Hono app (global middlewares, mounting of route modules, error handler), with no side effect, so tests can import it
 - `src/env.ts`: environment variables validated with Zod at startup; the only place that reads `process.env`
-- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `drafts`, `recurring`, `events`, `reports`...)
+- `src/routes/<domain>/`: one folder per domain (`health`, `me`, `households`, `invitations`, `accounts`, `tags`, `transactions`, `drafts`, `recurring`, `budgets`, `events`, `reports`...)
   - `<domain>.routes.ts`: the domain's Hono sub-app (routes, validators, call to the service)
   - `<domain>.service.ts`: business logic, independent of Hono
   - `<domain>.schemas.ts`: Zod schemas used only by this API (shared ones are in `@repo/schemas`)

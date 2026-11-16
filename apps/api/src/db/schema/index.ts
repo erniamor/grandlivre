@@ -1,5 +1,6 @@
 // Drizzle schema: one file per table in this folder, re-exported here.
 export { accounts } from "@/db/schema/accounts";
+export { budgets } from "@/db/schema/budgets";
 export { householdInvitations } from "@/db/schema/household-invitations";
 export { householdMembers } from "@/db/schema/household-members";
 export { households } from "@/db/schema/households";

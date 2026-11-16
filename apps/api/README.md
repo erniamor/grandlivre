@@ -214,6 +214,21 @@ A day already recorded or skipped answers 409 `occurrence_already_handled`.
 
 - A first day before today, in the household's time zone, answers 422 `recurrence_start_in_past` on `schedule.startDate`: what already happened is entered by hand. Other codes: `recurrence_unit_invalid`, `recurrence_interval_invalid`, `recurrence_mode_invalid`, `recurrence_end_before_start` (on `schedule.endDate`). The errors about what it records point into it: `transaction.accountId`, `transaction.lines.<n>.tagId`.
 
+### Budgets
+
+What a household means to spend on a tag, and where it stands. A budget on a tag covers the tags under it. It is `month`ly or `year`ly, and set from a month on (`from`, "2026-11"): that month and the following ones take it, the months before keep theirs. Shared and managed by every member, like the tags. Amounts are positive integers in minor units, for the whole period.
+
+| Route | Who | Effect |
+| --- | --- | --- |
+| `GET /v1/households/:householdId/budgets?month=2026-11` | member | The budgets in force that month (the household's current month, in its time zone, by default), monthly ones first: `{ month, budgets: [{ tagId, period, amount, since, spent, upcoming }] }` |
+| `PUT /v1/households/:householdId/budgets/:tagId` `{ period, amount, from }` | member | Sets the budget of the tag from `from` on, replacing any later change (200) |
+| `DELETE /v1/households/:householdId/budgets/:tagId?from=2027-01` | member | Stops it from that month on; the months before keep it (204) |
+| `GET /v1/households/:householdId/budgets/:tagId/suggestion?month=2026-11` | member | What the tag usually costs before the month: `{ month }`, the average of the 3 previous months, and `{ year }`, the sum of the 12 previous ones |
+
+- `spent`: the expenses on the tag and the tags under it over the period (the month, or the month's calendar year for a yearly budget), refunds (incomes on them) taken off, never below zero. Transfers and uncategorized lines don't count. Every account counts, including the ones that only show their balance, as in the reports: only totals come out.
+- `upcoming`: what the recurring expenses still plan in the period, from today on, and their days waiting for a member.
+- A tag from outside the household answers 404. Codes: `budget_period_invalid`, `budget_month_invalid`, `amount_not_positive`. Deleting a tag (possible only without transactions) deletes its budgets.
+
 ### Events (real time)
 
 `GET /v1/households/:householdId/events` (members only) is a stream of [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events): open it with the browser's `EventSource`, with the session cookie. Each message tells what changed in the household and carries no data:
@@ -222,7 +237,7 @@ A day already recorded or skipped answers 409 `occurrence_already_handled`.
 data: {"topic":"transactions"}
 ```
 
-Topics: `household` (name, currency, time zone), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances), `recurring`. On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
+Topics: `household` (name, currency, time zone), `members`, `invitations`, `accounts`, `tags`, `transactions` (and so the balances), `recurring`, `budgets`. On each one, the front end reloads, through the routes above, what it shows of that topic: the rules on who sees what stay in one place. The author of a change gets its event too.
 
 - An event is sent only once the change is saved: a refused change sends nothing.
 - The stream starts with a `ready` event (`event: ready`), sent once events are listened to: reload the data then, not on `EventSource`'s `open`, which comes a moment earlier. A `: ping` comment follows every 25 seconds so proxies keep the stream open.
