@@ -4,6 +4,7 @@ import { createBudgetsResource } from "./budgets/budgets.resource";
 import { createEventsResource } from "./events/events.resource";
 import { createHouseholdsResource } from "./households/households.resource";
 import { type ApiClientConfig, createApiClient } from "./http/client";
+import { createImportsResource } from "./imports/imports.resource";
 import { createInvitationsResource } from "./invitations/invitations.resource";
 import { createMeResource } from "./me/me.resource";
 import { createRecurringResource } from "./recurring/recurring.resource";
@@ -32,6 +33,7 @@ export type {
 } from "./events/events.resource";
 export type { HouseholdsResource } from "./households/households.resource";
 export type { ApiClientConfig } from "./http/client";
+export type { ImportsResource } from "./imports/imports.resource";
 export type { InvitationsResource } from "./invitations/invitations.resource";
 export type { MeResource } from "./me/me.resource";
 export type { RecurringResource } from "./recurring/recurring.resource";
@@ -56,6 +58,7 @@ export function createApi(config: ApiClientConfig) {
 		budgets: createBudgetsResource(client),
 		events: createEventsResource(client),
 		households: createHouseholdsResource(client),
+		imports: createImportsResource(client),
 		invitations: createInvitationsResource(client),
 		me: createMeResource(client),
 		recurring: createRecurringResource(client),

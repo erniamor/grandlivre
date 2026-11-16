@@ -11,6 +11,17 @@ export function formatDay(day: string, locale: string): string {
 }
 
 /**
+ * Formats a calendar day in few words, for lists: "Nov 14, 2026",
+ * "14 nov. 2026". Read and written in UTC, as `formatDay`.
+ */
+export function formatShortDay(day: string, locale: string): string {
+	return new Intl.DateTimeFormat(locale, {
+		dateStyle: "medium",
+		timeZone: "UTC",
+	}).format(new Date(`${day}T00:00:00Z`));
+}
+
+/**
  * Today, as a calendar day ("2026-11-15"), in a time zone: a household's
  * day, which can differ from the browser's.
  */

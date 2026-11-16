@@ -1,8 +1,8 @@
 import type { Household } from "@repo/schemas";
-import { buttonVariants, cn } from "@repo/ui";
+import { buttonVariants } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { PlusIcon } from "lucide-react";
+import { FileUpIcon, PlusIcon } from "lucide-react";
 import { AccountGroup } from "@/features/accounts/AccountGroup";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { groupAccounts } from "@/features/accounts/group-accounts";
@@ -31,13 +31,16 @@ export function AccountsPage({ household }: AccountsPageProps) {
 				<p className="text-muted-foreground">{m.accounts_intro()}</p>
 			</header>
 			<HouseholdBalance household={household} />
-			<Link
-				to="/accounts/new"
-				className={cn(buttonVariants(), "justify-self-start")}
-			>
-				<PlusIcon aria-hidden />
-				{m.account_add_button()}
-			</Link>
+			<div className="flex flex-wrap gap-2">
+				<Link to="/accounts/new" className={buttonVariants()}>
+					<PlusIcon aria-hidden />
+					{m.account_add_button()}
+				</Link>
+				<Link to="/import" className={buttonVariants({ variant: "outline" })}>
+					<FileUpIcon aria-hidden />
+					{m.import_link()}
+				</Link>
+			</div>
 			{accounts.items.length === 0 && (
 				<p className="text-muted-foreground">{m.accounts_empty()}</p>
 			)}

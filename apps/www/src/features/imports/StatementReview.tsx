@@ -1,0 +1,102 @@
+import type { Account, Tag } from "@repo/schemas";
+import { Button } from "@repo/ui";
+import { FormAlert } from "@/components/FormAlert";
+import { StatementAccountReview } from "@/features/imports/StatementAccountReview";
+import type { StatementImporter } from "@/features/imports/use-statement-import";
+import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
+import { formErrors } from "@/lib/error-messages";
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
+
+interface StatementReviewProps {
+	importer: StatementImporter;
+	accounts: Account[];
+	tags: Tag[];
+	currency: string;
+}
+
+/** A file read: each of its accounts to review, then the import. */
+export function StatementReview({
+	importer,
+	accounts,
+	tags,
+	currency,
+}: StatementReviewProps) {
+	const { reviewing, problems } = importer;
+	if (!reviewing) {
+		return null;
+	}
+	const { preview, draft } = reviewing;
+	const tagOptions = [
+		{ value: "", label: m.transaction_uncategorized() },
+		...flattenTagTree(buildTagTree(tags, getLocale())).map(({ tag, path }) => ({
+			value: tag.id,
+			label: path,
+		})),
+	];
+	const nameOf = (index: number) => {
+		const destination = draft.destinations[index];
+		if (destination?.kind === "account") {
+			return (
+				accounts.find((account) => account.id === destination.accountId)
+					?.name ?? null
+			);
+		}
+		return destination?.kind === "new" ? destination.name : null;
+	};
+	const saveError = importer.saveError ? formErrors(importer.saveError) : null;
+
+	return (
+		<div className="grid gap-6">
+			{preview.accounts.map((account) => (
+				<StatementAccountReview
+					key={account.index}
+					account={account}
+					draft={draft}
+					accounts={accounts}
+					currency={currency}
+					tagOptions={tagOptions}
+					nameOf={nameOf}
+					problems={problems}
+					reading={importer.reading}
+					onDestination={(destination) =>
+						importer.setDestination(account.index, destination)
+					}
+					onChoice={(externalId, choice) =>
+						importer.setChoice(account.index, externalId, choice)
+					}
+				/>
+			))}
+			<FormAlert
+				message={
+					problems.some((problem) => problem.kind === "nothing")
+						? m.import_nothing()
+						: problems.length > 0
+							? m.import_problems()
+							: (saveError?.form ?? Object.values(saveError?.fields ?? {})[0])
+				}
+			/>
+			<div className="flex flex-wrap justify-end gap-2">
+				<Button type="button" variant="outline" onClick={importer.restart}>
+					{m.import_other_file()}
+				</Button>
+				{importer.saveError && (
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => importer.choose(reviewing.file)}
+					>
+						{m.import_read_again()}
+					</Button>
+				)}
+				<Button
+					type="button"
+					disabled={importer.saving || importer.reading}
+					onClick={importer.submit}
+				>
+					{importer.saving ? m.import_saving() : m.import_submit()}
+				</Button>
+			</div>
+		</div>
+	);
+}

@@ -5,6 +5,7 @@ import { budgetsQueryKey } from "@/features/budgets/budgets-query";
 import { householdInvitationsQueryKey } from "@/features/households/household-invitations-query";
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
+import { importsQueryKey } from "@/features/imports/imports-query";
 import { recurringQueryKey } from "@/features/recurring/recurring-query";
 import { reportsQueryKey } from "@/features/reports/reports-query";
 import { sharingQueryKey } from "@/features/sharing/sharing-query";
@@ -56,6 +57,8 @@ export function staleQueries(
 				// What the budgets spent, and who owes whom
 				{ queryKey: budgetsQueryKey(householdId) },
 				{ queryKey: sharingQueryKey(householdId) },
+				// An import undone takes its transactions with it
+				{ queryKey: importsQueryKey(householdId) },
 			];
 		case "recurring":
 			// What the budgets plan

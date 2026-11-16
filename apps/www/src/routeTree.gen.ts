@@ -20,6 +20,7 @@ import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
 import { Route as AuthenticatedHouseholdHouseholdRouteImport } from './routes/_authenticated/_household/household'
+import { Route as AuthenticatedHouseholdImportRouteImport } from './routes/_authenticated/_household/import'
 import { Route as AuthenticatedHouseholdReportsRouteImport } from './routes/_authenticated/_household/reports'
 import { Route as AuthenticatedHouseholdAccountsIndexRouteImport } from './routes/_authenticated/_household/accounts/index'
 import { Route as AuthenticatedHouseholdAccountsAccountIdRouteImport } from './routes/_authenticated/_household/accounts/$accountId'
@@ -94,6 +95,12 @@ const AuthenticatedHouseholdHouseholdRoute =
   AuthenticatedHouseholdHouseholdRouteImport.update({
     id: '/household',
     path: '/household',
+    getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdImportRoute =
+  AuthenticatedHouseholdImportRouteImport.update({
+    id: '/import',
+    path: '/import',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
 const AuthenticatedHouseholdReportsRoute =
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/import': typeof AuthenticatedHouseholdImportRoute
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/import': typeof AuthenticatedHouseholdImportRoute
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRoute
+  '/_authenticated/_household/import': typeof AuthenticatedHouseholdImportRoute
   '/_authenticated/_household/reports': typeof AuthenticatedHouseholdReportsRoute
   '/_authenticated/_household/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/_authenticated/_household/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard'
     | '/household'
+    | '/import'
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard'
     | '/household'
+    | '/import'
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/_authenticated/_household/dashboard'
     | '/_authenticated/_household/household'
+    | '/_authenticated/_household/import'
     | '/_authenticated/_household/reports'
     | '/_authenticated/_household/accounts/$accountId'
     | '/_authenticated/_household/accounts/new'
@@ -496,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/household'
       fullPath: '/household'
       preLoaderRoute: typeof AuthenticatedHouseholdHouseholdRouteImport
+      parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/import': {
+      id: '/_authenticated/_household/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedHouseholdImportRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
     '/_authenticated/_household/reports': {
@@ -644,6 +664,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedHouseholdRouteChildren {
   AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
   AuthenticatedHouseholdHouseholdRoute: typeof AuthenticatedHouseholdHouseholdRoute
+  AuthenticatedHouseholdImportRoute: typeof AuthenticatedHouseholdImportRoute
   AuthenticatedHouseholdReportsRoute: typeof AuthenticatedHouseholdReportsRoute
   AuthenticatedHouseholdAccountsAccountIdRoute: typeof AuthenticatedHouseholdAccountsAccountIdRoute
   AuthenticatedHouseholdAccountsNewRoute: typeof AuthenticatedHouseholdAccountsNewRoute
@@ -670,6 +691,7 @@ const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
   {
     AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
     AuthenticatedHouseholdHouseholdRoute: AuthenticatedHouseholdHouseholdRoute,
+    AuthenticatedHouseholdImportRoute: AuthenticatedHouseholdImportRoute,
     AuthenticatedHouseholdReportsRoute: AuthenticatedHouseholdReportsRoute,
     AuthenticatedHouseholdAccountsAccountIdRoute:
       AuthenticatedHouseholdAccountsAccountIdRoute,

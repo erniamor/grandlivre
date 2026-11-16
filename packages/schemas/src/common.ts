@@ -61,6 +61,8 @@ export const validationIssueSchema = z.object({
 	field: z.string(),
 	/** Error code, e.g. "name_required". */
 	message: z.string(),
+	/** In a file sent (a statement): the line, from 1, that can't be read. */
+	line: z.number().int().optional(),
 });
 
 export type ValidationIssue = z.infer<typeof validationIssueSchema>;

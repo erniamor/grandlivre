@@ -1,6 +1,8 @@
 import type { Household, Profile } from "@repo/schemas";
-import { toast } from "@repo/ui";
+import { buttonVariants, toast } from "@repo/ui";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { FileUpIcon } from "lucide-react";
 import { AccountForm } from "@/features/accounts/AccountForm";
 import { AccountsBackLink } from "@/features/accounts/AccountsBackLink";
 import { AdjustBalanceDialog } from "@/features/accounts/AdjustBalanceDialog";
@@ -67,12 +69,23 @@ export function EditAccountPage({
 							? m.account_count_hint()
 							: m.account_adjust_hint()}
 					</p>
-					<div>
+					<div className="flex flex-wrap gap-2">
 						<AdjustBalanceDialog
 							household={household}
 							account={account}
 							tags={tags}
 						/>
+						{/* A wallet has no statement */}
+						{account.type !== "cash" && (
+							<Link
+								to="/import"
+								search={{ accountId: account.id }}
+								className={buttonVariants({ variant: "outline" })}
+							>
+								<FileUpIcon aria-hidden />
+								{m.import_link()}
+							</Link>
+						)}
 					</div>
 				</div>
 			)}
