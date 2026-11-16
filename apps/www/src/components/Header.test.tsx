@@ -129,6 +129,7 @@ describe("Header", () => {
 			["Dashboard", "/dashboard"],
 			["Transactions", "/transactions"],
 			["Recurring", "/recurring"],
+			["Budgets", "/budgets"],
 			["Reports", "/reports"],
 			["Accounts", "/accounts"],
 			["Tags", "/tags"],

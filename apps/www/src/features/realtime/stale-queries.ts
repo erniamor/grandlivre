@@ -1,6 +1,7 @@
 import type { HouseholdEventTopic } from "@repo/schemas";
 import type { InvalidateQueryFilters } from "@tanstack/react-query";
 import { accountsQueryKey } from "@/features/accounts/accounts-query";
+import { budgetsQueryKey } from "@/features/budgets/budgets-query";
 import { householdInvitationsQueryKey } from "@/features/households/household-invitations-query";
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
@@ -40,18 +41,28 @@ export function staleQueries(
 		case "accounts":
 			return [{ queryKey: accountsQueryKey(householdId) }];
 		case "tags":
-			return [{ queryKey: tagsQueryKey(householdId) }];
+			// A tag deleted takes its budgets with it
+			return [
+				{ queryKey: tagsQueryKey(householdId) },
+				{ queryKey: budgetsQueryKey(householdId) },
+			];
 		case "transactions":
 			// The balances of the accounts and the reports follow the transactions
 			return [
 				{ queryKey: transactionsQueryKey(householdId) },
 				{ queryKey: accountsQueryKey(householdId) },
 				{ queryKey: reportsQueryKey(householdId) },
+				// What the budgets spent
+				{ queryKey: budgetsQueryKey(householdId) },
 			];
 		case "recurring":
-			return [{ queryKey: recurringQueryKey(householdId) }];
+			// What the budgets plan
+			return [
+				{ queryKey: recurringQueryKey(householdId) },
+				{ queryKey: budgetsQueryKey(householdId) },
+			];
 		case "budgets":
-			return [{ queryKey: ["households", householdId, "budgets"] }];
+			return [{ queryKey: budgetsQueryKey(householdId) }];
 	}
 }
 

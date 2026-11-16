@@ -20,6 +20,8 @@ const cached = [
 	["households", HOME, "suggested-tags"],
 	["households", HOME, "transactions", "list", { page: 1 }],
 	["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
+	["households", HOME, "recurring", "list"],
+	["households", HOME, "budgets", "month", "2026-11"],
 	["households", "elsewhere", "transactions", "list", { page: 1 }],
 	["me"],
 	["invitations", "received"],
@@ -57,7 +59,13 @@ describe("staleQueries", () => {
 				["households", HOME, "accounts", "summary"],
 			],
 		],
-		["tags", [["households", HOME, "tags"]]],
+		[
+			"tags",
+			[
+				["households", HOME, "tags"],
+				["households", HOME, "budgets", "month", "2026-11"],
+			],
+		],
 		[
 			"transactions",
 			[
@@ -65,8 +73,17 @@ describe("staleQueries", () => {
 				["households", HOME, "accounts", "summary"],
 				["households", HOME, "transactions", "list", { page: 1 }],
 				["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
+				["households", HOME, "budgets", "month", "2026-11"],
 			],
 		],
+		[
+			"recurring",
+			[
+				["households", HOME, "recurring", "list"],
+				["households", HOME, "budgets", "month", "2026-11"],
+			],
+		],
+		["budgets", [["households", HOME, "budgets", "month", "2026-11"]]],
 	] as const)(
 		"reloads after a change of %s what shows it, and nothing else",
 		(topic, keys) => {
@@ -93,6 +110,8 @@ describe("allHouseholdQueries", () => {
 			["households", HOME, "suggested-tags"],
 			["households", HOME, "transactions", "list", { page: 1 }],
 			["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
+			["households", HOME, "recurring", "list"],
+			["households", HOME, "budgets", "month", "2026-11"],
 		]);
 	});
 });
