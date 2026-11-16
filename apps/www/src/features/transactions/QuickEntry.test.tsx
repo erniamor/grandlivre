@@ -167,19 +167,23 @@ describe("QuickEntry", () => {
 			expect(form.get("photo")).toBeInstanceOf(Blob);
 		});
 
-		it("opens the photo to prepare, then sends only the photo prepared", async () => {
+		it("opens the photo to prepare, then sends only the photo prepared, turned", async () => {
 			// A browser that decodes and draws: a photo 2000 × 4000, and a canvas
-			// that records its black rectangles
+			// that records its black rectangles and its turns
 			const close = vi.fn();
 			vi.stubGlobal(
 				"createImageBitmap",
 				vi.fn(async () => ({ width: 2000, height: 4000, close })),
 			);
 			const painted: number[][] = [];
+			const rotate = vi.fn();
 			vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
 				drawImage: vi.fn(),
 				fillRect: (...args: number[]) => painted.push(args),
 				fillStyle: "",
+				translate: vi.fn(),
+				rotate,
+				resetTransform: vi.fn(),
 			} as unknown as CanvasRenderingContext2D);
 			vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
 				(callback) => callback(new Blob(["prepared"], { type: "image/jpeg" })),
@@ -197,12 +201,15 @@ describe("QuickEntry", () => {
 				await screen.findByRole("dialog", { name: "Prepare the photo" }),
 			);
 			expect(requests).toEqual([]);
+			await user.click(dialog.getByRole("button", { name: "Turn right" }));
+			await user.click(dialog.getByRole("button", { name: "Apply the frame" }));
 			await user.click(dialog.getByRole("button", { name: "Add a mask" }));
 			await user.click(dialog.getByRole("button", { name: "Send the photo" }));
 
 			await vi.waitFor(() => expect(onDraft).toHaveBeenCalledOnce());
 			const form = requests[0]?.body as FormData;
 			expect(await (form.get("photo") as Blob).text()).toBe("prepared");
+			expect(rotate).toHaveBeenCalledWith(Math.PI / 2);
 			expect(painted).toHaveLength(1);
 			const photos = onDraft.mock.calls[0]?.[1];
 			expect(photos?.original).toBe(taken);

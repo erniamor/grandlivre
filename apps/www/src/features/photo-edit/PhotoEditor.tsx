@@ -1,37 +1,46 @@
 import { Button } from "@repo/ui";
-import { PlusIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { EditableRect } from "@/features/photo-edit/EditableRect";
+import { FrameTools } from "@/features/photo-edit/FrameTools";
+import { MaskTools } from "@/features/photo-edit/MaskTools";
+import { PhotoView } from "@/features/photo-edit/PhotoView";
 import {
-	intersect,
-	newMask,
-	type Rect,
+	absoluteFrom,
+	relativeTo,
 	WHOLE,
 } from "@/features/photo-edit/photo-geometry";
+import { placeStyle, type Size } from "@/features/photo-edit/photo-view";
+import type { Zoom } from "@/features/photo-edit/photo-zoom";
+import {
+	type PhotoEdits,
+	usePhotoEdits,
+} from "@/features/photo-edit/use-photo-edits";
+import { ZoomControls } from "@/features/photo-edit/ZoomControls";
 import { useObjectUrl } from "@/features/transactions/use-object-url";
 import { m } from "@/paraglide/messages";
 
-/** What to send: the crop, and the masks within it. */
-export interface PhotoEdits {
-	crop: Rect;
-	masks: Rect[];
-}
+export type { PhotoEdits };
 
 interface PhotoEditorProps {
 	photo: Blob;
 	/** Its size, the right way up: for the shape of the frame. */
-	size: { width: number; height: number };
+	size: Size;
 	sending: boolean;
 	error?: string;
 	onSend: (edits: PhotoEdits) => void;
 	onCancel: () => void;
 }
 
+/** First the frame (turned, narrowed), then the masks over what it keeps. */
+type Step = "frame" | "masks";
+
 /**
- * Prepares a photo before it is sent: a frame narrowed on what matters,
- * black masks over what shouldn't leave the device. Only the photo prepared
- * is sent; the original stays in the browser.
+ * Prepares a photo before it is sent, in two steps: the photo turned and a
+ * frame narrowed on what matters, then black masks over what shouldn't
+ * leave the device, on the frame shown alone, enlarged. Only the photo
+ * prepared is sent; the original stays in the browser.
  */
 export function PhotoEditor({
 	photo,
@@ -43,115 +52,138 @@ export function PhotoEditor({
 }: PhotoEditorProps) {
 	const hintId = useId();
 	const surface = useRef<HTMLDivElement>(null);
+	const stepTitle = useRef<HTMLParagraphElement>(null);
 	const url = useObjectUrl(photo);
-	const [crop, setCrop] = useState<Rect>(WHOLE);
-	const [masks, setMasks] = useState<Rect[]>([]);
-	// The mask chosen, to remove; -1 for the crop or nothing
+	const { edits, rotate, changeCrop, addMask, changeMask, removeMask } =
+		usePhotoEdits();
+	const { turns, crop, masks } = edits;
+	const [step, setStep] = useState<Step>("frame");
+	const [zoom, setZoom] = useState<Zoom>(1);
+	// The mask chosen, to remove; -1 for none
 	const [selected, setSelected] = useState(-1);
 
-	const changeCrop = (next: Rect) => {
-		setCrop(next);
-		// A mask left outside the new frame is no longer in the photo sent
-		setMasks((current) => current.filter((mask) => intersect(mask, next)));
+	const goTo = (next: Step) => {
+		setStep(next);
+		setZoom(1);
+		setSelected(-1);
+		// The button pressed is gone: the step's title takes the focus
+		stepTitle.current?.focus();
 	};
 	const remove = (index: number) => {
-		setMasks(masks.filter((_, each) => each !== index));
+		removeMask(index);
 		setSelected(-1);
 	};
+	const framing = step === "frame";
 
 	return (
 		<div className="grid gap-4">
-			<p id={hintId} className="text-muted-foreground text-sm">
-				{m.photo_editor_hint()} {m.photo_editor_keyboard()}
-			</p>
-			<div
-				ref={surface}
-				className="relative mx-auto w-full max-w-md touch-none overflow-hidden rounded-md border border-border bg-muted"
-				style={{
-					aspectRatio: `${size.width} / ${size.height}`,
-					maxHeight: "60vh",
-				}}
-			>
-				{url && (
-					<img
-						src={url}
-						alt={m.photo_editor_alt()}
-						draggable={false}
-						className="absolute inset-0 size-full select-none"
-					/>
-				)}
-				<EditableRect
-					rect={crop}
-					bounds={WHOLE}
-					label={m.photo_editor_crop()}
-					describedBy={hintId}
-					variant="crop"
-					selected={selected === -1}
-					surface={surface}
-					onSelect={() => setSelected(-1)}
-					onChange={changeCrop}
-				/>
-				{masks.map((mask, index) => (
-					<EditableRect
-						// A mask has nothing else to tell it apart: masks are only added
-						// at the end, so their places stay put
-						key={index}
-						rect={mask}
-						bounds={crop}
-						label={m.photo_editor_mask({ n: index + 1 })}
-						describedBy={hintId}
-						variant="mask"
-						selected={selected === index}
-						surface={surface}
-						onSelect={() => setSelected(index)}
-						onChange={(next) =>
-							setMasks(masks.map((each, at) => (at === index ? next : each)))
-						}
-						onRemove={() => remove(index)}
-					/>
-				))}
-			</div>
-			<div className="flex flex-wrap gap-2">
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						setMasks([...masks, newMask(crop)]);
-						setSelected(masks.length);
-					}}
+			<div className="grid gap-1">
+				<p
+					ref={stepTitle}
+					tabIndex={-1}
+					className="font-medium text-sm outline-none"
 				>
-					<PlusIcon aria-hidden />
-					{m.photo_editor_add_mask()}
-				</Button>
-				{selected >= 0 && (
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={() => remove(selected)}
-					>
-						<Trash2Icon aria-hidden />
-						{m.photo_editor_remove_mask({ n: selected + 1 })}
-					</Button>
-				)}
+					{framing ? m.photo_editor_step_frame() : m.photo_editor_step_masks()}
+				</p>
+				<p id={hintId} className="text-muted-foreground text-sm">
+					{framing
+						? `${m.photo_editor_hint_frame()} ${m.photo_editor_keyboard_frame()}`
+						: `${m.photo_editor_hint_masks()} ${m.photo_editor_keyboard_masks()}`}
+				</p>
 			</div>
-			<p className="flex gap-2 text-sm">
-				<TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-				{m.photo_editor_warning()}
-			</p>
+			<PhotoView
+				url={url}
+				size={size}
+				turns={turns}
+				region={framing ? WHOLE : crop}
+				zoom={zoom}
+				surface={surface}
+			>
+				{framing ? (
+					<>
+						{/* The masks already placed, shown under the frame */}
+						{masks.map((mask, index) => (
+							<div
+								// Masks are only added at the end: their places stay put
+								key={index}
+								aria-hidden
+								className="absolute bg-black"
+								style={placeStyle(mask)}
+							/>
+						))}
+						<EditableRect
+							rect={crop}
+							bounds={WHOLE}
+							label={m.photo_editor_crop()}
+							describedBy={hintId}
+							variant="crop"
+							selected
+							surface={surface}
+							onSelect={() => {}}
+							onChange={changeCrop}
+						/>
+					</>
+				) : (
+					masks.map((mask, index) => (
+						<EditableRect
+							// A mask has nothing else to tell it apart: masks are only added
+							// at the end, so their places stay put
+							key={index}
+							// Shown on the frame alone, kept on the whole photo
+							rect={relativeTo(mask, crop)}
+							bounds={WHOLE}
+							label={m.photo_editor_mask({ n: index + 1 })}
+							describedBy={hintId}
+							variant="mask"
+							selected={selected === index}
+							surface={surface}
+							onSelect={() => setSelected(index)}
+							onChange={(next) => changeMask(index, absoluteFrom(next, crop))}
+							onRemove={() => remove(index)}
+						/>
+					))
+				)}
+			</PhotoView>
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				{framing ? (
+					<FrameTools onRotate={rotate} />
+				) : (
+					<MaskTools
+						selected={selected}
+						onEditFrame={() => goTo("frame")}
+						onAdd={() => {
+							addMask();
+							setSelected(masks.length);
+						}}
+						onRemove={remove}
+					/>
+				)}
+				<ZoomControls zoom={zoom} onChange={setZoom} />
+			</div>
+			{!framing && (
+				<p className="flex gap-2 text-sm">
+					<TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+					{m.photo_editor_warning()}
+				</p>
+			)}
 			<FormAlert message={error} />
 			<div className="flex flex-wrap justify-end gap-2">
 				<Button type="button" variant="outline" onClick={onCancel}>
 					{m.photo_editor_cancel()}
 				</Button>
-				<Button
-					type="button"
-					disabled={sending}
-					onClick={() => onSend({ crop, masks })}
-				>
-					{sending ? m.receipt_scan_pending() : m.photo_editor_send()}
-				</Button>
+				{framing ? (
+					<Button type="button" onClick={() => goTo("masks")}>
+						{m.photo_editor_apply_frame()}
+					</Button>
+				) : (
+					<Button
+						type="button"
+						disabled={sending}
+						onClick={() => onSend(edits)}
+					>
+						{sending ? m.receipt_scan_pending() : m.photo_editor_send()}
+					</Button>
+				)}
 			</div>
 		</div>
 	);

@@ -75,6 +75,7 @@ export function ReceiptScanButton({
 				(bitmap &&
 					(await renderPhoto({
 						source: bitmap,
+						turns: edits?.turns,
 						crop: edits?.crop,
 						masks: edits?.masks,
 						maxSide: RECEIPT_PHOTO_MAX_SIDE,
