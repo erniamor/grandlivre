@@ -716,6 +716,8 @@
 	"categorize_title": "Clasificar por beneficiario",
 	"categorize_intro": "Tus gastos e ingresos sin etiqueta, por beneficiario, los más frecuentes primero. Elige una etiqueta: todas las transacciones del beneficiario la toman, y las próximas importaciones la propondrán.",
 	"categorize_back": "Volver a Primeros pasos",
+	"categorize_back_transactions": "Volver a las transacciones",
+	"transactions_categorize_link": "Clasificar por beneficiario ({count})",
 	"categorize_empty": "Nada más que clasificar: cada gasto e ingreso de tus cuentas tiene una etiqueta.",
 	"categorize_count": "Beneficiarios por clasificar: {count}",
 	"categorize_tag_choose": "Elegir una etiqueta",

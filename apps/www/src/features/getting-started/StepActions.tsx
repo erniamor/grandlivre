@@ -64,7 +64,7 @@ export function StepActions({ step, household }: StepActionsProps) {
 			);
 		case "categorized":
 			return (
-				<Link to="/categorize" className={style}>
+				<Link to="/categorize" search={{ redirect: BACK }} className={style}>
 					{m.getting_started_categorized_action()}
 				</Link>
 			);

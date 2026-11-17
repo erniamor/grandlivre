@@ -59,6 +59,7 @@ const saaq: UncategorizedPayee = {
 function setUp(
 	groups: UncategorizedPayee[],
 	suggestions: { key: string; type: string; tagId: string | null }[] = [],
+	fromGettingStarted = false,
 ) {
 	const requests = mockApi((request) => {
 		if (request.path.endsWith("/transactions/uncategorized/suggest")) {
@@ -84,7 +85,12 @@ function setUp(
 		}
 		return undefined;
 	});
-	renderWithRouter(<CategorizePage household={household} />);
+	renderWithRouter(
+		<CategorizePage
+			household={household}
+			fromGettingStarted={fromGettingStarted}
+		/>,
+	);
 	return { requests, user: userEvent.setup() };
 }
 
@@ -239,5 +245,23 @@ describe("CategorizePage, tags suggested by the assistant", () => {
 				},
 			]),
 		);
+	});
+});
+
+describe("CategorizePage, its way back", () => {
+	it("goes back to the transactions", async () => {
+		setUp([costco]);
+
+		expect(
+			await screen.findByRole("link", { name: "Back to transactions" }),
+		).toHaveAttribute("href", "/transactions");
+	});
+
+	it("goes back to the first steps it came from", async () => {
+		setUp([costco], [], true);
+
+		expect(
+			await screen.findByRole("link", { name: "Back to getting started" }),
+		).toHaveAttribute("href", "/getting-started");
 	});
 });

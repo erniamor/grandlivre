@@ -118,7 +118,7 @@ describe("GettingStartedPage", () => {
 		expect(within(step).getByText("Left without a tag: 12")).toBeVisible();
 		expect(
 			within(step).getByRole("link", { name: "Sort by payee" }),
-		).toHaveAttribute("href", "/categorize");
+		).toHaveAttribute("href", "/categorize?redirect=%2Fgetting-started");
 	});
 
 	it("leaves inviting members to the owners", async () => {

@@ -1,9 +1,10 @@
 import type { Household } from "@repo/schemas";
-import { buttonVariants, cn } from "@repo/ui";
+import { buttonVariants } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
+import { SortByPayeeLink } from "@/features/categorize/SortByPayeeLink";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { useOpenDraft } from "@/features/transactions/note-draft";
 import { QuickEntry } from "@/features/transactions/QuickEntry";
@@ -50,14 +51,17 @@ export function TransactionsPage({
 				</h1>
 				<p className="text-muted-foreground">{m.transactions_intro()}</p>
 			</header>
-			<Link
-				to="/transactions/new"
-				search={{ account: filters.accountId }}
-				className={cn(buttonVariants(), "justify-self-start")}
-			>
-				<PlusIcon aria-hidden />
-				{m.transaction_add_button()}
-			</Link>
+			<div className="flex flex-wrap gap-2">
+				<Link
+					to="/transactions/new"
+					search={{ account: filters.accountId }}
+					className={buttonVariants()}
+				>
+					<PlusIcon aria-hidden />
+					{m.transaction_add_button()}
+				</Link>
+				<SortByPayeeLink householdId={household.id} />
+			</div>
 			<QuickEntry
 				householdId={household.id}
 				onDraft={(draft, photos) => openDraft(draft, { photos })}

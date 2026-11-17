@@ -335,3 +335,34 @@ describe("TransactionsPage", () => {
 		).not.toBeInTheDocument();
 	});
 });
+
+describe("TransactionsPage, sorting by payee", () => {
+	it("leads to sorting the payees left without a tag, while there are some", async () => {
+		const reads = respondWith();
+		setUp({
+			respond: (request) =>
+				request.path === `${base}/transactions/uncategorized`
+					? {
+							status: 200,
+							body: {
+								data: [],
+								pagination: { page: 1, pageSize: 200, total: 12 },
+							},
+						}
+					: reads(request),
+		});
+
+		expect(
+			await screen.findByRole("link", { name: "Sort by payee (12)" }),
+		).toHaveAttribute("href", "/categorize");
+	});
+
+	it("shows nothing once every payee has a tag", async () => {
+		setUp();
+
+		await day("Saturday, November 14, 2026");
+		expect(
+			screen.queryByRole("link", { name: /^Sort by payee/ }),
+		).not.toBeInTheDocument();
+	});
+});

@@ -716,6 +716,8 @@
 	"categorize_title": "Classer par bénéficiaire",
 	"categorize_intro": "Vos dépenses et revenus sans étiquette, par bénéficiaire, les plus fréquents d'abord. Choisissez une étiquette : toutes les transactions du bénéficiaire la prennent, et les prochains imports la proposeront.",
 	"categorize_back": "Retour à Bien démarrer",
+	"categorize_back_transactions": "Retour aux transactions",
+	"transactions_categorize_link": "Classer par bénéficiaire ({count})",
 	"categorize_empty": "Plus rien à classer : chaque dépense et revenu de vos comptes a une étiquette.",
 	"categorize_count": "Bénéficiaires à classer : {count}",
 	"categorize_tag_choose": "Choisir une étiquette",

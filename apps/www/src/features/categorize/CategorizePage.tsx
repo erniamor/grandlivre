@@ -22,6 +22,8 @@ import { getLocale } from "@/paraglide/runtime";
 
 interface CategorizePageProps {
 	household: Household;
+	/** Opened from the first steps: its back link goes there, else to the transactions. */
+	fromGettingStarted?: boolean;
 }
 
 /**
@@ -29,7 +31,10 @@ interface CategorizePageProps {
  * frequent first: one tag for all of a payee's at once, suggested by the
  * assistant on request. The next imports learn it.
  */
-export function CategorizePage({ household }: CategorizePageProps) {
+export function CategorizePage({
+	household,
+	fromGettingStarted = false,
+}: CategorizePageProps) {
 	const { data: groups } = useSuspenseQuery(
 		uncategorizedQueryOptions(household.id),
 	);
@@ -61,10 +66,12 @@ export function CategorizePage({ household }: CategorizePageProps) {
 				<p className="text-muted-foreground">{m.categorize_intro()}</p>
 				<div className="flex flex-wrap gap-2">
 					<Link
-						to="/getting-started"
+						to={fromGettingStarted ? "/getting-started" : "/transactions"}
 						className={buttonVariants({ variant: "outline" })}
 					>
-						{m.categorize_back()}
+						{fromGettingStarted
+							? m.categorize_back()
+							: m.categorize_back_transactions()}
 					</Link>
 					<Link to="/tags/new" className={buttonVariants({ variant: "ghost" })}>
 						<PlusIcon aria-hidden />

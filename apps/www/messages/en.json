@@ -716,6 +716,8 @@
 	"categorize_title": "Sort by payee",
 	"categorize_intro": "Your expenses and incomes without a tag, by payee, the most frequent first. Choose a tag: all of the payee's take it, and the next imports will suggest it.",
 	"categorize_back": "Back to getting started",
+	"categorize_back_transactions": "Back to transactions",
+	"transactions_categorize_link": "Sort by payee ({count})",
 	"categorize_empty": "Nothing left to sort: every expense and income of your accounts has a tag.",
 	"categorize_count": "Payees to sort: {count}",
 	"categorize_tag_choose": "Choose a tag",
