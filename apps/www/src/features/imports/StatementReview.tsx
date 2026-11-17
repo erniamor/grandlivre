@@ -1,10 +1,14 @@
 import type { Account, Tag } from "@repo/schemas";
-import { Button } from "@repo/ui";
-import { ArrowUpIcon } from "lucide-react";
 import { useRef } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { goToFirstCorrection } from "@/features/imports/first-correction";
+import { ImportActionBar } from "@/features/imports/ImportActionBar";
+import { ImportSummaryPanel } from "@/features/imports/ImportSummaryPanel";
 import { statementAccountName } from "@/features/imports/import-draft";
+import {
+	summarizeAccount,
+	summarizeImport,
+} from "@/features/imports/import-summary";
 import { StatementAccountReview } from "@/features/imports/StatementAccountReview";
 import type { StatementImporter } from "@/features/imports/use-statement-import";
 import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
@@ -19,7 +23,10 @@ interface StatementReviewProps {
 	currency: string;
 }
 
-/** A file read: each of its accounts to review, then the import. */
+/**
+ * A file read: what it comes to, each of its accounts to review, and the
+ * import, its actions kept in sight.
+ */
 export function StatementReview({
 	importer,
 	accounts,
@@ -59,13 +66,16 @@ export function StatementReview({
 		return destination?.kind === "new" ? destination.name : null;
 	};
 	const saveError = importer.saveError ? formErrors(importer.saveError) : null;
+	const summary = summarizeImport(preview, draft);
 
 	return (
 		<div ref={review} className="grid gap-6">
+			<ImportSummaryPanel summary={summary} currency={currency} />
 			{preview.accounts.map((account) => (
 				<StatementAccountReview
 					key={account.index}
 					account={account}
+					summary={summarizeAccount(account, draft)}
 					draft={draft}
 					accounts={accounts}
 					currency={currency}
@@ -91,50 +101,26 @@ export function StatementReview({
 					}
 				/>
 			))}
-			<div className="grid gap-2">
-				<FormAlert
-					message={
-						problems.some((problem) => problem.kind === "nothing")
-							? m.import_nothing()
-							: problems.length > 0
-								? m.import_problems()
-								: (saveError?.form ?? Object.values(saveError?.fields ?? {})[0])
-					}
-				/>
-				{problems.some((problem) => problem.kind !== "nothing") && (
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						className="justify-self-start"
-						onClick={() => goToFirstCorrection(review.current)}
-					>
-						<ArrowUpIcon aria-hidden />
-						{m.import_go_to_correction()}
-					</Button>
-				)}
-			</div>
-			<div className="flex flex-wrap justify-end gap-2">
-				<Button type="button" variant="outline" onClick={importer.restart}>
-					{m.import_other_file()}
-				</Button>
-				{importer.saveError && (
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => importer.choose(reviewing.file)}
-					>
-						{m.import_read_again()}
-					</Button>
-				)}
-				<Button
-					type="button"
-					disabled={importer.saving || importer.reading}
-					onClick={importer.submit}
-				>
-					{importer.saving ? m.import_saving() : m.import_submit()}
-				</Button>
-			</div>
+			<FormAlert
+				message={
+					problems.some((problem) => problem.kind === "nothing")
+						? m.import_nothing()
+						: problems.length > 0
+							? m.import_problems()
+							: (saveError?.form ?? Object.values(saveError?.fields ?? {})[0])
+				}
+			/>
+			<ImportActionBar
+				newTransactions={summary.newTransactions}
+				corrections={problems.some((problem) => problem.kind !== "nothing")}
+				onCorrection={() => goToFirstCorrection(review.current)}
+				failed={importer.saveError !== null}
+				onReadAgain={() => importer.choose(reviewing.file)}
+				onOtherFile={importer.restart}
+				saving={importer.saving}
+				disabled={importer.saving || importer.reading}
+				onSubmit={importer.submit}
+			/>
 		</div>
 	);
 }

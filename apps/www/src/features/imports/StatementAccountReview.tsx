@@ -2,6 +2,7 @@ import type { Account, StatementPreviewAccount } from "@repo/schemas";
 import { useId } from "react";
 import type { SelectOption } from "@/components/SelectField";
 import { accountTypeLabels } from "@/features/accounts/account-type-labels";
+import { AccountSummaryLine } from "@/features/imports/AccountSummaryLine";
 import { DestinationField } from "@/features/imports/DestinationField";
 import {
 	type Destination,
@@ -11,6 +12,7 @@ import {
 	type LineChoice,
 	statementAccountName,
 } from "@/features/imports/import-draft";
+import type { ImportSummary } from "@/features/imports/import-summary";
 import { StatementLineList } from "@/features/imports/StatementLineList";
 import { formatShortDay } from "@/lib/dates";
 import { m } from "@/paraglide/messages";
@@ -18,6 +20,8 @@ import { getLocale } from "@/paraglide/runtime";
 
 interface StatementAccountReviewProps {
 	account: StatementPreviewAccount;
+	/** What it comes to, where it goes. */
+	summary: ImportSummary;
 	draft: ImportDraft;
 	accounts: Account[];
 	currency: string;
@@ -34,6 +38,7 @@ interface StatementAccountReviewProps {
 /** An account of the file: what it is, where it goes, and its lines. */
 export function StatementAccountReview({
 	account,
+	summary,
 	draft,
 	accounts,
 	currency,
@@ -74,6 +79,9 @@ export function StatementAccountReview({
 						count: account.lines.length,
 					})}
 				</p>
+				{destination.kind !== "skip" && (
+					<AccountSummaryLine summary={summary} currency={currency} />
+				)}
 			</header>
 			<DestinationField
 				account={account}

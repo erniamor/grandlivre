@@ -8,6 +8,7 @@ import { HelpHint } from "@/features/help/HelpHint";
 import {
 	type ImportDraft,
 	type LineChoice,
+	lineStatus,
 	pairedBy,
 	standingHolds,
 	transferAccounts,
@@ -46,16 +47,8 @@ export function StatementLineList({
 }: StatementLineListProps) {
 	const destination = draft.destinations[account.index];
 	const holds = standingHolds(account, destination);
-	// What a line is where its account goes: the preview's standing holds
-	// there, or a transfer's other side for an account still to make
-	const statusOf = (
-		line: StatementPreviewLine,
-	): StatementPreviewLine["status"] =>
-		holds ||
-		(line.status === "counterpart" &&
-			(destination?.kind === "new" || destination?.kind === "with"))
-			? line.status
-			: "new";
+	const statusOf = (line: StatementPreviewLine) =>
+		lineStatus(line, holds, destination);
 	const of = (...statuses: StatementPreviewLine["status"][]) =>
 		account.lines.filter((line) => statuses.includes(statusOf(line)));
 	const groups = [

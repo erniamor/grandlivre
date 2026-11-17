@@ -222,6 +222,48 @@ describe("ImportPage", () => {
 		});
 	});
 
+	it("sums up what the file comes to, and keeps the count in sight with the import", async () => {
+		const { user } = setUp();
+
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+
+		const summary = within(
+			await screen.findByRole("region", { name: "Summary" }),
+		);
+		expect(
+			summary.getByText("Lines read: 5 · accounts imported: 2"),
+		).toBeVisible();
+		expect(summary.getByText("New transactions: 3")).toBeVisible();
+		const figure = (label: string) =>
+			summary.getByText(label).nextElementSibling?.textContent;
+		expect(figure("Expenses")).toBe("1 · $60.50");
+		expect(figure("Incomes and refunds")).toBe("0 · $0.00");
+		// Cash taken out, and the transfer to savings, once
+		expect(figure("Transfers")).toBe("2 · $400.00");
+		expect(figure("Already imported")).toBe("1");
+		expect(
+			within(
+				screen.getByRole("region", { name: "Caisse du Plateau ···456" }),
+			).getByText(
+				"New transactions: 3 · expenses $60.50 · incomes $0.00 · transfers: 2",
+			),
+		).toBeVisible();
+		expect(screen.getByText("Transactions to add: 3")).toBeVisible();
+
+		// A line left out: the figures follow
+		await user.selectOptions(
+			within(
+				screen.getByRole("region", { name: "Caisse du Plateau ···456" }),
+			).getAllByLabelText("What to do with this line")[0] as HTMLElement,
+			"skip",
+		);
+		expect(await screen.findByText("Transactions to add: 2")).toBeVisible();
+		expect(figure("Lines not imported")).toBe("1");
+	});
+
 	it("goes back where the page was opened from, once imported", async () => {
 		const { router, user } = setUp({ returnTo: "/getting-started" });
 		await user.upload(

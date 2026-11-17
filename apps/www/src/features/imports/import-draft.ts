@@ -143,6 +143,23 @@ export function standingHolds(
 	);
 }
 
+/**
+ * What a line is where its account goes: what the preview found when its
+ * standing holds there (or a transfer's other side, for an account still
+ * to make), "new" otherwise.
+ */
+export function lineStatus(
+	line: StatementPreviewLine,
+	holds: boolean,
+	destination: Destination | undefined,
+): StatementPreviewLine["status"] {
+	return holds ||
+		(line.status === "counterpart" &&
+			(destination?.kind === "new" || destination?.kind === "with"))
+		? line.status
+		: "new";
+}
+
 /** The first choices for an account's lines, where it goes. */
 export function choicesFor(
 	account: StatementPreviewAccount,
@@ -152,9 +169,7 @@ export function choicesFor(
 	return Object.fromEntries(
 		account.lines.flatMap((line) => {
 			const choice = initialChoice(
-				holds ||
-					(line.status === "counterpart" &&
-						(destination?.kind === "new" || destination?.kind === "with"))
+				lineStatus(line, holds, destination) === line.status
 					? line
 					: { ...line, status: "new", match: null, occurrence: null },
 			);
