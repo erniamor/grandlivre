@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { householdsQueryOptions } from "@/features/households/households-query";
 import { rememberHousehold } from "@/features/households/preferred-household";
+import { receivedInvitationsQueryKey } from "@/features/households/received-invitations-query";
 
 /**
  * After creating, joining or leaving a household: works on the one made or
@@ -18,10 +19,16 @@ export function useHouseholdChange() {
 			if (householdId) {
 				rememberHousehold(householdId);
 			}
-			await queryClient.fetchQuery({
-				...householdsQueryOptions(),
-				staleTime: 0,
-			});
+			await Promise.all([
+				queryClient.fetchQuery({
+					...householdsQueryOptions(),
+					staleTime: 0,
+				}),
+				// An invitation accepted is no longer pending
+				queryClient.invalidateQueries({
+					queryKey: receivedInvitationsQueryKey,
+				}),
+			]);
 			await router.invalidate();
 			await router.navigate({ href });
 		},

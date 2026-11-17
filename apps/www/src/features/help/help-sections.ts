@@ -32,6 +32,7 @@ export const helpSections: HelpSection[] = [
 		paragraphs: [
 			m.help_section_getting_started_p1,
 			m.help_section_getting_started_p2,
+			m.help_section_getting_started_p3,
 		],
 	},
 	{

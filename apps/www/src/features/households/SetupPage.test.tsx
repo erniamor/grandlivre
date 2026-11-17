@@ -59,6 +59,22 @@ const writes = (requests: ApiRequest[]) =>
 	requests.filter((request) => request.method !== "GET");
 
 describe("SetupPage", () => {
+	it("offers a user who has a household to create or join another, with a way back", async () => {
+		mockSetupApi([]);
+
+		renderWithRouter(<SetupPage another onReady={vi.fn()} />);
+
+		expect(
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "Another household",
+			}),
+		).toBeVisible();
+		expect(
+			screen.getByRole("link", { name: "Back to the dashboard" }),
+		).toHaveAttribute("href", "/dashboard");
+	});
+
 	it.each([
 		["en", "Your household", "Create a household"],
 		["fr", "Votre foyer", "Créer un foyer"],

@@ -64,7 +64,7 @@ describe("Header", () => {
 		await user.click(within(menu).getByRole("menuitem", { name: "Sign out" }));
 
 		await vi.waitFor(() =>
-			expect(requests).toEqual([
+			expect(requests.filter((request) => request.method !== "GET")).toEqual([
 				{ method: "POST", path: "/auth/sign-out", body: {} },
 			]),
 		);
