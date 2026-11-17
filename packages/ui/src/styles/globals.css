@@ -63,6 +63,22 @@
 		@apply border-border outline-ring/50;
 	}
 
+	/*
+	 * The hand on everything clickable. Tailwind v4 gives buttons the
+	 * default arrow (its documented fix, widened to the controls the browser
+	 * leaves with an arrow too): links already have the hand; disabled
+	 * controls keep the arrow.
+	 */
+	button:not(:disabled),
+	[role="button"]:not([aria-disabled="true"]),
+	[role="tab"]:not([aria-disabled="true"]),
+	select:not(:disabled),
+	summary,
+	input:is([type="checkbox"], [type="radio"], [type="file"]):not(:disabled),
+	label:has(> input:is([type="checkbox"], [type="radio"]):not(:disabled)) {
+		cursor: pointer;
+	}
+
 	body {
 		@apply bg-background font-sans text-foreground;
 	}
