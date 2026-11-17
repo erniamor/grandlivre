@@ -114,7 +114,7 @@ async function accountsFor({ userId, membership }: Viewer) {
 	}));
 }
 
-async function tagsOf(householdId: string): Promise<Tag[]> {
+export async function tagsOf(householdId: string): Promise<Tag[]> {
 	const [rows, names] = await Promise.all([
 		db.select().from(tags).where(eq(tags.householdId, householdId)),
 		db.select().from(tagNames).where(eq(tagNames.householdId, householdId)),
@@ -137,7 +137,7 @@ async function tagsOf(householdId: string): Promise<Tag[]> {
  * accounts whose details the member may see: no habit of an account that
  * hides its transactions from them leaves through the assistant.
  */
-async function recentPayees(
+export async function recentPayees(
 	householdId: string,
 	visibleAccountIds: string[],
 ): Promise<ContextPayee[]> {

@@ -49,3 +49,9 @@ export function parsePrintedAmount(
 	}
 	return negative ? -amount : amount;
 }
+
+/** An amount in minor units as the assistant reads them: "2875.40", a dot, no symbol. */
+export function formatDraftAmount(amount: number, currency: string): string {
+	const digits = minorUnitDigits(currency);
+	return (amount / 10 ** digits).toFixed(digits);
+}

@@ -3,6 +3,7 @@ import {
 	createDraftSchema,
 	createTransactionSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
+	suggestPayeeTagsSchema,
 	updateTransactionSchema,
 	VOICE_AUDIO_MAX_BYTES,
 } from "@repo/schemas";
@@ -25,6 +26,7 @@ import { transcribeNote } from "@/routes/drafts/voice.service";
 import {
 	categorizePayee,
 	listUncategorizedPayees,
+	suggestPayeeTags,
 } from "@/routes/transactions/categorize.service";
 import {
 	transactionParamSchema,
@@ -114,6 +116,19 @@ export const transactionRoutes = new Hono<Env>()
 		validate("query", uncategorizedQuerySchema),
 		async (c) =>
 			c.json(await listUncategorizedPayees(viewerOf(c), c.req.valid("query"))),
+	)
+	// The assistant's tag for payees without one, to review: nothing applied
+	.post(
+		"/uncategorized/suggest",
+		validate("json", suggestPayeeTagsSchema),
+		async (c) =>
+			c.json(
+				await suggestPayeeTags(
+					viewerOf(c),
+					c.req.valid("json"),
+					resolveLocale(c.req.header("accept-language")),
+				),
+			),
 	)
 	// A tag for all of a payee's expenses (or incomes) without one
 	.post("/categorize", validate("json", categorizePayeeSchema), async (c) =>

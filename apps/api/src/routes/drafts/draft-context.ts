@@ -45,6 +45,35 @@ function tagPaths(tags: Tag[], locale: Locale): Map<string, string> {
 }
 
 /**
+ * The household's tags, by short references ("t3 | Car › Gas"), and the
+ * payees recorded with their usual tag ("Shell → t3"); `tags` maps each
+ * reference to its tag.
+ */
+export function describeTags(
+	tags: Tag[],
+	locale: Locale,
+	payees: ContextPayee[],
+): { tagLines: string[]; payeeLines: string[]; tags: Map<string, string> } {
+	const references = new Map<string, string>();
+	const idOfTag = new Map<string, string>();
+	const paths = tagPaths(tags, locale);
+	const sortedTags = [...tags].sort((a, b) =>
+		(paths.get(a.id) ?? "").localeCompare(paths.get(b.id) ?? ""),
+	);
+	const tagLines = sortedTags.map((tag, index) => {
+		const reference = `t${index + 1}`;
+		references.set(reference, tag.id);
+		idOfTag.set(tag.id, reference);
+		return `${reference} | ${paths.get(tag.id)}`;
+	});
+	const payeeLines = payees.flatMap(({ payee, tagId }) => {
+		const reference = idOfTag.get(tagId);
+		return reference ? [`${payee} → ${reference}`] : [];
+	});
+	return { tagLines, payeeLines, tags: references };
+}
+
+/**
  * The household as the assistant sees it, and the references it names
  * things by. Written the same way for the same household, so it caches.
  */
@@ -61,26 +90,15 @@ export function buildDraftContext({
 	tags: Tag[];
 	payees: ContextPayee[];
 }): { context: string; references: References } {
-	const references: References = { accounts: new Map(), tags: new Map() };
-	const idOfTag = new Map<string, string>();
-	const paths = tagPaths(tags, locale);
-	const sortedTags = [...tags].sort((a, b) =>
-		(paths.get(a.id) ?? "").localeCompare(paths.get(b.id) ?? ""),
-	);
-	const tagLines = sortedTags.map((tag, index) => {
-		const reference = `t${index + 1}`;
-		references.tags.set(reference, tag.id);
-		idOfTag.set(tag.id, reference);
-		return `${reference} | ${paths.get(tag.id)}`;
-	});
+	const described = describeTags(tags, locale, payees);
+	const references: References = {
+		accounts: new Map(),
+		tags: described.tags,
+	};
 	const accountLines = accounts.map((account, index) => {
 		const reference = `a${index + 1}`;
 		references.accounts.set(reference, account.id);
 		return `${reference} | ${account.name} | ${account.type}${account.writable ? " | yours" : ""}`;
-	});
-	const payeeLines = payees.flatMap(({ payee, tagId }) => {
-		const reference = idOfTag.get(tagId);
-		return reference ? [`${payee} → ${reference}`] : [];
 	});
 
 	const context = [
@@ -91,10 +109,12 @@ export function buildDraftContext({
 		...accountLines,
 		"",
 		"Tags:",
-		...(tagLines.length > 0 ? tagLines : ["(none yet)"]),
+		...(described.tagLines.length > 0 ? described.tagLines : ["(none yet)"]),
 		"",
 		"Recent payees and their usual tag:",
-		...(payeeLines.length > 0 ? payeeLines : ["(none yet)"]),
+		...(described.payeeLines.length > 0
+			? described.payeeLines
+			: ["(none yet)"]),
 	].join("\n");
 	return { context, references };
 }

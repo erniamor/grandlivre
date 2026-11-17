@@ -99,3 +99,37 @@ export const categorizeResultSchema = z.object({
 });
 
 export type CategorizeResult = z.infer<typeof categorizeResultSchema>;
+
+/** The most payees the assistant suggests tags for at once: a page of them. */
+export const TAG_SUGGESTION_MAX_PAYEES = 50;
+
+/** The payees, among those without a tag, to suggest a tag for. */
+export const suggestPayeeTagsSchema = z.strictObject({
+	payees: z
+		.array(
+			z.strictObject({
+				key: z.string().min(1).max(200),
+				type: categorizableTypeSchema,
+			}),
+		)
+		.min(1)
+		.max(TAG_SUGGESTION_MAX_PAYEES),
+});
+
+export type SuggestPayeeTags = z.infer<typeof suggestPayeeTagsSchema>;
+
+/**
+ * The assistant's tag for each payee asked that still has transactions
+ * without a tag: one of the household's, or null when none fits surely.
+ */
+export const payeeTagSuggestionsSchema = z.object({
+	suggestions: z.array(
+		z.object({
+			key: z.string(),
+			type: categorizableTypeSchema,
+			tagId: z.uuid().nullable(),
+		}),
+	),
+});
+
+export type PayeeTagSuggestions = z.infer<typeof payeeTagSuggestionsSchema>;

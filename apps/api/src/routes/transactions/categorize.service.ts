@@ -2,17 +2,33 @@ import type {
 	CategorizePayee,
 	CategorizeResult,
 	Paginated,
+	PayeeTagSuggestions,
+	SuggestPayeeTags,
 	UncategorizedPayee,
 } from "@repo/schemas";
 import { and, eq, exists, inArray, isNotNull, not, sql } from "drizzle-orm";
 import { db, type Transaction as Tx } from "@/db/client";
 import { tags, transactionLines, transactions } from "@/db/schema";
+import { assistant } from "@/lib/assistant";
 import { AppError } from "@/lib/errors";
 import { publishHouseholdEvent } from "@/lib/events";
+import type { Locale } from "@/lib/locale";
 import type { PaginationQuery } from "@/lib/pagination";
+import { createRateLimiter } from "@/lib/rate-limit";
 import type { Viewer } from "@/routes/accounts/accounts.service";
+import { formatDraftAmount } from "@/routes/drafts/draft-amounts";
+import { describeTags } from "@/routes/drafts/draft-context";
+import { recentPayees, tagsOf } from "@/routes/drafts/drafts.service";
 import { descriptionKey } from "@/routes/imports/statements/fingerprint";
 import { accountAccess } from "@/routes/transactions/transactions.service";
+
+/** Times a member may ask for tag suggestions per hour: far above any real use. */
+export const TAG_SUGGESTIONS_PER_HOUR = 30;
+
+export const tagSuggestionLimiter = createRateLimiter({
+	limit: TAG_SUGGESTIONS_PER_HOUR,
+	windowMs: 60 * 60 * 1000,
+});
 
 /** An expense or an income without a tag, on an account the member holds. */
 interface Uncategorized {
@@ -77,19 +93,19 @@ export async function countUncategorized(viewer: Viewer): Promise<number> {
 	return (await uncategorized(db, viewer)).length;
 }
 
+/** A payee's transactions without a tag, with their amounts. */
+type PayeeGroup = UncategorizedPayee & { amounts: number[] };
+
 /**
  * The expenses and incomes without a tag of the member's accounts, by
  * payee: payees alike in their letters together, the expenses and the
  * incomes apart; the payees with the most transactions first. Those
  * without a payee are left out: nothing groups them.
  */
-export async function listUncategorizedPayees(
-	viewer: Viewer,
-	pagination: PaginationQuery,
-): Promise<Paginated<UncategorizedPayee>> {
+async function payeeGroups(viewer: Viewer): Promise<PayeeGroup[]> {
 	const groups = new Map<
 		string,
-		UncategorizedPayee & { spellings: Map<string, number> }
+		PayeeGroup & { spellings: Map<string, number> }
 	>();
 	for (const row of await uncategorized(db, viewer)) {
 		const key = descriptionKey(row.payee ?? "");
@@ -105,10 +121,12 @@ export async function listUncategorizedPayees(
 			total: 0,
 			firstDate: row.date,
 			lastDate: row.date,
+			amounts: [],
 			spellings: new Map<string, number>(),
 		};
 		group.count += 1;
 		group.total += row.amount;
+		group.amounts.push(row.amount);
 		// Days as YYYY-MM-DD: their text sorts as the days do
 		if (row.date < group.firstDate) {
 			group.firstDate = row.date;
@@ -119,7 +137,7 @@ export async function listUncategorizedPayees(
 		group.spellings.set(row.payee, (group.spellings.get(row.payee) ?? 0) + 1);
 		groups.set(id, group);
 	}
-	const sorted = [...groups.values()]
+	return [...groups.values()]
 		.map(({ spellings, ...group }) => ({
 			...group,
 			// As most of its transactions write it
@@ -134,10 +152,100 @@ export async function listUncategorizedPayees(
 				b.total - a.total ||
 				a.payee.localeCompare(b.payee),
 		);
+}
+
+/** The payees of the member's expenses and incomes without a tag, a page of them. */
+export async function listUncategorizedPayees(
+	viewer: Viewer,
+	pagination: PaginationQuery,
+): Promise<Paginated<UncategorizedPayee>> {
+	const sorted = await payeeGroups(viewer);
 	const start = (pagination.page - 1) * pagination.pageSize;
 	return {
-		data: sorted.slice(start, start + pagination.pageSize),
+		data: sorted
+			.slice(start, start + pagination.pageSize)
+			.map(({ amounts: _amounts, ...group }) => group),
 		pagination: { ...pagination, total: sorted.length },
+	};
+}
+
+/** The middle amount, the usual one. */
+function median(values: number[]): number {
+	const sorted = [...values].sort((a, b) => a - b);
+	return sorted[Math.floor(sorted.length / 2)] ?? 0;
+}
+
+/**
+ * The assistant's tag for each payee asked, among the member's payees
+ * without a tag: one of the household's tags, or null. Nothing is applied:
+ * the member reviews each one. The assistant gets the payees as their
+ * transactions write them, the household's tags and the payees already
+ * tagged, of the accounts whose details the member may see.
+ */
+export async function suggestPayeeTags(
+	viewer: Viewer,
+	{ payees }: SuggestPayeeTags,
+	locale: Locale,
+): Promise<PayeeTagSuggestions> {
+	if (!tagSuggestionLimiter.consume(viewer.userId)) {
+		throw new AppError(
+			429,
+			"too_many_requests",
+			"Too many in the last hour: choose the tags by hand or try again later",
+		);
+	}
+	const { household } = viewer.membership;
+	const asked = new Set(payees.map(({ key, type }) => `${type}:${key}`));
+	const groups = (await payeeGroups(viewer)).filter((group) =>
+		asked.has(`${group.type}:${group.key}`),
+	);
+	if (groups.length === 0) {
+		return { suggestions: [] };
+	}
+	const [householdTags, access] = await Promise.all([
+		tagsOf(household.id),
+		accountAccess(db, viewer),
+	]);
+	const habits = await recentPayees(
+		household.id,
+		[...access]
+			.filter(([, rights]) => rights.seesDetails)
+			.map(([accountId]) => accountId),
+	);
+	const described = describeTags(householdTags, locale, habits);
+	const context = [
+		`Household currency: ${household.currency}`,
+		`Member's language: ${locale}`,
+		"",
+		"Tags:",
+		...(described.tagLines.length > 0 ? described.tagLines : ["(none yet)"]),
+		"",
+		"Payees already tagged, with their usual tag:",
+		...(described.payeeLines.length > 0
+			? described.payeeLines
+			: ["(none yet)"]),
+	].join("\n");
+	const lines = groups.map(
+		(group, index) =>
+			`p${index + 1} | ${group.type} | ${group.payee} | ${group.count} ${group.count === 1 ? "time" : "times"} | usually ${formatDraftAmount(median(group.amounts), household.currency)}`,
+	);
+	const answer = await assistant.suggestTags({
+		context,
+		payees: lines.join("\n"),
+	});
+	// What the assistant answers is checked: known payees and tags only
+	const tagOf = new Map(
+		answer.suggestions.map(({ payee, tag }) => [
+			payee,
+			tag === null ? null : (described.tags.get(tag) ?? null),
+		]),
+	);
+	return {
+		suggestions: groups.map((group, index) => ({
+			key: group.key,
+			type: group.type,
+			tagId: tagOf.get(`p${index + 1}`) ?? null,
+		})),
 	};
 }
 
