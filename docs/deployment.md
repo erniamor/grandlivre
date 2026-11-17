@@ -2,17 +2,23 @@
 
 How to deploy Grand Livre to [Railway](https://railway.com) (Hobby plan), from the `main` branch of its GitHub repository. Why Railway, and the alternatives: [hosting.md](hosting.md).
 
-The examples use `app.example.com` for the front end and `api.example.com` for the API: replace them with the project's domains.
-
 | Railway service | Content | Public URL |
 | --- | --- | --- |
-| `www` | Front end: TanStack Start built by Nitro into a Node server | `https://app.example.com` |
-| `api` | API: Hono on Node | `https://api.example.com` |
+| `www` | Front end: TanStack Start built by Nitro into a Node server | `https://grandlivre.romain.re` |
+| `api` | API: Hono on Node | `https://api.grandlivre.romain.re` |
 | `Postgres` | PostgreSQL, managed by Railway, on a volume | none (private network only) |
 
-The front end and the API share the parent domain `example.com`: the session cookie is set for it (`COOKIE_DOMAIN`), so the front end's server receives it and renders signed-in pages.
+The front end and the API share the parent domain `grandlivre.romain.re`: the session cookie is set for it (`COOKIE_DOMAIN`), so the front end's server receives it and renders signed-in pages. The cookie stays within `grandlivre.romain.re`: nothing else under `romain.re` receives it.
 
-Each service runs **one instance**: Better Auth's rate limiting is kept in memory (see `apps/api/README.md`).
+## Before the launch: a pre-launch
+
+The first deployment is a **pre-launch**: until the launch is declared (see [roadmap.md](roadmap.md)), the production database is disposable, reset at will (see "Resetting the database before the launch"), and nobody keeps real data in it. From the launch on, it is never reset again, and migrations must keep the data in place.
+
+## What must stay as it is
+
+- **One instance of each service.** The API keeps in its memory the rate limits (sign-in, notes, receipts, voice, tag suggestions) and the timer that records the recurring transactions whose day has come: a second instance would count apart and record them twice.
+- **`BETTER_AUTH_SECRET` never changes once real data is in.** It signs the sessions, and it is the key of the hash that recognizes an account at the bank from its number (`statement_accounts.number_hash`): a new secret signs everyone out, and every statement account then has to be tied to its account again.
+- **`VITE_API_URL` is read when `www` is built**: changing it needs a new build, not only a restart.
 
 ## Service settings
 
@@ -30,7 +36,7 @@ Both services deploy the repository root (Root Directory left empty): the pnpm w
 | Start command | `pnpm --filter api start` |
 | Healthcheck path | `/v1/health` |
 | Watch paths | `/apps/api/**`, `/packages/schemas/**`, `/packages/config-ts/**`, `/package.json`, `/pnpm-lock.yaml`, `/pnpm-workspace.yaml` |
-| Region / replicas | The project's region, 1 |
+| Region / replicas | US East (the closest to Québec), 1 |
 | Restart policy | On failure |
 
 Variables:
@@ -39,14 +45,18 @@ Variables:
 | --- | --- |
 | `NODE_ENV` | `production` |
 | `PORT` | `3001` (fixed, so the front end can reach the API on the private network) |
-| `API_URL` | `https://api.example.com` |
-| `APP_URL` | `https://app.example.com` |
-| `CORS_ORIGINS` | `https://app.example.com` |
-| `COOKIE_DOMAIN` | `example.com` |
+| `API_URL` | `https://api.grandlivre.romain.re` |
+| `APP_URL` | `https://grandlivre.romain.re` (the links in the emails, and the logo they show: `<APP_URL>/icon-192.png`) |
+| `CORS_ORIGINS` | `https://grandlivre.romain.re` |
+| `COOKIE_DOMAIN` | `grandlivre.romain.re` |
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (Railway reference: the database's private URL) |
-| `BETTER_AUTH_SECRET` | A new secret for production, never the development one: `openssl rand -base64 32` |
-| `RESEND_API_KEY` | A Resend key with "Sending access", restricted to the sending domain |
-| `EMAIL_FROM` | `<App name> <address on the domain verified in Resend>` |
+| `BETTER_AUTH_SECRET` | A new secret for production, never the development one: `openssl rand -base64 32` (see "What must stay as it is") |
+| `RESEND_API_KEY` | A Resend key with "Sending access", restricted to the sending domain (required: the API refuses to start without it in production) |
+| `EMAIL_FROM` | `Grand Livre <bonjour@grandlivre.romain.re>`, on the domain verified in Resend |
+| `ANTHROPIC_API_KEY` | A key of its own for production, in a Claude Console workspace with a monthly spend limit: notes, receipts and tag suggestions. Without it, the assistant answers that it is unavailable |
+| `MISTRAL_API_KEY` | A key of its own for production, with a spending limit: the notes dictated through the microphone. Without it, dictating is unavailable |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Not set for now: sign-in by email only. To add Google later: an OAuth client in Google Cloud Console, with the redirect URI `https://api.grandlivre.romain.re/v1/auth/callback/google` |
+| `RECURRING_RUN_EVERY_SECONDS` | Not set: every 15 minutes by default |
 
 The pre-deploy command applies the pending migrations with the service's variables before the new version starts; if it fails, the deployment stops and the previous version keeps running.
 
@@ -59,14 +69,14 @@ The pre-deploy command applies the pending migrations with the service's variabl
 | Start command | `pnpm --filter www start` |
 | Healthcheck path | `/` |
 | Watch paths | `/apps/www/**`, `/packages/**`, `/package.json`, `/pnpm-lock.yaml`, `/pnpm-workspace.yaml` |
-| Region / replicas | The project's region, 1 |
+| Region / replicas | US East, 1 |
 | Restart policy | On failure |
 
 Variables:
 
 | Variable | Value |
 | --- | --- |
-| `VITE_API_URL` | `https://api.example.com` (read at build time: changing it needs a new build) |
+| `VITE_API_URL` | `https://api.grandlivre.romain.re` (read at build time: changing it needs a new build) |
 | `API_URL` | `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3001`: the server-side rendering calls the API on the private network |
 
 ### `Postgres`
@@ -76,30 +86,61 @@ Variables:
 
 ## Domains
 
-1. In each service, Settings, Networking: add the custom domain (`app.example.com` for `www`, `api.example.com` for `api`). Railway shows a CNAME target and a TXT verification record for each.
-2. In the DNS zone of `example.com`, at the DNS provider, add:
-   - `app` CNAME to the target shown for `www`;
-   - `api` CNAME to the target shown for `api`;
+1. In each service, Settings, Networking: add the custom domain (`grandlivre.romain.re` for `www`, `api.grandlivre.romain.re` for `api`). Railway shows a CNAME target and a TXT verification record for each.
+2. In the DNS zone of `romain.re`, at its DNS provider, add:
+   - `grandlivre` CNAME to the target shown for `www`;
+   - `api.grandlivre` CNAME to the target shown for `api`;
    - the TXT records Railway asks for.
 3. Railway issues the HTTPS certificates once the records resolve.
 
-The email records of the Resend sending domain (DKIM, SPF, return path) are separate: don't change them.
+## Emails (Resend)
+
+1. In Resend, add the domain `grandlivre.romain.re` (EU region). Resend shows its DNS records: a DKIM TXT record, and the MX and SPF TXT records of its return path (on a `send.grandlivre` subdomain).
+2. Add them in the DNS zone of `romain.re`, beside the others, and wait for Resend to verify the domain.
+3. Create an API key with "Sending access", restricted to that domain: it is `RESEND_API_KEY`.
+
+These records are separate from Railway's: changing one never needs the other. The `romain.re` address you receive mail on is untouched: the records are on subdomains.
 
 ## First deployment
 
-1. Create the Railway project (Hobby plan, in the project's region) and connect the GitHub repository.
-2. Add PostgreSQL, then the `api` and `www` services with the settings above, and enable the database backups.
-3. Deploy `api` first (the pre-deploy command creates the tables), then `www`.
-4. Add the domains and the DNS records, and wait for the certificates.
-5. Check, on a phone and a computer:
-   - sign in with the email link, then with the code;
-   - set the name, then change it on the profile page;
-   - switch the language, the mode and the theme, and reload: the choices stay.
+1. Merge `dev` into `stage`, then `stage` into `main`, after `pnpm typecheck`, `pnpm test` and `pnpm check` pass.
+2. Create the Railway project (Hobby plan, US East) and connect the GitHub repository.
+3. Add PostgreSQL and enable its backups, then the `api` and `www` services with the settings above.
+4. Deploy `api` first (the pre-deploy command creates the tables), then `www`.
+5. Add the domains and the DNS records (Railway's and Resend's), and wait for the certificates and Resend's verification.
+6. Run the checks below.
+
+## Checks after a deployment
+
+On a computer and on a phone (Android, in Brave), at `https://grandlivre.romain.re`:
+
+- **Signing in:** the email arrives styled, with the logo; the link signs in; then sign out and sign in with the code. Set the name, then change it on the profile page.
+- **Appearance:** switch the language, the mode and the theme, and reload: the choices stay. Install the app from the account menu, and open it from the home screen.
+- **A household:** create one, go through Getting started; invite a second address, accept from it, and switch between two households from the header.
+- **Accounts and transactions:** add an account, record an expense, a transfer; the balances follow, in a second browser too (real time).
+- **Quick entry:** a typed note, a note dictated through the microphone (on the phone, in Brave: it needs HTTPS), and a receipt photo turned, cropped and masked by touch before it is sent.
+- **Import:** a full Desjardins CSV (accounts, then cards): the summary, the tabs, the filters and the bar at the bottom, on the phone too, with hundreds of lines; the balances against the bank's; undo it.
+- **Recurring transactions and tags:** the suggestions from the history, and the tags suggested when sorting by payee.
+- **Reports, budgets, help:** each page opens; the help's FAQ searches.
+
+## Resetting the database before the launch
+
+Only during the pre-launch, never after it:
+
+1. Open a `psql` session on the production database with Railway's CLI (`railway link` to the project once, then `railway connect Postgres`), and run:
+   ```sql
+   DROP SCHEMA IF EXISTS drizzle CASCADE;
+   DROP SCHEMA public CASCADE;
+   CREATE SCHEMA public;
+   ```
+2. Redeploy `api`: its pre-deploy command applies every migration again on the empty database.
+
+Everyone is signed out, and every household, account and transaction is gone. The local development database has the same reset: `pnpm db:reset`.
 
 ## Day to day
 
 - **Deploying:** every push to `main` redeploys the services whose watch paths changed. Railway doesn't run the tests: run `pnpm typecheck`, `pnpm test` and `pnpm check` before merging into `main`.
 - **Migrations:** generated and committed as in development (`pnpm --filter api db:generate`); the pre-deploy command applies them. Keep them backward compatible with the running version (add a column before using it, remove it in a later deployment), since the old version serves requests until the new one is up.
 - **Rolling back:** redeploy a previous deployment from the service's Deployments tab. Migrations aren't rolled back: a migration that must be undone needs a new migration.
-- **Logs:** each service's Logs tab. Failed emails are logged with Resend's reason, never with their content.
-- **Cost:** about USD 5 a month on the Hobby plan (usage included up to USD 5); check the usage page during the first month.
+- **Logs:** each service's Logs tab. Failed emails are logged with Resend's reason, never with their content; the Claude and Mistral APIs' failures without the member's note, photo or recording.
+- **Cost:** about USD 5 a month on the Hobby plan (usage included up to USD 5); check the usage page during the first month, and the spending of the Claude and Mistral keys.
