@@ -54,8 +54,20 @@ export interface RecurringPattern extends PatternIdentity {
 export interface FindPatternsOptions {
 	/** Today, "YYYY-MM-DD". */
 	today: string;
-	/** Series already covered by a recurring transaction or dismissed. */
-	covered?: PatternIdentity[];
+	/** Schedules of the recurring transactions, and of the series dismissed. */
+	covered?: CoveredSchedule[];
+}
+
+/**
+ * A schedule that covers a series: a recurring transaction's, or a series
+ * dismissed (from the day it was next expected).
+ */
+export interface CoveredSchedule extends PatternIdentity {
+	unit: RecurrenceUnit;
+	interval: number;
+	startDate: string;
+	/** A recurring transaction's amount; null for a series dismissed. */
+	amount: number | null;
 }
 
 /** A cadence looked for, and how far a day may stray from it. */
@@ -421,6 +433,47 @@ function identityKey(identity: PatternIdentity): string {
 }
 
 /**
+ * Whether a schedule already covers a series: the same accounts, type and
+ * cadence, a day of the schedule where the series is next expected, and
+ * the same payee, or else an amount within the series' (a recurring
+ * transaction whose payee was renamed, "ATELIER BOREAL INC." become "Boréal").
+ * A pay on the 15th doesn't cover the one on the 30th.
+ */
+export function covers(
+	schedule: CoveredSchedule,
+	pattern: RecurringPattern,
+): boolean {
+	if (
+		schedule.accountId !== pattern.accountId ||
+		schedule.toAccountId !== pattern.toAccountId ||
+		schedule.type !== pattern.type ||
+		schedule.unit !== pattern.unit ||
+		schedule.interval !== pattern.interval
+	) {
+		return false;
+	}
+	const tolerance = (
+		CADENCES.find(
+			(cadence) =>
+				cadence.unit === pattern.unit && cadence.interval === pattern.interval,
+		) as Cadence
+	).tolerance;
+	const day = nextOccurrence(
+		{ ...schedule, endDate: null },
+		addDays(pattern.nextDate, -tolerance),
+	) as string;
+	if (Math.abs(daysBetween(pattern.nextDate, day)) > tolerance) {
+		return false;
+	}
+	return (
+		schedule.key === pattern.key ||
+		(schedule.amount !== null &&
+			schedule.amount >= pattern.minAmount / VARYING_RATIO &&
+			schedule.amount <= pattern.maxAmount * VARYING_RATIO)
+	);
+}
+
+/**
  * The transactions of the history that repeat: by account, payee and type,
  * weekly, every two weeks, monthly or yearly, still going on today, and not
  * yet covered. A payee's transactions can make several series (a pay on
@@ -430,7 +483,6 @@ export function findRecurringPatterns(
 	history: PastTransaction[],
 	{ today, covered = [] }: FindPatternsOptions,
 ): RecurringPattern[] {
-	const skip = new Set(covered.map(identityKey));
 	const groups = new Map<
 		string,
 		{ identity: PatternIdentity; items: PastTransaction[] }
@@ -448,9 +500,6 @@ export function findRecurringPatterns(
 			key,
 		};
 		const groupKey = identityKey(identity);
-		if (skip.has(groupKey)) {
-			continue;
-		}
 		const group = groups.get(groupKey) ?? { identity, items: [] };
 		group.items.push(transaction);
 		groups.set(groupKey, group);
@@ -461,7 +510,10 @@ export function findRecurringPatterns(
 			.filter((item) => item.date <= today)
 			.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 		for (const chain of chainsOf(sorted, today)) {
-			patterns.push(patternOf(chain, identity, today));
+			const pattern = patternOf(chain, identity, today);
+			if (!covered.some((schedule) => covers(schedule, pattern))) {
+				patterns.push(pattern);
+			}
 		}
 	}
 	return patterns.sort(

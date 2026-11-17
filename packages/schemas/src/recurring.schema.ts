@@ -146,3 +146,68 @@ export const upcomingOccurrenceSchema = z.object({
 });
 
 export type UpcomingOccurrence = z.infer<typeof upcomingOccurrenceSchema>;
+
+/** How many of a suggested series' last days come with it. */
+export const SUGGESTION_MAX_DATES = 12;
+
+/** The longest payee key a dismissal holds. */
+export const SUGGESTION_KEY_MAX_LENGTH = 200;
+
+/**
+ * What tells a suggested series apart, as a dismissal names it: its
+ * accounts, type, payee (its letters only, lowercased), cadence, and a day
+ * it is expected on.
+ */
+export const recurringSuggestionKeySchema = z
+	.strictObject({
+		accountId: z.uuid(),
+		/** Where a transfer goes; null otherwise. */
+		toAccountId: z.uuid().nullable(),
+		type: transactionTypeSchema,
+		key: z.string().max(SUGGESTION_KEY_MAX_LENGTH),
+		unit: recurrenceUnitSchema,
+		interval: z.number().int().min(1).max(RECURRENCE_MAX_INTERVAL),
+		/** The day it was next expected on. */
+		startDate: calendarDateSchema,
+	})
+	.refine(
+		({ type, toAccountId }) => (type === "transfer") === (toAccountId !== null),
+		{ message: "transfer_destination_invalid", path: ["toAccountId"] },
+	);
+
+export type RecurringSuggestionKey = z.infer<
+	typeof recurringSuggestionKeySchema
+>;
+
+/**
+ * A series found in the history of an account the member holds, offered
+ * as a recurring transaction: they confirm it in the recurring form, or
+ * dismiss it.
+ */
+export const recurringSuggestionSchema = z.object({
+	accountId: z.uuid(),
+	toAccountId: z.uuid().nullable(),
+	type: transactionTypeSchema,
+	/** Its payee's letters, lowercased: with the rest, what a dismissal names. */
+	key: z.string(),
+	/** As last written by the bank or a member. */
+	payee: z.string().nullable(),
+	unit: recurrenceUnitSchema,
+	interval: z.number().int(),
+	/** Positive, in minor units: its last amount when steady, else its median. */
+	amount: z.number().int(),
+	minAmount: z.number().int(),
+	maxAmount: z.number().int(),
+	/** "automatic" when its last amounts are the same. */
+	mode: recurrenceModeSchema,
+	/** The next day it is expected on: the recurring transaction's first day. */
+	nextDate: calendarDateSchema,
+	/** The tag it is most often given. */
+	tagId: z.uuid().nullable(),
+	/** How many times it was seen. */
+	count: z.number().int(),
+	/** Its last days, at most `SUGGESTION_MAX_DATES`, oldest first. */
+	dates: z.array(calendarDateSchema),
+});
+
+export type RecurringSuggestion = z.infer<typeof recurringSuggestionSchema>;

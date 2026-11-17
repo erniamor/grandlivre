@@ -1,5 +1,6 @@
 import {
 	createRecurringTransactionSchema,
+	recurringSuggestionKeySchema,
 	updateRecurringTransactionSchema,
 	updateTransactionSchema,
 } from "@repo/schemas";
@@ -24,6 +25,10 @@ import {
 	skipOccurrence,
 	updateRecurring,
 } from "@/routes/recurring/recurring.service";
+import {
+	dismissSuggestion,
+	listSuggestions,
+} from "@/routes/recurring/suggestions.service";
 
 type Env = { Variables: HouseholdVariables };
 
@@ -67,6 +72,18 @@ export const recurringRoutes = new Hono<Env>()
 		validate("param", occurrenceParamSchema),
 		async (c) => {
 			await skipOccurrence(viewerOf(c), c.req.valid("param").occurrenceId);
+			return c.body(null, 204);
+		},
+	)
+	// Series found in the history of the accounts the member holds
+	.get("/suggestions", validate("query", recurringQuerySchema), async (c) =>
+		c.json(await listSuggestions(viewerOf(c), c.req.valid("query"))),
+	)
+	.post(
+		"/suggestions/dismiss",
+		validate("json", recurringSuggestionKeySchema),
+		async (c) => {
+			await dismissSuggestion(viewerOf(c), c.req.valid("json"));
 			return c.body(null, 204);
 		},
 	)

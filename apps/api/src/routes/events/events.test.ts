@@ -192,6 +192,19 @@ describe("GET /v1/households/:householdId/events", () => {
 				call("DELETE", `/recurring-transactions/${recurringId}`),
 			),
 		).toEqual(["recurring"]);
+		expect(
+			await topicsOf(() =>
+				call("POST", "/recurring-transactions/suggestions/dismiss", {
+					accountId: account.id,
+					toAccountId: null,
+					type: "expense",
+					key: "costco",
+					unit: "month",
+					interval: 1,
+					startDate: "2026-12-01",
+				}),
+			),
+		).toEqual(["recurring"]);
 		// Expense sharing: turned on with the household, then its settings
 		// and its settlements
 		expect(

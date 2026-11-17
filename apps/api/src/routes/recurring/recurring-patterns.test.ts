@@ -269,7 +269,7 @@ describe("findRecurringPatterns", () => {
 		expect(series?.dates).toHaveLength(10);
 	});
 
-	it("keeps payees, accounts and types apart, and skips what is covered", () => {
+	it("keeps payees, accounts and types apart, and skips a series dismissed", () => {
 		const days = monthlyDays("2026-04-05", 8);
 		const history = [
 			...days.map((date) => past(date, 50_00, "Bell")),
@@ -280,13 +280,53 @@ describe("findRecurringPatterns", () => {
 		const patterns = findRecurringPatterns(history, {
 			today: TODAY,
 			covered: [
-				{ accountId: "joint", toAccountId: null, type: "expense", key: "bell" },
+				{
+					accountId: "joint",
+					toAccountId: null,
+					type: "expense",
+					key: "bell",
+					unit: "month",
+					interval: 1,
+					startDate: "2026-12-05",
+					amount: null,
+				},
 			],
 		});
 
 		expect(
 			patterns.map(({ accountId, type }) => `${accountId} ${type}`).sort(),
 		).toEqual(["chequing expense", "chequing income"]);
+	});
+
+	it("skips the series a recurring transaction covers, its payee renamed, and only that one", () => {
+		const history = [
+			...monthlyDays("2026-01-15", 10),
+			...monthlyDays("2026-01-30", 10),
+		].map((date) => past(date, 2_150_00, "ATELIER BOREAL INC.", { type: "income" }));
+		const pay = {
+			accountId: "chequing",
+			toAccountId: null,
+			type: "income" as const,
+			key: "boreal",
+			unit: "month" as const,
+			interval: 1,
+			startDate: "2026-11-15",
+			amount: 2_150_00,
+		};
+
+		const left = findRecurringPatterns(history, {
+			today: TODAY,
+			covered: [pay],
+		});
+
+		expect(left.map(({ nextDate }) => nextDate)).toEqual(["2026-11-30"]);
+		// Another amount, under another payee: something else
+		expect(
+			findRecurringPatterns(history, {
+				today: TODAY,
+				covered: [{ ...pay, amount: 500_00 }],
+			}),
+		).toHaveLength(2);
 	});
 
 	it("finds a monthly transfer to savings by its accounts, without a payee", () => {
