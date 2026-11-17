@@ -11,6 +11,7 @@
 		"db:down": "docker compose down",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx --env-file=.env src/db/migrate.ts",
+		"db:reset": "docker compose exec -T postgres psql -U grandlivre -d grandlivre -v ON_ERROR_STOP=1 -q -c \"SET client_min_messages = warning; DROP SCHEMA IF EXISTS drizzle CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public;\" && pnpm db:migrate",
 		"db:migrate:built": "node --env-file-if-exists=.env dist/db/migrate.mjs",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run"

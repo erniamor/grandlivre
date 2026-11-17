@@ -28,6 +28,7 @@ The product's backend. Exposes a JSON REST API consumed by `apps/www` through `@
 - Production start: `pnpm --filter api start`
 - Generate a migration: `pnpm --filter api db:generate`
 - Apply migrations: `pnpm --filter api db:migrate`
+- Reset the local development database (everything deleted, then every migration applied again): `pnpm db:reset` from the root, or `pnpm --filter api db:reset`; it goes through the Docker container, so it can only reach the local `grandlivre` database
 - Tests: `pnpm --filter api test` (applies the migrations to `grandlivre_test` first)
 - Typecheck: `pnpm --filter api typecheck`
 
