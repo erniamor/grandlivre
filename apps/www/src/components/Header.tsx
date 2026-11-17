@@ -18,9 +18,16 @@ interface HeaderProps {
 	theme: ThemeName;
 	/** The signed-in user, null for a visitor. */
 	me: Profile | null;
+	/** The household chosen on this device, if any. */
+	preferredHousehold?: string;
 }
 
-export function Header({ appearance, theme, me }: HeaderProps) {
+export function Header({
+	appearance,
+	theme,
+	me,
+	preferredHousehold,
+}: HeaderProps) {
 	return (
 		<header className="border-inverse-border border-b bg-inverse text-inverse-foreground">
 			<div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
@@ -42,7 +49,7 @@ export function Header({ appearance, theme, me }: HeaderProps) {
 			{/* The app's pages are reserved to signed-in users */}
 			{me && (
 				<div className="mx-auto max-w-5xl px-4 pb-2">
-					<MainNav />
+					<MainNav preferredHousehold={preferredHousehold} />
 				</div>
 			)}
 		</header>

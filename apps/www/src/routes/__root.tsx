@@ -17,6 +17,7 @@ import {
 } from "@/features/appearance/appearance";
 import { getAppearance } from "@/features/appearance/get-appearance";
 import { meQueryOptions } from "@/features/auth/me-query";
+import { getPreferredHousehold } from "@/features/households/preferred-household";
 import { listenForInstallPrompt } from "@/features/pwa/install-prompt";
 import { registerServiceWorker } from "@/features/pwa/service-worker";
 import { themeColorMetas } from "@/features/pwa/theme-color";
@@ -39,6 +40,8 @@ interface ShellContext {
 	appearance: Appearance;
 	theme: ThemeName;
 	me: Profile | null;
+	/** The household chosen on this device, if any (see currentHousehold). */
+	preferredHousehold: string | undefined;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -48,7 +51,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		if (me && !me.name && location.pathname !== "/welcome") {
 			throw redirect({ to: "/welcome", search: { redirect: location.href } });
 		}
-		return { appearance: getAppearance(), theme: getTheme(), me };
+		return {
+			appearance: getAppearance(),
+			theme: getTheme(),
+			me,
+			preferredHousehold: getPreferredHousehold(),
+		};
 	},
 	head: () => ({
 		meta: [
@@ -107,7 +115,12 @@ function RootDocument({ children }: { children: ReactNode }) {
 				{/* One provider for the app's tooltips: hovering from one to the next
 				shows it without the delay */}
 				<TooltipProvider>
-					<Header appearance={appearance} theme={theme} me={me} />
+					<Header
+						appearance={appearance}
+						theme={theme}
+						me={me}
+						preferredHousehold={context.preferredHousehold}
+					/>
 					<main>{children}</main>
 				</TooltipProvider>
 				<Toaster theme={appearance} position="bottom-center" />

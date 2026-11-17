@@ -43,13 +43,20 @@ const sharingItem = {
  * The links to the app's pages, on the header's band: each with its icon and
  * its name. On a narrow screen the row scrolls sideways rather than wrap.
  */
-export function MainNav() {
+interface MainNavProps {
+	/** The household chosen on this device, if any (see currentHousehold). */
+	preferredHousehold?: string;
+}
+
+export function MainNav({ preferredHousehold }: MainNavProps) {
 	// The households the pages loaded, from the cache: no request of its own
 	const { data: households } = useQuery({
 		...householdsQueryOptions(),
 		enabled: false,
 	});
-	const household = households ? currentHousehold(households) : null;
+	const household = households
+		? currentHousehold(households, preferredHousehold)
+		: null;
 	const links = household?.expenseSharing ? [...items, sharingItem] : items;
 
 	return (

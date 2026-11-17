@@ -96,7 +96,10 @@ describe("SetupPage", () => {
 
 		await vi.waitFor(() => expect(onReady).toHaveBeenCalledOnce());
 		// A household made starts with its first steps
-		expect(onReady).toHaveBeenCalledWith("created");
+		expect(onReady).toHaveBeenCalledWith(
+			expect.objectContaining({ id: household.id }),
+			"created",
+		);
 		expect(writes(requests)).toEqual([
 			{
 				method: "POST",
@@ -205,7 +208,10 @@ describe("SetupPage", () => {
 		await user.click(within(invitations).getByRole("button", { name: "Join" }));
 
 		await vi.waitFor(() => expect(onReady).toHaveBeenCalledOnce());
-		expect(onReady).toHaveBeenCalledWith("joined");
+		expect(onReady).toHaveBeenCalledWith(
+			expect.objectContaining({ id: household.id }),
+			"joined",
+		);
 		expect(writes(requests)).toEqual([
 			{
 				method: "POST",

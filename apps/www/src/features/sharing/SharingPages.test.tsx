@@ -465,6 +465,42 @@ describe("the navigation", () => {
 			await within(nav).findByRole("link", { name: "Sharing" }),
 		).toHaveAttribute("href", "/shared");
 	});
+
+	it("follows the household chosen on this device", async () => {
+		const other = {
+			...sharing,
+			id: "00000000-0000-4000-8000-0000000000aa",
+			expenseSharing: false,
+		};
+		const renderHeader = (preferred: string) => {
+			const { router } = renderWithRouter(
+				<Header
+					appearance="system"
+					theme="ledger"
+					me={aliceProfile}
+					preferredHousehold={preferred}
+				/>,
+			);
+			const { queryClient } = router.options.context as {
+				queryClient: import("@tanstack/react-query").QueryClient;
+			};
+			act(() => {
+				queryClient.setQueryData(["households"], {
+					items: [other, sharing],
+					page: 1,
+					pageSize: 50,
+					total: 2,
+				});
+			});
+		};
+
+		// The second household, chosen: it shares expenses
+		renderHeader(sharing.id);
+		const nav = await screen.findByRole("navigation", { name: "Main" });
+		expect(
+			await within(nav).findByRole("link", { name: "Sharing" }),
+		).toBeVisible();
+	});
 });
 
 describe("sharing a recurring transaction", () => {

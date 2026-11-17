@@ -5,22 +5,31 @@ import { getApi } from "@/lib/api";
 
 export const householdsQueryKey = ["households"] as const;
 
-/** The households the signed-in user belongs to. */
+/** A user's households fit in one page: the API's largest. */
+const HOUSEHOLDS_PAGE_SIZE = 50;
+
+/** The households the signed-in user belongs to, the oldest first. */
 export function householdsQueryOptions() {
 	return queryOptions({
 		queryKey: householdsQueryKey,
-		queryFn: ({ signal }) => getApi().households.list({ signal }),
+		queryFn: ({ signal }) =>
+			getApi().households.list({ pageSize: HOUSEHOLDS_PAGE_SIZE, signal }),
 		staleTime: 5 * 60_000,
 	});
 }
 
 /**
- * The household the app works on, or null for a user who has none yet. A user
- * can belong to several households, but the interface handles a single one
- * for now: the first they joined.
+ * The household the app works on: the one the user chose on this device
+ * (`preferredId`), while they still belong to it; else their first one;
+ * null for a user who has none yet.
  */
 export function currentHousehold(
 	households: Page<Household>,
+	preferredId?: string,
 ): Household | null {
-	return households.items[0] ?? null;
+	return (
+		households.items.find((household) => household.id === preferredId) ??
+		households.items[0] ??
+		null
+	);
 }

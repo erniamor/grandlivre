@@ -34,9 +34,10 @@ function SetupRoute() {
 
 	return (
 		<SetupPage
-			onReady={(how) =>
+			onReady={(created, how) =>
 				household.refresh(
 					target ?? (how === "created" ? NEW_HOUSEHOLD_TARGET : DEFAULT_TARGET),
+					created.id,
 				)
 			}
 		/>

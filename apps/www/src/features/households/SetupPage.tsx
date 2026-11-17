@@ -1,3 +1,4 @@
+import type { Household } from "@repo/schemas";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useId } from "react";
 import { CreateHouseholdForm } from "@/features/households/CreateHouseholdForm";
@@ -9,9 +10,11 @@ import {
 import { m } from "@/paraglide/messages";
 
 interface SetupPageProps {
-	/** Called once the user has a household: created, or joined by invitation. */
-	/** Called once in a household: one it made, or one it joined. */
-	onReady: (how: "created" | "joined") => void | Promise<void>;
+	/** Called once in a household: one the user made, or one they joined. */
+	onReady: (
+		household: Household,
+		how: "created" | "joined",
+	) => void | Promise<void>;
 }
 
 /**
@@ -36,7 +39,7 @@ export function SetupPage({ onReady }: SetupPageProps) {
 			{invitations.items.length > 0 && (
 				<ReceivedInvitations
 					invitations={invitations.items}
-					onAccepted={() => onReady("joined")}
+					onAccepted={(household) => onReady(household, "joined")}
 					onDeclined={() =>
 						queryClient.invalidateQueries({
 							queryKey: receivedInvitationsQueryKey,
@@ -48,7 +51,9 @@ export function SetupPage({ onReady }: SetupPageProps) {
 				<h2 id={createTitleId} className="font-heading font-semibold text-lg">
 					{m.create_household_title()}
 				</h2>
-				<CreateHouseholdForm onCreated={() => onReady("created")} />
+				<CreateHouseholdForm
+					onCreated={(household) => onReady(household, "created")}
+				/>
 			</section>
 		</section>
 	);
