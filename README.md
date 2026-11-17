@@ -1,6 +1,6 @@
 # Grand Livre
 
-A family finance app: the members of a household record the money coming in and going out of their accounts, personal or shared, and see where it goes. A pnpm monorepo with a React front end and a REST API. The product decisions and the roadmap are in the "Project" section of [`CLAUDE.md`](CLAUDE.md).
+A family finance app: the members of a household record the money coming in and going out of their accounts, personal or shared, and see where it goes. A pnpm monorepo with a React front end and a REST API. The product decisions are in the "Project" section of [`CLAUDE.md`](CLAUDE.md), and the roadmap in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## What's in place
 
