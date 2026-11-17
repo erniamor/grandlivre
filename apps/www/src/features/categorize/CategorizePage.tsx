@@ -3,8 +3,18 @@ import { buttonVariants } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
+import { useState } from "react";
 import { PayeeGroupItem } from "@/features/categorize/PayeeGroupItem";
+import { TagSuggestionsBar } from "@/features/categorize/TagSuggestionsBar";
+import {
+	type ChoiceMap,
+	groupId,
+	shownTag,
+	tagsToApply,
+} from "@/features/categorize/tag-suggestions";
 import { uncategorizedQueryOptions } from "@/features/categorize/uncategorized-query";
+import { useApplyTags } from "@/features/categorize/use-apply-tags";
+import { useTagSuggestions } from "@/features/categorize/use-tag-suggestions";
 import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { m } from "@/paraglide/messages";
@@ -16,8 +26,8 @@ interface CategorizePageProps {
 
 /**
  * The user's expenses and incomes without a tag, by payee, the most
- * frequent first: one tag for all of a payee's at once. The next imports
- * learn it.
+ * frequent first: one tag for all of a payee's at once, suggested by the
+ * assistant on request. The next imports learn it.
  */
 export function CategorizePage({ household }: CategorizePageProps) {
 	const { data: groups } = useSuspenseQuery(
@@ -31,6 +41,16 @@ export function CategorizePage({ household }: CategorizePageProps) {
 			label: path,
 		})),
 	];
+	const tagIds = new Set(tags.map((tag) => tag.id));
+	const [choices, setChoices] = useState<ChoiceMap>(new Map());
+	const suggestions = useTagSuggestions(household.id, groups.items);
+	const applyTags = useApplyTags(household.id);
+	const toApply = tagsToApply(
+		groups.items,
+		choices,
+		suggestions.suggestions,
+		tagIds,
+	);
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-8 px-4 py-12">
@@ -59,15 +79,47 @@ export function CategorizePage({ household }: CategorizePageProps) {
 					<p className="text-sm">
 						{m.categorize_count({ count: groups.total })}
 					</p>
+					<TagSuggestionsBar
+						remaining={suggestions.remaining}
+						askedCount={suggestions.askedCount}
+						suggesting={suggestions.pending}
+						onSuggest={suggestions.suggest}
+						toApply={{
+							payees: toApply.length,
+							transactions: toApply.reduce(
+								(sum, { group }) => sum + group.count,
+								0,
+							),
+						}}
+						applying={applyTags.pending}
+						onApply={() => applyTags.apply(toApply)}
+					/>
 					<ul className="grid gap-3">
-						{groups.items.map((group) => (
-							<PayeeGroupItem
-								key={`${group.type}:${group.key}`}
-								household={household}
-								group={group}
-								tagOptions={tagOptions}
-							/>
-						))}
+						{groups.items.map((group) => {
+							const id = groupId(group);
+							const shown = shownTag(
+								group,
+								choices,
+								suggestions.suggestions,
+								tagIds,
+							);
+							return (
+								<PayeeGroupItem
+									key={id}
+									household={household}
+									group={group}
+									tagOptions={tagOptions}
+									tagId={shown.tagId}
+									suggested={shown.suggested}
+									noSuggestion={
+										suggestions.suggestions.get(id) === null && !choices.has(id)
+									}
+									onTagChange={(tagId) =>
+										setChoices((before) => new Map(before).set(id, tagId))
+									}
+								/>
+							);
+						})}
 					</ul>
 				</>
 			)}

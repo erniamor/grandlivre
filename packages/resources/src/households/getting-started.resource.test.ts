@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ValidationError } from "../errors";
+import { ValidationError } from "../errors";
 import { fakeApi } from "../test/fake-fetch";
 
 const HOUSEHOLD_ID = "5f1b7c2e-8d4a-4e6b-9c3f-1a2b3c4d5e6f";
@@ -96,5 +96,33 @@ describe("categorizing by payee", () => {
 			{ field: "tagId", message: "transaction_tag_invalid" },
 		]);
 		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("asks the assistant's tag for payees, at most a page of them", async () => {
+		const suggestions = {
+			suggestions: [{ key: payee.key, type: "expense", tagId: TAG }],
+		};
+		const { api, requests } = fakeApi(200, suggestions);
+
+		expect(
+			await api.transactions.suggestTags(HOUSEHOLD_ID, {
+				payees: [{ key: payee.key, type: "expense" }],
+			}),
+		).toEqual(suggestions);
+		expect(requests[0]).toMatchObject({
+			url: `${base}/transactions/uncategorized/suggest`,
+			method: "POST",
+			body: { payees: [{ key: payee.key, type: "expense" }] },
+		});
+		const tooMany = await api.transactions
+			.suggestTags(HOUSEHOLD_ID, {
+				payees: Array.from({ length: 51 }, (_, index) => ({
+					key: `payee${index}`,
+					type: "expense" as const,
+				})),
+			})
+			.catch((reason: unknown) => reason);
+		expect(tooMany).toBeInstanceOf(ValidationError);
+		expect(requests).toHaveLength(1);
 	});
 });

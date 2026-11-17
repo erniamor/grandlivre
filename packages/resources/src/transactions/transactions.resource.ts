@@ -7,8 +7,12 @@ import {
 	categorizeResultSchema,
 	createDraftSchema,
 	createTransactionSchema,
+	type PayeeTagSuggestions,
 	paginatedSchema,
+	payeeTagSuggestionsSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
+	type SuggestPayeeTags,
+	suggestPayeeTagsSchema,
 	type Transaction,
 	type TransactionDraft,
 	type TransactionType,
@@ -246,6 +250,24 @@ export function createTransactionsResource(client: ApiClient) {
 				path: `${transactionsPath(householdId)}/categorize`,
 				body: parseInput(categorizePayeeSchema, input),
 				response: categorizeResultSchema,
+			});
+		},
+
+		/**
+		 * The assistant's tag for payees without one (TAG_SUGGESTION_MAX_PAYEES
+		 * at most): one of the household's tags, or null; nothing is applied.
+		 * Rejects with an ApiError `assistant_unavailable` (503), and a
+		 * RateLimitError beyond the requests allowed per hour.
+		 */
+		async suggestTags(
+			householdId: string,
+			input: SuggestPayeeTags,
+		): Promise<PayeeTagSuggestions> {
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/uncategorized/suggest`,
+				body: parseInput(suggestPayeeTagsSchema, input),
+				response: payeeTagSuggestionsSchema,
 			});
 		},
 

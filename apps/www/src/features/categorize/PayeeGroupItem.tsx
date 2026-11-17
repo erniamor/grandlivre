@@ -1,7 +1,8 @@
 import type { Household, UncategorizedPayee } from "@repo/schemas";
 import { Button, toast } from "@repo/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { SparklesIcon } from "lucide-react";
+import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { SelectField, type SelectOption } from "@/components/SelectField";
 import { getApi } from "@/lib/api";
@@ -16,21 +17,31 @@ interface PayeeGroupItemProps {
 	group: UncategorizedPayee;
 	/** The household's tags, by their path; an empty value first, for none chosen. */
 	tagOptions: SelectOption<string>[];
+	/** The tag shown: chosen by the user, or suggested by the assistant; "" for none. */
+	tagId: string;
+	/** The tag shown is the assistant's. */
+	suggested: boolean;
+	/** The assistant was asked and had no tag for it. */
+	noSuggestion: boolean;
+	onTagChange: (tagId: string) => void;
 }
 
 /**
  * A payee's transactions without a tag: how many, how much, since when;
- * and one tag for all of them.
+ * and one tag for all of them, the assistant's when it suggested one.
  */
 export function PayeeGroupItem({
 	household,
 	group,
 	tagOptions,
+	tagId,
+	suggested,
+	noSuggestion,
+	onTagChange,
 }: PayeeGroupItemProps) {
 	const locale = getLocale();
 	const titleId = useId();
 	const queryClient = useQueryClient();
-	const [tagId, setTagId] = useState("");
 	const categorize = useMutation({
 		mutationFn: () =>
 			getApi().transactions.categorize(household.id, {
@@ -73,9 +84,15 @@ export function PayeeGroupItem({
 					hideLabel
 					value={tagId}
 					options={tagOptions}
-					onChange={setTagId}
+					onChange={onTagChange}
 					tone="default"
 				/>
+				{suggested && (
+					<span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 font-medium text-xs">
+						<SparklesIcon aria-hidden className="size-3" />
+						{m.categorize_suggested()}
+					</span>
+				)}
 				<Button
 					type="button"
 					disabled={tagId === "" || categorize.isPending}
@@ -84,6 +101,11 @@ export function PayeeGroupItem({
 					{m.categorize_submit()}
 				</Button>
 			</div>
+			{noSuggestion && (
+				<p className="text-muted-foreground text-sm">
+					{m.categorize_no_suggestion()}
+				</p>
+			)}
 			<FormAlert
 				message={error?.form ?? Object.values(error?.fields ?? {})[0]}
 			/>

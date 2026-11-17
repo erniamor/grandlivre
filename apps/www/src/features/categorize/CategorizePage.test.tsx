@@ -48,8 +48,22 @@ const refund: UncategorizedPayee = {
 	total: 12_50,
 };
 
-function setUp(groups: UncategorizedPayee[]) {
+const saaq: UncategorizedPayee = {
+	...costco,
+	key: "saaq",
+	payee: "SAAQ",
+	count: 1,
+	total: 350_86,
+};
+
+function setUp(
+	groups: UncategorizedPayee[],
+	suggestions: { key: string; type: string; tagId: string | null }[] = [],
+) {
 	const requests = mockApi((request) => {
+		if (request.path.endsWith("/transactions/uncategorized/suggest")) {
+			return { status: 200, body: { suggestions } };
+		}
 		if (request.path.endsWith("/transactions/uncategorized")) {
 			return {
 				status: 200,
@@ -131,5 +145,99 @@ describe("CategorizePage", () => {
 				"Nothing left to sort: every expense and income of your accounts has a tag.",
 			),
 		).toBeVisible();
+	});
+});
+
+describe("CategorizePage, tags suggested by the assistant", () => {
+	it("asks for the payees shown, then shows its tag, marked, or that it had none", async () => {
+		const { requests, user } = setUp(
+			[costco, saaq],
+			[
+				{ key: "costcoessencew", type: "expense", tagId: FUEL },
+				{ key: "saaq", type: "expense", tagId: null },
+			],
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Suggest tags" }),
+		);
+
+		const [fuel, registration] = screen.getAllByRole("listitem");
+		await vi.waitFor(() =>
+			expect(
+				within(fuel as HTMLElement).getByRole("combobox", {
+					name: "Tag for COSTCO ESSENCE W100",
+				}),
+			).toHaveDisplayValue("Fuel"),
+		);
+		expect(within(fuel as HTMLElement).getByText("Suggested")).toBeVisible();
+		expect(
+			within(registration as HTMLElement).getByText(
+				"No suggestion: choose a tag yourself.",
+			),
+		).toBeVisible();
+		expect(writes(requests)).toEqual([
+			{
+				method: "POST",
+				path: `/households/${household.id}/transactions/uncategorized/suggest`,
+				body: {
+					payees: [
+						{ key: "costcoessencew", type: "expense" },
+						{ key: "saaq", type: "expense" },
+					],
+				},
+			},
+		]);
+		// Every payee was asked: nothing more to suggest
+		expect(
+			screen.queryByRole("button", { name: /^Suggest/ }),
+		).not.toBeInTheDocument();
+	});
+
+	it("applies every tag shown at once, after a confirmation", async () => {
+		const { requests, user } = setUp(
+			[costco, saaq, refund],
+			[
+				{ key: "costcoessencew", type: "expense", tagId: FUEL },
+				{ key: "saaq", type: "expense", tagId: null },
+			],
+		);
+		await user.click(
+			await screen.findByRole("button", { name: "Suggest tags" }),
+		);
+		// The user's own choice for the refund; none for SAAQ
+		const [, refundTag] = await screen.findAllByRole("combobox", {
+			name: "Tag for COSTCO ESSENCE W100",
+		});
+		await user.selectOptions(refundTag as HTMLElement, "Fuel");
+
+		await user.click(
+			screen.getByRole("button", { name: "Apply the tags shown (2)" }),
+		);
+		expect(
+			screen.getByText(
+				"Payees: 2. Transactions that will take the tag shown: 36. You can change a transaction's tag afterwards.",
+			),
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Apply" }));
+
+		await vi.waitFor(() =>
+			expect(
+				writes(requests).filter((request) =>
+					request.path.endsWith("/categorize"),
+				),
+			).toEqual([
+				{
+					method: "POST",
+					path: `/households/${household.id}/transactions/categorize`,
+					body: { key: "costcoessencew", type: "expense", tagId: FUEL },
+				},
+				{
+					method: "POST",
+					path: `/households/${household.id}/transactions/categorize`,
+					body: { key: "costcoessencew", type: "income", tagId: FUEL },
+				},
+			]),
+		);
 	});
 });
