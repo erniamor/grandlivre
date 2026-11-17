@@ -3,7 +3,9 @@ import { toast } from "@repo/ui";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HouseholdPage } from "@/features/households/HouseholdPage";
+import { HouseholdGeneralSettings } from "@/features/households/HouseholdGeneralSettings";
+import { HouseholdMembersSettings } from "@/features/households/HouseholdMembersSettings";
+import { HouseholdSettingsLayout } from "@/features/households/HouseholdSettingsLayout";
 import { setTestLocale } from "@/test/locale";
 import {
 	type ApiRequest,
@@ -92,12 +94,16 @@ function setUp({ role = "owner", invitations = [], respond }: Setup = {}) {
 		return respond?.(request);
 	});
 	const onMembershipChanged = vi.fn();
+	// Both sections at once: each has its own route in the app
 	renderWithRouter(
-		<HouseholdPage
-			me={aliceProfile}
-			household={{ ...household, role }}
-			onMembershipChanged={onMembershipChanged}
-		/>,
+		<HouseholdSettingsLayout>
+			<HouseholdGeneralSettings household={{ ...household, role }} />
+			<HouseholdMembersSettings
+				me={aliceProfile}
+				household={{ ...household, role }}
+				onMembershipChanged={onMembershipChanged}
+			/>
+		</HouseholdSettingsLayout>,
 	);
 	return {
 		user: userEvent.setup(),
@@ -119,7 +125,23 @@ async function memberRow(name: string) {
 	return within(row);
 }
 
-describe("HouseholdPage", () => {
+describe("the household's settings", () => {
+	it("leads to each section from its menu", async () => {
+		setUp();
+
+		const nav = within(
+			await screen.findByRole("navigation", { name: "Household settings" }),
+		);
+		expect(nav.getByRole("link", { name: "General" })).toHaveAttribute(
+			"href",
+			"/household",
+		);
+		expect(nav.getByRole("link", { name: "Members" })).toHaveAttribute(
+			"href",
+			"/household/members",
+		);
+	});
+
 	it.each([
 		["en", "Household", "Members", "Member"],
 		["fr", "Foyer", "Membres", "Membre"],

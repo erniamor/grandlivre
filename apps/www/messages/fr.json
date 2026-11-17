@@ -106,6 +106,8 @@
 	"household_link": "Foyer",
 	"household_title": "Foyer",
 	"household_intro": "Le nom, la devise et les membres de votre foyer.",
+	"household_section_general": "Général",
+	"household_settings_nav": "Réglages du foyer",
 	"household_rename_button": "Renommer le foyer",
 	"rename_tooltip": "Renommer",
 	"members_title": "Membres",

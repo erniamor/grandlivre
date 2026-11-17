@@ -106,6 +106,8 @@
 	"household_link": "Household",
 	"household_title": "Household",
 	"household_intro": "The name, the currency and the members of your household.",
+	"household_section_general": "General",
+	"household_settings_nav": "Household settings",
 	"household_rename_button": "Rename the household",
 	"rename_tooltip": "Rename",
 	"members_title": "Members",

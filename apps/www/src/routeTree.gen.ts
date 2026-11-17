@@ -22,7 +22,7 @@ import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHouseholdCategorizeRouteImport } from './routes/_authenticated/_household/categorize'
 import { Route as AuthenticatedHouseholdDashboardRouteImport } from './routes/_authenticated/_household/dashboard'
 import { Route as AuthenticatedHouseholdGettingStartedRouteImport } from './routes/_authenticated/_household/getting-started'
-import { Route as AuthenticatedHouseholdHouseholdRouteImport } from './routes/_authenticated/_household/household'
+import { Route as AuthenticatedHouseholdHouseholdRouteRouteImport } from './routes/_authenticated/_household/household/route'
 import { Route as AuthenticatedHouseholdImportRouteImport } from './routes/_authenticated/_household/import'
 import { Route as AuthenticatedHouseholdReportsRouteImport } from './routes/_authenticated/_household/reports'
 import { Route as AuthenticatedHouseholdAccountsIndexRouteImport } from './routes/_authenticated/_household/accounts/index'
@@ -31,6 +31,8 @@ import { Route as AuthenticatedHouseholdAccountsNewRouteImport } from './routes/
 import { Route as AuthenticatedHouseholdBudgetsIndexRouteImport } from './routes/_authenticated/_household/budgets/index'
 import { Route as AuthenticatedHouseholdBudgetsTagIdRouteImport } from './routes/_authenticated/_household/budgets/$tagId'
 import { Route as AuthenticatedHouseholdBudgetsNewRouteImport } from './routes/_authenticated/_household/budgets/new'
+import { Route as AuthenticatedHouseholdHouseholdIndexRouteImport } from './routes/_authenticated/_household/household/index'
+import { Route as AuthenticatedHouseholdHouseholdMembersRouteImport } from './routes/_authenticated/_household/household/members'
 import { Route as AuthenticatedHouseholdRecurringIndexRouteImport } from './routes/_authenticated/_household/recurring/index'
 import { Route as AuthenticatedHouseholdRecurringRecurringIdRouteImport } from './routes/_authenticated/_household/recurring/$recurringId'
 import { Route as AuthenticatedHouseholdRecurringNewRouteImport } from './routes/_authenticated/_household/recurring/new'
@@ -111,8 +113,8 @@ const AuthenticatedHouseholdGettingStartedRoute =
     path: '/getting-started',
     getParentRoute: () => AuthenticatedHouseholdRoute,
   } as any)
-const AuthenticatedHouseholdHouseholdRoute =
-  AuthenticatedHouseholdHouseholdRouteImport.update({
+const AuthenticatedHouseholdHouseholdRouteRoute =
+  AuthenticatedHouseholdHouseholdRouteRouteImport.update({
     id: '/household',
     path: '/household',
     getParentRoute: () => AuthenticatedHouseholdRoute,
@@ -164,6 +166,18 @@ const AuthenticatedHouseholdBudgetsNewRoute =
     id: '/budgets/new',
     path: '/budgets/new',
     getParentRoute: () => AuthenticatedHouseholdRoute,
+  } as any)
+const AuthenticatedHouseholdHouseholdIndexRoute =
+  AuthenticatedHouseholdHouseholdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedHouseholdHouseholdRouteRoute,
+  } as any)
+const AuthenticatedHouseholdHouseholdMembersRoute =
+  AuthenticatedHouseholdHouseholdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AuthenticatedHouseholdHouseholdRouteRoute,
   } as any)
 const AuthenticatedHouseholdRecurringIndexRoute =
   AuthenticatedHouseholdRecurringIndexRouteImport.update({
@@ -253,16 +267,17 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/household': typeof AuthenticatedHouseholdHouseholdRouteRouteWithChildren
   '/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
-  '/household': typeof AuthenticatedHouseholdHouseholdRoute
   '/import': typeof AuthenticatedHouseholdImportRoute
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
   '/budgets/$tagId': typeof AuthenticatedHouseholdBudgetsTagIdRoute
   '/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
+  '/household/members': typeof AuthenticatedHouseholdHouseholdMembersRoute
   '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
@@ -273,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/budgets/': typeof AuthenticatedHouseholdBudgetsIndexRoute
+  '/household/': typeof AuthenticatedHouseholdHouseholdIndexRoute
   '/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/shared/': typeof AuthenticatedHouseholdSharedIndexRoute
   '/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
@@ -291,13 +307,13 @@ export interface FileRoutesByTo {
   '/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
-  '/household': typeof AuthenticatedHouseholdHouseholdRoute
   '/import': typeof AuthenticatedHouseholdImportRoute
   '/reports': typeof AuthenticatedHouseholdReportsRoute
   '/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
   '/budgets/$tagId': typeof AuthenticatedHouseholdBudgetsTagIdRoute
   '/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
+  '/household/members': typeof AuthenticatedHouseholdHouseholdMembersRoute
   '/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
@@ -308,6 +324,7 @@ export interface FileRoutesByTo {
   '/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/accounts': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/budgets': typeof AuthenticatedHouseholdBudgetsIndexRoute
+  '/household': typeof AuthenticatedHouseholdHouseholdIndexRoute
   '/recurring': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/shared': typeof AuthenticatedHouseholdSharedIndexRoute
   '/tags': typeof AuthenticatedHouseholdTagsIndexRoute
@@ -326,16 +343,17 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRouteRouteWithChildren
   '/_authenticated/_household/categorize': typeof AuthenticatedHouseholdCategorizeRoute
   '/_authenticated/_household/dashboard': typeof AuthenticatedHouseholdDashboardRoute
   '/_authenticated/_household/getting-started': typeof AuthenticatedHouseholdGettingStartedRoute
-  '/_authenticated/_household/household': typeof AuthenticatedHouseholdHouseholdRoute
   '/_authenticated/_household/import': typeof AuthenticatedHouseholdImportRoute
   '/_authenticated/_household/reports': typeof AuthenticatedHouseholdReportsRoute
   '/_authenticated/_household/accounts/$accountId': typeof AuthenticatedHouseholdAccountsAccountIdRoute
   '/_authenticated/_household/accounts/new': typeof AuthenticatedHouseholdAccountsNewRoute
   '/_authenticated/_household/budgets/$tagId': typeof AuthenticatedHouseholdBudgetsTagIdRoute
   '/_authenticated/_household/budgets/new': typeof AuthenticatedHouseholdBudgetsNewRoute
+  '/_authenticated/_household/household/members': typeof AuthenticatedHouseholdHouseholdMembersRoute
   '/_authenticated/_household/recurring/$recurringId': typeof AuthenticatedHouseholdRecurringRecurringIdRoute
   '/_authenticated/_household/recurring/new': typeof AuthenticatedHouseholdRecurringNewRoute
   '/_authenticated/_household/shared/settle': typeof AuthenticatedHouseholdSharedSettleRoute
@@ -346,6 +364,7 @@ export interface FileRoutesById {
   '/_authenticated/_household/transactions/new': typeof AuthenticatedHouseholdTransactionsNewRoute
   '/_authenticated/_household/accounts/': typeof AuthenticatedHouseholdAccountsIndexRoute
   '/_authenticated/_household/budgets/': typeof AuthenticatedHouseholdBudgetsIndexRoute
+  '/_authenticated/_household/household/': typeof AuthenticatedHouseholdHouseholdIndexRoute
   '/_authenticated/_household/recurring/': typeof AuthenticatedHouseholdRecurringIndexRoute
   '/_authenticated/_household/shared/': typeof AuthenticatedHouseholdSharedIndexRoute
   '/_authenticated/_household/tags/': typeof AuthenticatedHouseholdTagsIndexRoute
@@ -363,16 +382,17 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/welcome'
+    | '/household'
     | '/categorize'
     | '/dashboard'
     | '/getting-started'
-    | '/household'
     | '/import'
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
     | '/budgets/$tagId'
     | '/budgets/new'
+    | '/household/members'
     | '/recurring/$recurringId'
     | '/recurring/new'
     | '/shared/settle'
@@ -383,6 +403,7 @@ export interface FileRouteTypes {
     | '/transactions/new'
     | '/accounts/'
     | '/budgets/'
+    | '/household/'
     | '/recurring/'
     | '/shared/'
     | '/tags/'
@@ -401,13 +422,13 @@ export interface FileRouteTypes {
     | '/categorize'
     | '/dashboard'
     | '/getting-started'
-    | '/household'
     | '/import'
     | '/reports'
     | '/accounts/$accountId'
     | '/accounts/new'
     | '/budgets/$tagId'
     | '/budgets/new'
+    | '/household/members'
     | '/recurring/$recurringId'
     | '/recurring/new'
     | '/shared/settle'
@@ -418,6 +439,7 @@ export interface FileRouteTypes {
     | '/transactions/new'
     | '/accounts'
     | '/budgets'
+    | '/household'
     | '/recurring'
     | '/shared'
     | '/tags'
@@ -435,16 +457,17 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/setup'
     | '/_authenticated/welcome'
+    | '/_authenticated/_household/household'
     | '/_authenticated/_household/categorize'
     | '/_authenticated/_household/dashboard'
     | '/_authenticated/_household/getting-started'
-    | '/_authenticated/_household/household'
     | '/_authenticated/_household/import'
     | '/_authenticated/_household/reports'
     | '/_authenticated/_household/accounts/$accountId'
     | '/_authenticated/_household/accounts/new'
     | '/_authenticated/_household/budgets/$tagId'
     | '/_authenticated/_household/budgets/new'
+    | '/_authenticated/_household/household/members'
     | '/_authenticated/_household/recurring/$recurringId'
     | '/_authenticated/_household/recurring/new'
     | '/_authenticated/_household/shared/settle'
@@ -455,6 +478,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_household/transactions/new'
     | '/_authenticated/_household/accounts/'
     | '/_authenticated/_household/budgets/'
+    | '/_authenticated/_household/household/'
     | '/_authenticated/_household/recurring/'
     | '/_authenticated/_household/shared/'
     | '/_authenticated/_household/tags/'
@@ -567,7 +591,7 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/_household/household'
       path: '/household'
       fullPath: '/household'
-      preLoaderRoute: typeof AuthenticatedHouseholdHouseholdRouteImport
+      preLoaderRoute: typeof AuthenticatedHouseholdHouseholdRouteRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
     }
     '/_authenticated/_household/import': {
@@ -625,6 +649,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/budgets/new'
       preLoaderRoute: typeof AuthenticatedHouseholdBudgetsNewRouteImport
       parentRoute: typeof AuthenticatedHouseholdRoute
+    }
+    '/_authenticated/_household/household/': {
+      id: '/_authenticated/_household/household/'
+      path: '/'
+      fullPath: '/household/'
+      preLoaderRoute: typeof AuthenticatedHouseholdHouseholdIndexRouteImport
+      parentRoute: typeof AuthenticatedHouseholdHouseholdRouteRoute
+    }
+    '/_authenticated/_household/household/members': {
+      id: '/_authenticated/_household/household/members'
+      path: '/members'
+      fullPath: '/household/members'
+      preLoaderRoute: typeof AuthenticatedHouseholdHouseholdMembersRouteImport
+      parentRoute: typeof AuthenticatedHouseholdHouseholdRouteRoute
     }
     '/_authenticated/_household/recurring/': {
       id: '/_authenticated/_household/recurring/'
@@ -720,11 +758,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedHouseholdHouseholdRouteRouteChildren {
+  AuthenticatedHouseholdHouseholdMembersRoute: typeof AuthenticatedHouseholdHouseholdMembersRoute
+  AuthenticatedHouseholdHouseholdIndexRoute: typeof AuthenticatedHouseholdHouseholdIndexRoute
+}
+
+const AuthenticatedHouseholdHouseholdRouteRouteChildren: AuthenticatedHouseholdHouseholdRouteRouteChildren =
+  {
+    AuthenticatedHouseholdHouseholdMembersRoute:
+      AuthenticatedHouseholdHouseholdMembersRoute,
+    AuthenticatedHouseholdHouseholdIndexRoute:
+      AuthenticatedHouseholdHouseholdIndexRoute,
+  }
+
+const AuthenticatedHouseholdHouseholdRouteRouteWithChildren =
+  AuthenticatedHouseholdHouseholdRouteRoute._addFileChildren(
+    AuthenticatedHouseholdHouseholdRouteRouteChildren,
+  )
+
 interface AuthenticatedHouseholdRouteChildren {
+  AuthenticatedHouseholdHouseholdRouteRoute: typeof AuthenticatedHouseholdHouseholdRouteRouteWithChildren
   AuthenticatedHouseholdCategorizeRoute: typeof AuthenticatedHouseholdCategorizeRoute
   AuthenticatedHouseholdDashboardRoute: typeof AuthenticatedHouseholdDashboardRoute
   AuthenticatedHouseholdGettingStartedRoute: typeof AuthenticatedHouseholdGettingStartedRoute
-  AuthenticatedHouseholdHouseholdRoute: typeof AuthenticatedHouseholdHouseholdRoute
   AuthenticatedHouseholdImportRoute: typeof AuthenticatedHouseholdImportRoute
   AuthenticatedHouseholdReportsRoute: typeof AuthenticatedHouseholdReportsRoute
   AuthenticatedHouseholdAccountsAccountIdRoute: typeof AuthenticatedHouseholdAccountsAccountIdRoute
@@ -750,12 +806,13 @@ interface AuthenticatedHouseholdRouteChildren {
 
 const AuthenticatedHouseholdRouteChildren: AuthenticatedHouseholdRouteChildren =
   {
+    AuthenticatedHouseholdHouseholdRouteRoute:
+      AuthenticatedHouseholdHouseholdRouteRouteWithChildren,
     AuthenticatedHouseholdCategorizeRoute:
       AuthenticatedHouseholdCategorizeRoute,
     AuthenticatedHouseholdDashboardRoute: AuthenticatedHouseholdDashboardRoute,
     AuthenticatedHouseholdGettingStartedRoute:
       AuthenticatedHouseholdGettingStartedRoute,
-    AuthenticatedHouseholdHouseholdRoute: AuthenticatedHouseholdHouseholdRoute,
     AuthenticatedHouseholdImportRoute: AuthenticatedHouseholdImportRoute,
     AuthenticatedHouseholdReportsRoute: AuthenticatedHouseholdReportsRoute,
     AuthenticatedHouseholdAccountsAccountIdRoute:

@@ -52,7 +52,7 @@ export function StepActions({ step, household }: StepActionsProps) {
 			return step.done ? null : <CreateWalletButton household={household} />;
 		case "members":
 			return (
-				<Link to="/household" className={style}>
+				<Link to="/household/members" className={style}>
 					{m.getting_started_members_action()}
 				</Link>
 			);

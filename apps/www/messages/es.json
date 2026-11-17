@@ -106,6 +106,8 @@
 	"household_link": "Hogar",
 	"household_title": "Hogar",
 	"household_intro": "El nombre, la moneda y los miembros de tu hogar.",
+	"household_section_general": "General",
+	"household_settings_nav": "Ajustes del hogar",
 	"household_rename_button": "Cambiar el nombre del hogar",
 	"rename_tooltip": "Cambiar el nombre",
 	"members_title": "Miembros",
