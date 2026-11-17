@@ -75,12 +75,16 @@ export const helpSections: HelpSection[] = [
 	{
 		id: "sorting",
 		title: m.help_section_sorting_title,
-		paragraphs: [m.help_section_sorting_p1],
+		paragraphs: [m.help_section_sorting_p1, m.help_section_sorting_p2],
 	},
 	{
 		id: "recurring",
 		title: m.help_section_recurring_title,
-		paragraphs: [m.help_section_recurring_p1, m.help_section_recurring_p2],
+		paragraphs: [
+			m.help_section_recurring_p1,
+			m.help_section_recurring_p2,
+			m.help_section_recurring_p3,
+		],
 	},
 	{
 		id: "budgets",
