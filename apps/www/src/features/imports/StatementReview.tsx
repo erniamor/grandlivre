@@ -1,7 +1,13 @@
 import type { Account, Tag } from "@repo/schemas";
-import { useRef } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { FormAlert } from "@/components/FormAlert";
-import { goToFirstCorrection } from "@/features/imports/first-correction";
+import { AccountTabLabel } from "@/features/imports/AccountTabLabel";
+import {
+	firstCorrectionAccount,
+	goToFirstCorrection,
+} from "@/features/imports/first-correction";
 import { ImportActionBar } from "@/features/imports/ImportActionBar";
 import { ImportSummaryPanel } from "@/features/imports/ImportSummaryPanel";
 import { statementAccountName } from "@/features/imports/import-draft";
@@ -34,6 +40,8 @@ export function StatementReview({
 	currency,
 }: StatementReviewProps) {
 	const review = useRef<HTMLDivElement>(null);
+	// The account of the file shown, by its place, while the file has several
+	const [shown, setShown] = useState<string | null>(null);
 	const { reviewing, problems } = importer;
 	if (!reviewing) {
 		return null;
@@ -67,40 +75,100 @@ export function StatementReview({
 	};
 	const saveError = importer.saveError ? formErrors(importer.saveError) : null;
 	const summary = summarizeImport(preview, draft);
+	const summaries = new Map(
+		preview.accounts.map((account) => [
+			account.index,
+			summarizeAccount(account, draft),
+		]),
+	);
+	const tabs = preview.accounts.length > 1;
+	const active =
+		shown !== null &&
+		preview.accounts.some((account) => String(account.index) === shown)
+			? shown
+			: String(preview.accounts[0]?.index ?? 0);
+	const goToCorrection = () => {
+		const index = firstCorrectionAccount(problems);
+		if (tabs && index !== null) {
+			// Its tab open first: only the tab shown is in the page
+			flushSync(() => setShown(String(index)));
+		}
+		goToFirstCorrection(review.current);
+	};
+	const accountReview = (account: (typeof preview.accounts)[number]) => (
+		<StatementAccountReview
+			key={account.index}
+			account={account}
+			summary={summaries.get(account.index) ?? summary}
+			draft={draft}
+			accounts={accounts}
+			currency={currency}
+			tagOptions={tagOptions}
+			nameOf={nameOf}
+			companions={preview.accounts
+				.filter(
+					(other) =>
+						other.index !== account.index &&
+						draft.destinations[other.index]?.kind === "new",
+				)
+				.map((other) => ({
+					index: other.index,
+					name: statementAccountName(other),
+				}))}
+			problems={problems}
+			reading={importer.reading}
+			onDestination={(destination) =>
+				importer.setDestination(account.index, destination)
+			}
+			onChoice={(externalId, choice) =>
+				importer.setChoice(account.index, externalId, choice)
+			}
+		/>
+	);
 
 	return (
 		<div ref={review} className="grid gap-6">
 			<ImportSummaryPanel summary={summary} currency={currency} />
-			{preview.accounts.map((account) => (
-				<StatementAccountReview
-					key={account.index}
-					account={account}
-					summary={summarizeAccount(account, draft)}
-					draft={draft}
-					accounts={accounts}
-					currency={currency}
-					tagOptions={tagOptions}
-					nameOf={nameOf}
-					companions={preview.accounts
-						.filter(
-							(other) =>
-								other.index !== account.index &&
-								draft.destinations[other.index]?.kind === "new",
-						)
-						.map((other) => ({
-							index: other.index,
-							name: statementAccountName(other),
-						}))}
-					problems={problems}
-					reading={importer.reading}
-					onDestination={(destination) =>
-						importer.setDestination(account.index, destination)
-					}
-					onChoice={(externalId, choice) =>
-						importer.setChoice(account.index, externalId, choice)
-					}
-				/>
-			))}
+			{tabs ? (
+				<Tabs value={active} onValueChange={setShown}>
+					<TabsList
+						aria-label={m.import_tabs_label()}
+						className="h-auto w-full justify-start overflow-x-auto"
+					>
+						{preview.accounts.map((account) => {
+							const destination = draft.destinations[account.index];
+							return (
+								<TabsTrigger
+									key={account.index}
+									value={String(account.index)}
+									className="flex-none"
+								>
+									<AccountTabLabel
+										account={account}
+										destination={
+											destination?.kind === "skip"
+												? null
+												: (nameOf(account.index) ?? "")
+										}
+										fresh={summaries.get(account.index)?.fresh ?? 0}
+										corrections={problems.some(
+											(problem) =>
+												"index" in problem && problem.index === account.index,
+										)}
+									/>
+								</TabsTrigger>
+							);
+						})}
+					</TabsList>
+					{preview.accounts.map((account) => (
+						<TabsContent key={account.index} value={String(account.index)}>
+							{accountReview(account)}
+						</TabsContent>
+					))}
+				</Tabs>
+			) : (
+				preview.accounts.map(accountReview)
+			)}
 			<FormAlert
 				message={
 					problems.some((problem) => problem.kind === "nothing")
@@ -113,7 +181,7 @@ export function StatementReview({
 			<ImportActionBar
 				newTransactions={summary.newTransactions}
 				corrections={problems.some((problem) => problem.kind !== "nothing")}
-				onCorrection={() => goToFirstCorrection(review.current)}
+				onCorrection={goToCorrection}
 				failed={importer.saveError !== null}
 				onReadAgain={() => importer.choose(reviewing.file)}
 				onOtherFile={importer.restart}

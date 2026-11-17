@@ -22,6 +22,8 @@ export interface ImportSummary {
 	skippedAccounts: number;
 	/** The lines read, of the accounts going somewhere. */
 	lines: number;
+	/** The lines new where they go, each to decide (a transfer's other side in the file aside). */
+	fresh: number;
 	/** What was found: already imported, already entered, a transfer's other side entered elsewhere, a recurring day waiting. */
 	found: {
 		imported: number;
@@ -54,6 +56,7 @@ function emptySummary(): ImportSummary {
 		accounts: 0,
 		skippedAccounts: 0,
 		lines: 0,
+		fresh: 0,
 		found: { imported: 0, matched: 0, counterpart: 0, recurring: 0 },
 		record: {
 			expenses: { count: 0, amount: 0 },
@@ -99,6 +102,9 @@ export function summarizeAccount(
 		// Recorded by its other side, in the file
 		if (pairedBy(draft, account.index, line)) {
 			continue;
+		}
+		if (status === "new") {
+			summary.fresh += 1;
 		}
 		const choice = draft.choices[account.index]?.[line.externalId];
 		switch (choice?.action) {
@@ -156,6 +162,7 @@ export function summarizeImport(
 		total.accounts += each.accounts;
 		total.skippedAccounts += each.skippedAccounts;
 		total.lines += each.lines;
+		total.fresh += each.fresh;
 		for (const key of FOUND_KINDS) {
 			total.found[key] += each.found[key];
 		}

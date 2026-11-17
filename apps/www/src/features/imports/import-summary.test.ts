@@ -19,6 +19,8 @@ describe("summarizeImport", () => {
 			accounts: 2,
 			skippedAccounts: 0,
 			lines: 5,
+			// The transfer's other side, in savings, needs no decision
+			fresh: 3,
 			found: { imported: 1, matched: 0, counterpart: 0, recurring: 0 },
 			record: {
 				expenses: { count: 1, amount: 60_50 },

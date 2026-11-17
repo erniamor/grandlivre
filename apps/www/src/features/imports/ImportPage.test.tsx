@@ -167,6 +167,8 @@ describe("ImportPage", () => {
 		expect(
 			everyday.getByText("Already imported, left as they are: 1"),
 		).toBeVisible();
+		// The savings account, in its own tab
+		await user.click(screen.getByRole("tab", { name: /···321/ }));
 		const savings = within(
 			screen.getByRole("region", { name: "Caisse du Plateau ···321" }),
 		);
@@ -262,6 +264,71 @@ describe("ImportPage", () => {
 		);
 		expect(await screen.findByText("Transactions to add: 2")).toBeVisible();
 		expect(figure("Lines not imported")).toBe("1");
+	});
+
+	it("shows one account of the file at a time, each tab saying where it goes and what is left to decide", async () => {
+		const { user } = setUp();
+
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+
+		const tabs = await screen.findByRole("tablist", {
+			name: "Accounts of the file",
+		});
+		expect(
+			within(tabs)
+				.getAllByRole("tab")
+				.map((tab) => tab.textContent),
+		).toEqual(["···456→ Everyday3", "···321→ Caisse du Plateau ···321"]);
+		expect(
+			screen.getByRole("region", { name: "Caisse du Plateau ···456" }),
+		).toBeVisible();
+		expect(
+			screen.queryByRole("region", { name: "Caisse du Plateau ···321" }),
+		).not.toBeInTheDocument();
+
+		await user.click(within(tabs).getByRole("tab", { name: /···321/ }));
+		await user.selectOptions(
+			within(
+				screen.getByRole("region", { name: "Caisse du Plateau ···321" }),
+			).getByLabelText("Goes to"),
+			"skip",
+		);
+		expect(within(tabs).getByRole("tab", { name: /···321/ })).toHaveTextContent(
+			"···321not imported",
+		);
+	});
+
+	it("opens the tab of the first account to correct", async () => {
+		const { user } = setUp();
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+		// The savings account, new, left without a name
+		await user.click(await screen.findByRole("tab", { name: /···321/ }));
+		await user.clear(
+			within(
+				screen.getByRole("region", { name: "Caisse du Plateau ···321" }),
+			).getByLabelText("Account name"),
+		);
+		await user.click(screen.getByRole("tab", { name: /···456/ }));
+		await user.click(screen.getByRole("button", { name: "Import" }));
+
+		expect(
+			screen.getByRole("tab", { name: /^To correct:.*···321/ }),
+		).toBeVisible();
+		await user.click(
+			await screen.findByRole("button", { name: "Go to the first correction" }),
+		);
+
+		expect(screen.getByRole("tab", { name: /···321/ })).toHaveAttribute(
+			"aria-selected",
+			"true",
+		);
+		expect(screen.getByLabelText("Account name")).toHaveFocus();
 	});
 
 	it("goes back where the page was opened from, once imported", async () => {
@@ -405,6 +472,7 @@ describe("ImportPage", () => {
 			await screen.findByLabelText("Choose a statement file"),
 			file,
 		);
+		await user.click(await screen.findByRole("tab", { name: /···321/ }));
 		const savings = within(
 			await screen.findByRole("region", { name: "Caisse du Plateau ···321" }),
 		);

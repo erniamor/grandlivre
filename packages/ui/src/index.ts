@@ -49,6 +49,12 @@ export {
 } from "@repo/ui/components/ui/popover";
 export { Toaster } from "@repo/ui/components/ui/sonner";
 export {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@repo/ui/components/ui/tabs";
+export {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
