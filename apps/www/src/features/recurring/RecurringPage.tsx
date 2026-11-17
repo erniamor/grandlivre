@@ -5,7 +5,11 @@ import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { RecurringItem } from "@/features/recurring/RecurringItem";
-import { recurringListQueryOptions } from "@/features/recurring/recurring-query";
+import { RecurringSuggestions } from "@/features/recurring/RecurringSuggestions";
+import {
+	recurringListQueryOptions,
+	suggestionsQueryOptions,
+} from "@/features/recurring/recurring-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { writableAccounts } from "@/features/transactions/transaction-form";
 import { m } from "@/paraglide/messages";
@@ -14,7 +18,10 @@ interface RecurringPageProps {
 	household: Household;
 }
 
-/** The household's recurring transactions the user may see, the next due first. */
+/**
+ * The household's recurring transactions the user may see, the next due
+ * first, then the series found in the history of the accounts they hold.
+ */
 export function RecurringPage({ household }: RecurringPageProps) {
 	const { data: recurring } = useSuspenseQuery(
 		recurringListQueryOptions(household.id),
@@ -23,6 +30,9 @@ export function RecurringPage({ household }: RecurringPageProps) {
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
+	const { data: suggestions } = useSuspenseQuery(
+		suggestionsQueryOptions(household.id),
+	);
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-6 px-4 py-12">
@@ -57,6 +67,13 @@ export function RecurringPage({ household }: RecurringPageProps) {
 					))}
 				</ul>
 			)}
+			<RecurringSuggestions
+				householdId={household.id}
+				suggestions={suggestions.items}
+				accounts={accounts.items}
+				tags={tags}
+				currency={household.currency}
+			/>
 		</section>
 	);
 }

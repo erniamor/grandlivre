@@ -4,22 +4,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { NewRecurringPage } from "@/features/recurring/NewRecurringPage";
+import { suggestionsQueryOptions } from "@/features/recurring/recurring-query";
+import { findSuggestion } from "@/features/recurring/recurring-suggestion";
 import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { transactionQueryOptions } from "@/features/transactions/transactions-query";
 
-// The account proposed in the form, and the transaction it starts from;
-// anything else is dropped
+// The account proposed in the form, and the transaction or the series found
+// in the history it starts from; anything else is dropped
 const searchSchema = z.object({
 	account: z.uuid().optional().catch(undefined),
 	from: z.uuid().optional().catch(undefined),
+	suggestion: z.string().max(400).optional().catch(undefined),
 });
 
 export const Route = createFileRoute(
 	"/_authenticated/_household/recurring/new",
 )({
 	validateSearch: searchSchema,
-	loaderDeps: ({ search }) => ({ from: search.from }),
+	loaderDeps: ({ search }) => ({
+		from: search.from,
+		suggestion: search.suggestion,
+	}),
 	loader: ({ context, deps }) => {
 		const { household, queryClient } = context;
 		return Promise.all([
@@ -39,6 +45,9 @@ export const Route = createFileRoute(
 							}
 						})
 				: undefined,
+			deps.suggestion
+				? queryClient.ensureQueryData(suggestionsQueryOptions(household.id))
+				: undefined,
 		]);
 	},
 	component: NewRecurringRoute,
@@ -46,11 +55,17 @@ export const Route = createFileRoute(
 
 function NewRecurringRoute() {
 	const { household } = Route.useRouteContext();
-	const { account, from } = Route.useSearch();
+	const { account, from, suggestion } = Route.useSearch();
 	const navigate = useNavigate();
 	// Loaded by the loader when there is one: read from the cache
 	const { data: transaction } = useQuery({
 		...transactionQueryOptions(household.id, from ?? ""),
+		enabled: false,
+	});
+
+	// Loaded by the loader when asked: one no longer offered starts it blank
+	const { data: suggestions } = useQuery({
+		...suggestionsQueryOptions(household.id),
 		enabled: false,
 	});
 
@@ -59,6 +74,11 @@ function NewRecurringRoute() {
 			household={household}
 			accountId={account}
 			from={from ? transaction : undefined}
+			suggestion={
+				suggestion && suggestions
+					? findSuggestion(suggestions.items, suggestion)
+					: undefined
+			}
 			onCreated={() => navigate({ to: "/recurring" })}
 		/>
 	);

@@ -4,7 +4,11 @@ import {
 	type PendingOccurrence,
 	paginatedSchema,
 	pendingOccurrenceSchema,
+	type RecurringSuggestion,
+	type RecurringSuggestionKey,
 	type RecurringTransaction,
+	recurringSuggestionKeySchema,
+	recurringSuggestionSchema,
 	recurringTransactionSchema,
 	type Transaction,
 	transactionSchema,
@@ -27,6 +31,7 @@ import { type ApiClient, parseInput } from "../http/client";
 const recurringPageSchema = paginatedSchema(recurringTransactionSchema);
 const pendingPageSchema = paginatedSchema(pendingOccurrenceSchema);
 const upcomingPageSchema = paginatedSchema(upcomingOccurrenceSchema);
+const suggestionPageSchema = paginatedSchema(recurringSuggestionSchema);
 
 const recurringBase = (householdId: string) =>
 	`/households/${segment(householdId)}/recurring-transactions`;
@@ -154,6 +159,42 @@ export function createRecurringResource(client: ApiClient) {
 			await client.request({
 				method: "POST",
 				path: `${pendingPath(householdId, occurrenceId)}/skip`,
+			});
+		},
+
+		/**
+		 * The series found in the history of the accounts the user holds, to
+		 * make recurring transactions of, the next due first: those going on,
+		 * neither covered by a recurring transaction nor dismissed.
+		 */
+		async suggestions(
+			householdId: string,
+			{ page, pageSize, signal }: PageOptions = {},
+		): Promise<Page<RecurringSuggestion>> {
+			return toPage(
+				await client.request({
+					path: withQuery(`${recurringBase(householdId)}/suggestions`, {
+						page,
+						pageSize,
+					}),
+					response: suggestionPageSchema,
+					signal,
+				}),
+			);
+		},
+
+		/**
+		 * Says a suggested series doesn't repeat: it is no longer suggested, to
+		 * any member. Only a holder of its account may (NotFoundError otherwise).
+		 */
+		async dismiss(
+			householdId: string,
+			suggestion: RecurringSuggestionKey,
+		): Promise<void> {
+			await client.request({
+				method: "POST",
+				path: `${recurringBase(householdId)}/suggestions/dismiss`,
+				body: parseInput(recurringSuggestionKeySchema, suggestion),
 			});
 		},
 

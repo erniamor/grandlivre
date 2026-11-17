@@ -7,7 +7,10 @@ import { householdInvitationsQueryKey } from "@/features/households/household-in
 import { householdMembersQueryKey } from "@/features/households/household-members-query";
 import { householdsQueryKey } from "@/features/households/households-query";
 import { importsQueryKey } from "@/features/imports/imports-query";
-import { recurringQueryKey } from "@/features/recurring/recurring-query";
+import {
+	recurringQueryKey,
+	suggestionsQueryKey,
+} from "@/features/recurring/recurring-query";
 import { reportsQueryKey } from "@/features/reports/reports-query";
 import { sharingQueryKey } from "@/features/sharing/sharing-query";
 import { tagsQueryKey } from "@/features/tags/tags-query";
@@ -81,6 +84,8 @@ function staleOfTopic(
 				{ queryKey: sharingQueryKey(householdId) },
 				// An import undone takes its transactions with it
 				{ queryKey: importsQueryKey(householdId) },
+				// The series found in the history
+				{ queryKey: suggestionsQueryKey(householdId) },
 			];
 		case "recurring":
 			// What the budgets plan

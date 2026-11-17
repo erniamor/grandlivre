@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { RecurringPage } from "@/features/recurring/RecurringPage";
-import { recurringListQueryOptions } from "@/features/recurring/recurring-query";
+import {
+	recurringListQueryOptions,
+	suggestionsQueryOptions,
+} from "@/features/recurring/recurring-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 
 export const Route = createFileRoute("/_authenticated/_household/recurring/")({
@@ -11,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/_household/recurring/")({
 			queryClient.ensureQueryData(recurringListQueryOptions(household.id)),
 			queryClient.ensureQueryData(accountsQueryOptions(household.id)),
 			queryClient.ensureQueryData(tagsQueryOptions(household.id)),
+			queryClient.ensureQueryData(suggestionsQueryOptions(household.id)),
 		]);
 	},
 	component: RecurringRoute,

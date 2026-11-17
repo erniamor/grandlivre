@@ -22,6 +22,7 @@ const cached = [
 	["households", HOME, "transactions", "list", { page: 1 }],
 	["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 	["households", HOME, "recurring", "list"],
+	["households", HOME, "recurring", "suggestions"],
 	["households", HOME, "budgets", "month", "2026-11"],
 	["households", HOME, "sharing", "overview"],
 	["households", "elsewhere", "transactions", "list", { page: 1 }],
@@ -75,6 +76,7 @@ describe("staleQueries", () => {
 				["households", HOME, "accounts", "summary"],
 				["households", HOME, "transactions", "list", { page: 1 }],
 				["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
+				["households", HOME, "recurring", "suggestions"],
 				["households", HOME, "budgets", "month", "2026-11"],
 				["households", HOME, "sharing", "overview"],
 			],
@@ -83,6 +85,7 @@ describe("staleQueries", () => {
 			"recurring",
 			[
 				["households", HOME, "recurring", "list"],
+				["households", HOME, "recurring", "suggestions"],
 				["households", HOME, "budgets", "month", "2026-11"],
 			],
 		],
@@ -115,6 +118,7 @@ describe("allHouseholdQueries", () => {
 			["households", HOME, "transactions", "list", { page: 1 }],
 			["households", HOME, "reports", "tags", "2026-11-01", "2026-11-30"],
 			["households", HOME, "recurring", "list"],
+			["households", HOME, "recurring", "suggestions"],
 			["households", HOME, "budgets", "month", "2026-11"],
 			["households", HOME, "sharing", "overview"],
 		]);

@@ -253,6 +253,69 @@ describe("recurring", () => {
 		expect(requests[0]?.url).toBe(`${base}/upcoming?days=14`);
 	});
 
+	describe("suggestions", () => {
+		const suggestion = {
+			accountId: ACCOUNT_ID,
+			toAccountId: null,
+			type: "expense",
+			key: "hydroquebec",
+			payee: "HYDRO-QUEBEC",
+			unit: "month",
+			interval: 1,
+			amount: 79_07,
+			minAmount: 62_50,
+			maxAmount: 389_31,
+			mode: "confirm",
+			nextDate: "2026-11-26",
+			tagId: TAG_ID,
+			count: 17,
+			dates: ["2026-09-26", "2026-10-27"],
+		};
+		const key = {
+			accountId: ACCOUNT_ID,
+			toAccountId: null,
+			type: "expense" as const,
+			key: "hydroquebec",
+			unit: "month" as const,
+			interval: 1,
+			startDate: "2026-11-26",
+		};
+
+		it("lists the series found in the history", async () => {
+			const { api, requests } = fakeApi(200, page([suggestion]));
+
+			expect((await api.recurring.suggestions(HOUSEHOLD_ID)).items).toEqual([
+				suggestion,
+			]);
+			expect(requests[0]?.url).toBe(`${base}/suggestions`);
+		});
+
+		it("dismisses one by what tells it apart", async () => {
+			const { api, requests } = fakeApi(204);
+
+			await api.recurring.dismiss(HOUSEHOLD_ID, key);
+
+			expect(requests[0]).toMatchObject({
+				url: `${base}/suggestions/dismiss`,
+				method: "POST",
+				body: key,
+			});
+		});
+
+		it("refuses a transfer without its destination before sending", async () => {
+			const { api, fetch } = fakeApi(204);
+
+			const error = await api.recurring
+				.dismiss(HOUSEHOLD_ID, { ...key, type: "transfer" })
+				.catch((reason: unknown) => reason);
+
+			expect((error as ValidationError).issues).toEqual([
+				{ field: "toAccountId", message: "transfer_destination_invalid" },
+			]);
+			expect(fetch).not.toHaveBeenCalled();
+		});
+	});
+
 	it("keeps identifiers from changing the requested path", async () => {
 		const { api, requests } = fakeApi(204);
 

@@ -67,3 +67,19 @@ export function upcomingQueryOptions(householdId: string) {
 			}),
 	});
 }
+
+/** The series found in the history: under the recurring transactions, which cover them. */
+export const suggestionsQueryKey = (householdId: string) =>
+	[...recurringQueryKey(householdId), "suggestions"] as const;
+
+/** The series found in the history: a handful, one page holds them. */
+export function suggestionsQueryOptions(householdId: string) {
+	return queryOptions({
+		queryKey: suggestionsQueryKey(householdId),
+		queryFn: ({ signal }) =>
+			getApi().recurring.suggestions(householdId, {
+				pageSize: RECURRING_PAGE_SIZE,
+				signal,
+			}),
+	});
+}

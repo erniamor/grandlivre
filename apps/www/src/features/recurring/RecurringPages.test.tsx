@@ -1,4 +1,4 @@
-import type { RecurringTransaction } from "@repo/schemas";
+import type { RecurringSuggestion, RecurringTransaction } from "@repo/schemas";
 import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,13 +77,42 @@ const saving: RecurringTransaction = {
 	nextDate: null,
 };
 
-/** Answers the reads, the recurring transactions given, and `respond` for the rest. */
+/** A power bill found 17 times in the history, its amount varying. */
+const hydro: RecurringSuggestion = {
+	accountId: chequing.id,
+	toAccountId: null,
+	type: "expense",
+	key: "hydroquebec",
+	payee: "HYDRO-QUEBEC",
+	unit: "month",
+	interval: 1,
+	amount: 79_07,
+	minAmount: 62_50,
+	maxAmount: 389_31,
+	mode: "confirm",
+	nextDate: "2026-11-26",
+	tagId: gas.id,
+	count: 17,
+	dates: ["2026-09-26", "2026-10-27"],
+};
+
+/**
+ * Answers the reads, the recurring transactions and the suggestions given,
+ * and `respond` for the rest.
+ */
 function api(
 	recurring: RecurringTransaction[] = [rent, saving],
 	respond: (request: ApiRequest) => ApiResponse | undefined = () => undefined,
+	suggestions: RecurringSuggestion[] = [],
 ) {
 	const reads = respondWith();
 	return mockApi((request) => {
+		if (
+			request.method === "GET" &&
+			request.path === `${base}/recurring-transactions/suggestions`
+		) {
+			return page(suggestions, { pageSize: 100 });
+		}
 		if (
 			request.method === "GET" &&
 			request.path === `${base}/recurring-transactions`
@@ -166,6 +195,127 @@ describe("RecurringPage", () => {
 		expect(
 			await screen.findByText("No recurring transaction yet."),
 		).toBeVisible();
+	});
+});
+
+describe("RecurringPage, suggestions", () => {
+	it("shows the series found in the history, to make recurring", async () => {
+		api([rent], undefined, [hydro]);
+		renderWithRouter(<RecurringPage household={household} />);
+
+		expect(
+			await screen.findByRole("heading", { name: "Found in your history" }),
+		).toBeVisible();
+		const item = within(
+			screen.getByText("HYDRO-QUEBEC").closest("li") as HTMLElement,
+		);
+		expect(
+			item.getByText("Every month · Next: Thursday, November 26, 2026"),
+		).toBeVisible();
+		expect(
+			item.getByText("Seen 17 times, last on Tuesday, October 27, 2026"),
+		).toBeVisible();
+		expect(item.getByText("-$79.07")).toBeVisible();
+		expect(item.getByText("from $62.50 to $389.31")).toBeVisible();
+		expect(
+			item.getByRole("link", { name: "Make “HYDRO-QUEBEC” recurring" }),
+		).toHaveAttribute(
+			"href",
+			`/recurring/new?suggestion=${chequing.id}..expense.hydroquebec.month.1.2026-11-26`,
+		);
+	});
+
+	it("dismisses one the user says doesn't recur", async () => {
+		const requests = api(
+			[rent],
+			(request) =>
+				request.method === "POST" ? { status: 204, body: null } : undefined,
+			[hydro],
+		);
+		const user = userEvent.setup();
+		renderWithRouter(<RecurringPage household={household} />);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "“HYDRO-QUEBEC” is not recurring",
+			}),
+		);
+
+		await vi.waitFor(() =>
+			expect(writes(requests)).toEqual([
+				{
+					method: "POST",
+					path: `${base}/recurring-transactions/suggestions/dismiss`,
+					body: {
+						accountId: chequing.id,
+						toAccountId: null,
+						type: "expense",
+						key: "hydroquebec",
+						unit: "month",
+						interval: 1,
+						startDate: "2026-11-26",
+					},
+				},
+			]),
+		);
+	});
+
+	it("shows no section when nothing was found", async () => {
+		api([rent]);
+		renderWithRouter(<RecurringPage household={household} />);
+
+		await screen.findByText("Landlord");
+		expect(
+			screen.queryByRole("heading", { name: "Found in your history" }),
+		).not.toBeInTheDocument();
+	});
+});
+
+describe("NewRecurringPage, from a suggestion", () => {
+	it("starts from it: its amount, tag, cadence, next date and mode", async () => {
+		const requests = api([], (request) =>
+			request.method === "POST" ? { status: 201, body: rent } : undefined,
+		);
+		const onCreated = vi.fn();
+		const user = userEvent.setup();
+		renderWithRouter(
+			<NewRecurringPage
+				household={household}
+				suggestion={hydro}
+				onCreated={onCreated}
+			/>,
+		);
+
+		expect(
+			await screen.findByText(
+				"Found 17 times in your history: check the amount, how often it comes back, and from when.",
+			),
+		).toBeVisible();
+		expect(screen.getByLabelText("Amount")).toHaveValue("79.07");
+		expect(screen.getByLabelText("Paid to (optional)")).toHaveValue(
+			"HYDRO-QUEBEC",
+		);
+		expect(screen.getByLabelText("First date")).toHaveValue("2026-11-26");
+		expect(screen.getByRole("radio", { name: /^To confirm/ })).toBeChecked();
+		await user.click(
+			screen.getByRole("button", { name: "Create the recurring transaction" }),
+		);
+
+		await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
+		expect(writes(requests)).toMatchObject([
+			{
+				body: {
+					transaction: {
+						type: "expense",
+						accountId: chequing.id,
+						payee: "HYDRO-QUEBEC",
+						lines: [{ amount: 79_07, tagId: gas.id }],
+					},
+					schedule: { unit: "month", interval: 1, startDate: "2026-11-26" },
+					mode: "confirm",
+				},
+			},
+		]);
 	});
 });
 

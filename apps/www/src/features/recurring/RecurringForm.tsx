@@ -1,6 +1,7 @@
 import type {
 	Account,
 	CreateRecurringTransaction,
+	RecurringSuggestion,
 	RecurringTransaction,
 	Tag,
 	Transaction,
@@ -18,6 +19,7 @@ import {
 	recurringStateOfTransaction,
 	toRecurringInput,
 } from "@/features/recurring/recurring-form";
+import { recurringStateOfSuggestion } from "@/features/recurring/recurring-suggestion";
 import { ScheduleFields } from "@/features/recurring/ScheduleFields";
 import { SharesField } from "@/features/sharing/SharesField";
 import { shareStateOf, toShareSplit } from "@/features/sharing/share-form";
@@ -40,6 +42,8 @@ interface RecurringFormProps {
 	recurring?: RecurringTransaction;
 	/** A transaction to make recurring: the new one starts from it. */
 	from?: Transaction;
+	/** A series found in the history: the new one starts from it. */
+	suggestion?: RecurringSuggestion;
 	/** The account proposed for a new one, when the user holds it. */
 	defaultAccountId?: string;
 	submitLabel: string;
@@ -60,6 +64,7 @@ export function RecurringForm({
 	tags,
 	recurring,
 	from,
+	suggestion,
 	defaultAccountId,
 	submitLabel,
 	save,
@@ -73,7 +78,9 @@ export function RecurringForm({
 			? formStateOfRecurring(recurring, currency, locale)
 			: from
 				? recurringStateOfTransaction(from, currency, locale, today)
-				: emptyRecurringState(today),
+				: suggestion
+					? recurringStateOfSuggestion(suggestion, currency, locale)
+					: emptyRecurringState(today),
 	);
 	const [shares, setShares] = useState(() =>
 		shareStateOf(

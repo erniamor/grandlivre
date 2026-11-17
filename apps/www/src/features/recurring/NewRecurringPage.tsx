@@ -1,4 +1,8 @@
-import type { Household, Transaction } from "@repo/schemas";
+import type {
+	Household,
+	RecurringSuggestion,
+	Transaction,
+} from "@repo/schemas";
 import { toast } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
@@ -16,17 +20,20 @@ interface NewRecurringPageProps {
 	accountId?: string;
 	/** A transaction to make recurring: the form starts from it. */
 	from?: Transaction;
+	/** A series found in the history to make recurring: the form starts from it. */
+	suggestion?: RecurringSuggestion;
 	onCreated: () => void | Promise<void>;
 }
 
 /**
  * Creates a recurring transaction on an account the user holds, from
- * scratch or from a transaction.
+ * scratch, from a transaction or from a series found in the history.
  */
 export function NewRecurringPage({
 	household,
 	accountId,
 	from,
+	suggestion,
 	onCreated,
 }: NewRecurringPageProps) {
 	const { data: accounts } = useSuspenseQuery(
@@ -45,6 +52,11 @@ export function NewRecurringPage({
 			{from && (
 				<p className="text-muted-foreground">{m.recurring_from_intro()}</p>
 			)}
+			{suggestion && (
+				<p className="text-muted-foreground">
+					{m.recurring_from_suggestion_intro({ count: suggestion.count })}
+				</p>
+			)}
 			<RecurringForm
 				currency={household.currency}
 				timeZone={household.timeZone}
@@ -53,6 +65,7 @@ export function NewRecurringPage({
 				tags={tags}
 				defaultAccountId={accountId}
 				from={from}
+				suggestion={suggestion}
 				submitLabel={m.recurring_create_button()}
 				save={(input) => getApi().recurring.create(household.id, input)}
 				onSaved={async () => {
