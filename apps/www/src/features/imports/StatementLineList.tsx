@@ -1,10 +1,6 @@
-import type {
-	Account,
-	StatementPreviewAccount,
-	StatementPreviewLine,
-} from "@repo/schemas";
+import type { Account, StatementPreviewAccount } from "@repo/schemas";
+import { useState } from "react";
 import type { SelectOption } from "@/components/SelectField";
-import { HelpHint } from "@/features/help/HelpHint";
 import {
 	type ImportDraft,
 	type LineChoice,
@@ -13,6 +9,14 @@ import {
 	standingHolds,
 	transferAccounts,
 } from "@/features/imports/import-draft";
+import { LineFilterBar } from "@/features/imports/LineFilterBar";
+import {
+	countByFilter,
+	defaultFilter,
+	type FilteredLine,
+	type LineFilter,
+	visibleLines,
+} from "@/features/imports/line-filters";
 import { StatementLineItem } from "@/features/imports/StatementLineItem";
 import { m } from "@/paraglide/messages";
 
@@ -30,10 +34,10 @@ interface StatementLineListProps {
 }
 
 /**
- * An account's lines, by what the preview found: the new ones first, then
- * those already in the app (entered, or their transfer's other side
- * entered elsewhere), the recurring days waiting, and those imported
- * before, folded away.
+ * An account's lines, one filter at a time (what is to decide first, then
+ * what is already in the app, the recurring days waiting, and what was
+ * imported before) and searched by payee; the lines still to correct always
+ * show.
  */
 export function StatementLineList({
 	account,
@@ -45,29 +49,25 @@ export function StatementLineList({
 	missing,
 	onChoice,
 }: StatementLineListProps) {
+	const [chosen, setChosen] = useState<LineFilter | null>(null);
+	const [search, setSearch] = useState("");
 	const destination = draft.destinations[account.index];
 	const holds = standingHolds(account, destination);
-	const statusOf = (line: StatementPreviewLine) =>
-		lineStatus(line, holds, destination);
-	const of = (...statuses: StatementPreviewLine["status"][]) =>
-		account.lines.filter((line) => statuses.includes(statusOf(line)));
-	const groups = [
-		{ title: m.import_group_new(), lines: of("new") },
-		{
-			title: m.import_group_matched(),
-			lines: of("matched", "counterpart"),
-			hint: "importKnown" as const,
-		},
-		{ title: m.import_group_recurring(), lines: of("recurring") },
-	];
-	const imported = of("imported");
-	const item = (line: StatementPreviewLine) => {
+	const lines: FilteredLine[] = account.lines.map((line) => ({
+		line,
+		status: lineStatus(line, holds, destination),
+		paired: pairedBy(draft, account.index, line) !== null,
+	}));
+	const counts = countByFilter(lines);
+	const filter = chosen ?? defaultFilter(counts);
+	const shown = visibleLines(lines, filter, search, missing);
+	const item = ({ line, status }: FilteredLine) => {
 		const pair = pairedBy(draft, account.index, line);
 		return (
 			<StatementLineItem
 				key={line.externalId}
 				line={line}
-				status={statusOf(line)}
+				status={status}
 				choice={draft.choices[account.index]?.[line.externalId] ?? null}
 				holds={holds}
 				pairedWith={pair ? (nameOf(pair.index) ?? "") : null}
@@ -88,28 +88,22 @@ export function StatementLineList({
 	};
 
 	return (
-		<div className="grid gap-4">
-			{groups.map(
-				({ title, lines, hint }) =>
-					lines.length > 0 && (
-						<section key={title} className="grid gap-1">
-							<div className="flex items-center gap-1">
-								<h3 className="font-medium text-sm">
-									{title} ({lines.length})
-								</h3>
-								{hint && <HelpHint topic={hint} />}
-							</div>
-							<ul>{lines.map(item)}</ul>
-						</section>
-					),
-			)}
-			{imported.length > 0 && (
-				<details className="grid gap-1">
-					<summary className="cursor-pointer text-muted-foreground text-sm">
-						{m.import_group_imported({ count: imported.length })}
-					</summary>
-					<ul>{imported.map(item)}</ul>
-				</details>
+		<div className="grid gap-3">
+			<LineFilterBar
+				counts={counts}
+				filter={filter}
+				onFilter={setChosen}
+				search={search}
+				onSearch={setSearch}
+			/>
+			{shown.length === 0 ? (
+				<p className="text-muted-foreground text-sm">
+					{search.trim() === ""
+						? m.import_filter_empty()
+						: m.import_search_empty()}
+				</p>
+			) : (
+				<ul aria-label={m.import_lines_label()}>{shown.map(item)}</ul>
 			)}
 		</div>
 	);

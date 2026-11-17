@@ -165,7 +165,7 @@ describe("ImportPage", () => {
 			everyday.getByText("Recognized from an earlier import."),
 		).toBeVisible();
 		expect(
-			everyday.getByText("Already imported, left as they are: 1"),
+			everyday.getByRole("button", { name: "Already imported (1)" }),
 		).toBeVisible();
 		// The savings account, in its own tab
 		await user.click(screen.getByRole("tab", { name: /···321/ }));
@@ -329,6 +329,43 @@ describe("ImportPage", () => {
 			"true",
 		);
 		expect(screen.getByLabelText("Account name")).toHaveFocus();
+	});
+
+	it("shows the lines to decide first, the others by filter, and searches by payee", async () => {
+		const { user } = setUp();
+		await user.upload(
+			await screen.findByLabelText("Choose a statement file"),
+			file,
+		);
+		const everyday = within(
+			await screen.findByRole("region", { name: "Caisse du Plateau ···456" }),
+		);
+		const filters = within(
+			everyday.getByRole("group", { name: "Lines shown" }),
+		);
+		const payees = () =>
+			within(everyday.getByRole("list", { name: "Lines of the statement" }))
+				.getAllByRole("listitem")
+				.map((item) => item.textContent ?? "");
+
+		expect(
+			filters
+				.getAllByRole("button")
+				.map((button) => [
+					button.textContent,
+					button.getAttribute("aria-pressed"),
+				]),
+		).toEqual([
+			["To decide (3)", "true"],
+			["Already imported (1)", "false"],
+		]);
+		expect(payees()).toHaveLength(3);
+
+		await user.type(everyday.getByLabelText("Search the lines"), "essence");
+		expect(payees()).toEqual([expect.stringContaining("ESSENCE DU COIN")]);
+		await user.clear(everyday.getByLabelText("Search the lines"));
+		await user.type(everyday.getByLabelText("Search the lines"), "nothing");
+		expect(everyday.getByText("No line matches this search.")).toBeVisible();
 	});
 
 	it("goes back where the page was opened from, once imported", async () => {
@@ -535,19 +572,23 @@ describe("ImportPage", () => {
 			await screen.findByRole("region", { name: "Caisse du Plateau ···456" }),
 		);
 
+		await user.click(everyday.getByRole("button", { name: /^Already known/ }));
 		expect(everyday.getByText("Already entered in Savings")).toBeVisible();
 		expect(
 			everyday.getByRole("option", {
 				name: "It's the transfer entered in Savings: “PAIEMENT CAISSE” of Oct 6, 2026",
 			}),
 		).toHaveProperty("selected", true);
-		// What was imported before is folded away, with its badge
-		const imported = everyday.getByText(
-			"Already imported, left as they are: 1",
+		// What was imported before shows on request, with its badge
+		expect(
+			everyday.queryByText("Already imported", { exact: true }),
+		).not.toBeInTheDocument();
+		await user.click(
+			everyday.getByRole("button", { name: "Already imported (1)" }),
 		);
-		expect(everyday.getByText("Already imported")).not.toBeVisible();
-		await user.click(imported);
-		expect(everyday.getByText("Already imported")).toBeVisible();
+		expect(
+			everyday.getByText("Already imported", { exact: true }),
+		).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Import" }));
 
 		await screen.findByText("Statement imported");
