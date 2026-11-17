@@ -29,7 +29,7 @@ The monorepo's shared design system: shadcn/ui components and reusable composed 
 - `src/components/`: composed components built from the base components
 - `src/lib/`: pure utilities specific to the package (`cn()` comes from the `cn` package, not from here)
 - `src/hooks/`: reusable UI hooks
-- `src/styles/globals.css`: minimal global styles and the package's animations (never tokens or themes, which live in `packages/themes`), exported as `@repo/ui/styles.css`
+- `src/styles/globals.css`: minimal global styles and the package's animations (never tokens or themes, which live in `packages/themes`), exported as `@repo/ui/styles.css`; it also defines the state variants the `radix-nova` components are written with (`data-open:`, `data-active:`, `data-horizontal:`...), as shadcn's `shadcn/tailwind.css` does (not imported, so as not to add a dependency): a component added with a new one of these variants needs it defined there, or Tailwind silently generates none of its classes
 - `src/index.ts`: the package's public API (what is exported here is the contract)
 
 

@@ -5,6 +5,59 @@
 
 @import "tw-animate-css";
 
+/*
+ * The state variants the shadcn components are written with ("radix-nova"
+ * style: `data-open:`, `data-active:`, `data-horizontal:`...), as shadcn's
+ * own `shadcn/tailwind.css` defines them: Radix marks a state with
+ * `data-state` or `data-orientation`, not with an attribute of that name.
+ * Without them, Tailwind generates none of these classes (tabs side by
+ * side instead of stacked, no open or close animation).
+ */
+@custom-variant data-open {
+	&:where([data-state="open"]),
+	&:where([data-open]:not([data-open="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-closed {
+	&:where([data-state="closed"]),
+	&:where([data-closed]:not([data-closed="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-checked {
+	&:where([data-state="checked"]),
+	&:where([data-checked]:not([data-checked="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-active {
+	&:where([data-state="active"]),
+	&:where([data-active]:not([data-active="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-disabled {
+	&:where([data-disabled]:not([data-disabled="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-inset {
+	&:where([data-inset]:not([data-inset="false"])) {
+		@slot;
+	}
+}
+@custom-variant data-horizontal {
+	&:where([data-orientation="horizontal"]) {
+		@slot;
+	}
+}
+@custom-variant data-vertical {
+	&:where([data-orientation="vertical"]) {
+		@slot;
+	}
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
