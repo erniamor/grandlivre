@@ -47,6 +47,20 @@ describe("createResendMailer", () => {
 		expect(init?.signal).toBeInstanceOf(AbortSignal);
 	});
 
+	it("sends its HTML too, when it has some", async () => {
+		const { mailer, fetch } = mailerAnswering(async () =>
+			Response.json({ id: "email-id" }),
+		);
+
+		await mailer.send({ ...message, html: "<p>123456</p>" });
+
+		const [, init] = fetch.mock.calls[0] ?? [];
+		expect(JSON.parse(String(init?.body))).toMatchObject({
+			text: message.text,
+			html: "<p>123456</p>",
+		});
+	});
+
 	it("answers 503 when Resend refuses the email, logging why without its content", async () => {
 		const log = vi.spyOn(console, "error").mockImplementation(() => {});
 		const { mailer } = mailerAnswering(async () =>

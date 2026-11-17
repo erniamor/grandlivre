@@ -4,7 +4,10 @@ import { AppError } from "@/lib/errors";
 export interface EmailMessage {
 	to: string;
 	subject: string;
+	/** For the email apps that don't show HTML, and the console in development. */
 	text: string;
+	/** The email as shown by most email apps (see emails/layout.ts). */
+	html?: string;
 }
 
 export interface Mailer {
@@ -70,6 +73,7 @@ export function createResendMailer({
 						to: [message.to],
 						subject: message.subject,
 						text: message.text,
+						...(message.html ? { html: message.html } : {}),
 					}),
 					signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
 				});
