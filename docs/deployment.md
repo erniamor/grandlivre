@@ -82,7 +82,48 @@ Variables:
 ### `Postgres`
 
 - Added from Railway's PostgreSQL template, in the same project and region.
-- **Backups:** Railway's own backups (the Backups tab) need its Pro plan. On the Hobby plan, the database is backed up by a nightly cron service to Cloudflare R2, outside Railway: to set up before the launch (see [roadmap.md](roadmap.md)). Until then, nothing is backed up: the data is disposable during the pre-launch.
+- **Backups:** Railway's own backups (the Backups tab) need its Pro plan. On the Hobby plan, the `backup` service below sends a nightly encrypted dump to Cloudflare R2, outside Railway.
+
+### `backup`
+
+A cron service: Railway starts it once a night, it dumps the database over the private network, encrypts the dump with `age` for the owner of the restore key, sends it to a private R2 bucket and stops. The image and its script are in [`infra/backup/`](../infra/backup/).
+
+| Setting | Value |
+| --- | --- |
+| Source | GitHub repository, branch `main`, Root Directory `/infra/backup` |
+| Builder | Dockerfile (`infra/backup/Dockerfile`) |
+| Cron schedule | `0 8 * * *` (8:00 UTC: 3:00 in Montréal in winter, 4:00 in summer) |
+| Watch paths | `/infra/backup/**` |
+| Region / replicas | US East, 1 |
+| Restart policy | Never: a failed backup shows in the logs, the next night runs anyway |
+
+Variables:
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `AGE_RECIPIENT` | The public key of the restore key (`age1…`). Its private key stays with the owner, in a password manager: never on Railway nor in the repository. Without it, the backups can't be read |
+| `S3_ENDPOINT` | `https://<account id>.r2.cloudflarestorage.com` |
+| `S3_BUCKET` | `grandlivre-backups`: a bucket of its own, since an R2 token can only be limited to whole buckets |
+| `S3_PREFIX` | Not set: `grandlivre` |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | An R2 API token, "Object Read & Write", limited to `grandlivre-backups` |
+
+In R2, a lifecycle rule on the bucket deletes the backups older than 30 days.
+
+### Restoring a backup
+
+1. Download the backup from the R2 bucket (`grandlivre/grandlivre-<date>.dump.age`).
+2. Decrypt it with the restore key, and restore it into an **empty** database, here the local one of `docker-compose.yml` (the image has the right `pg_dump`, `pg_restore` and `age`):
+   ```sh
+   docker build -t grandlivre-backup infra/backup
+   docker exec grandlivre-postgres-1 psql -U grandlivre -c "CREATE DATABASE grandlivre_restore"
+   docker run --rm --add-host host.docker.internal:host-gateway -v "$PWD":/work --entrypoint sh grandlivre-backup -c \
+     "age --decrypt --identity /work/restore.key /work/grandlivre-<date>.dump.age | pg_restore --no-owner --no-privileges --dbname=postgres://grandlivre:grandlivre@host.docker.internal:5434/grandlivre_restore"
+   ```
+   `restore.key` is the private key, written to a file for the time of the restore, then deleted.
+3. To put it back in production: empty the production database as in "Resetting the database", without redeploying, then restore into it with the same command over a connection to it (`railway connect Postgres`, or from the `api` service with `railway ssh`); then redeploy `api`, whose pre-deploy command applies the migrations newer than the backup.
+
+The restore was tried on 2026-11-18: a dump of the development database, restored into an empty one, gave the same rows, table by table.
 
 ## Domains
 

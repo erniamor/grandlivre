@@ -56,6 +56,8 @@ packages/
   schemas/      Zod schemas shared by the API and the front ends (inputs, responses)
   config-ts/    base tsconfig
   utils/        pure utilities, no framework dependency
+infra/
+  backup/       the nightly backup of the production database (Docker image, script), see docs/deployment.md
 ```
 
 
