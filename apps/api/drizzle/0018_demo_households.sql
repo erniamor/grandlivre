@@ -1,0 +1,1 @@
+ALTER TABLE "households" ADD COLUMN "demo" boolean DEFAULT false NOT NULL;

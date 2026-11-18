@@ -404,56 +404,69 @@ export async function addSuggestedTags(
 	if (keys.some((key) => !known.has(key))) {
 		throw invalid("keys", "suggested_tags_invalid");
 	}
-	const selected = withAncestors(keys);
-
 	await db.transaction(async (tx) => {
-		await lockTags(tx, householdId);
-		const existing = await tx
-			.select({
-				tagId: tagNames.tagId,
-				locale: tagNames.locale,
-				name: tagNames.name,
-				parentId: tags.parentId,
-			})
-			.from(tagNames)
-			.innerJoin(tags, eq(tags.id, tagNames.tagId))
-			.where(eq(tagNames.householdId, householdId));
-		// A name designates a tag among the children of a same parent
-		const keyOf = (parentId: string | null, locale: Locale, name: string) =>
-			`${parentId ?? "root"}:${locale}:${name.toLowerCase()}`;
-		const tagByName = new Map(
-			existing.map((row) => [
-				keyOf(row.parentId, row.locale, row.name),
-				row.tagId,
-			]),
-		);
-
-		const add = async (
-			suggestions: SuggestedTag[],
-			parentId: string | null,
-		) => {
-			for (const { key, names, children } of suggestions) {
-				// Not chosen: neither is anything under it
-				if (!selected.has(key)) {
-					continue;
-				}
-				const nameKeys = entriesOf(names).map(([locale, name]) =>
-					keyOf(parentId, locale, name),
-				);
-				let tagId = nameKeys
-					.map((nameKey) => tagByName.get(nameKey))
-					.find((id) => id !== undefined);
-				if (tagId === undefined) {
-					await assertUnderLimit(tx, householdId);
-					tagId = (await insertTag(tx, householdId, names, parentId)).id;
-					for (const nameKey of nameKeys) {
-						tagByName.set(nameKey, tagId);
-					}
-				}
-				await add(children, tagId);
-			}
-		};
-		await add(suggestedTags, null);
+		await insertSuggestedTags(tx, householdId, keys);
 		await publishHouseholdEvent(tx, householdId, "tags");
 	});
+}
+
+/**
+ * Adds the suggested tags of `keys`, and the tags above them, inside `tx`,
+ * as `addSuggestedTags` does: what the household has already, at the same
+ * place under any of its names, isn't added again. Returns each suggestion's
+ * tag by its key; the caller publishes the event.
+ */
+export async function insertSuggestedTags(
+	tx: Transaction,
+	householdId: string,
+	keys: string[],
+): Promise<Map<string, string>> {
+	const selected = withAncestors(keys);
+	const tagOfKey = new Map<string, string>();
+	await lockTags(tx, householdId);
+	const existing = await tx
+		.select({
+			tagId: tagNames.tagId,
+			locale: tagNames.locale,
+			name: tagNames.name,
+			parentId: tags.parentId,
+		})
+		.from(tagNames)
+		.innerJoin(tags, eq(tags.id, tagNames.tagId))
+		.where(eq(tagNames.householdId, householdId));
+	// A name designates a tag among the children of a same parent
+	const keyOf = (parentId: string | null, locale: Locale, name: string) =>
+		`${parentId ?? "root"}:${locale}:${name.toLowerCase()}`;
+	const tagByName = new Map(
+		existing.map((row) => [
+			keyOf(row.parentId, row.locale, row.name),
+			row.tagId,
+		]),
+	);
+
+	const add = async (suggestions: SuggestedTag[], parentId: string | null) => {
+		for (const { key, names, children } of suggestions) {
+			// Not chosen: neither is anything under it
+			if (!selected.has(key)) {
+				continue;
+			}
+			const nameKeys = entriesOf(names).map(([locale, name]) =>
+				keyOf(parentId, locale, name),
+			);
+			let tagId = nameKeys
+				.map((nameKey) => tagByName.get(nameKey))
+				.find((id) => id !== undefined);
+			if (tagId === undefined) {
+				await assertUnderLimit(tx, householdId);
+				tagId = (await insertTag(tx, householdId, names, parentId)).id;
+				for (const nameKey of nameKeys) {
+					tagByName.set(nameKey, tagId);
+				}
+			}
+			tagOfKey.set(key, tagId);
+			await add(children, tagId);
+		}
+	};
+	await add(suggestedTags, null);
+	return tagOfKey;
 }

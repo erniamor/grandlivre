@@ -1,9 +1,11 @@
 import {
+	createDemoHouseholdSchema,
 	createHouseholdSchema,
 	updateHouseholdMemberSchema,
 	updateHouseholdSchema,
 } from "@repo/schemas";
 import { Hono } from "hono";
+import { resolveLocale } from "@/lib/locale";
 import { validate } from "@/lib/validator";
 import { requireAuth } from "@/middlewares/require-auth";
 import {
@@ -15,6 +17,10 @@ import { accountRoutes } from "@/routes/accounts/accounts.routes";
 import { budgetRoutes } from "@/routes/budgets/budgets.routes";
 import { eventRoutes } from "@/routes/events/events.routes";
 import { gettingStartedRoutes } from "@/routes/getting-started/getting-started.routes";
+import {
+	createDemoHousehold,
+	deleteDemoHousehold,
+} from "@/routes/households/demo/demo.service";
 import {
 	householdsQuerySchema,
 	memberParamSchema,
@@ -45,6 +51,17 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 	.get("/", validate("query", householdsQuerySchema), async (c) =>
 		c.json(await listHouseholds(c.get("user").id, c.req.valid("query"))),
 	)
+	// A household of made-up data, replacing the user's previous one
+	.post("/demo", validate("json", createDemoHouseholdSchema), async (c) =>
+		c.json(
+			await createDemoHousehold(
+				c.get("user").id,
+				c.req.valid("json"),
+				resolveLocale(c.req.header("accept-language")),
+			),
+			201,
+		),
+	)
 	// Everything below belongs to one household, open to its members only
 	// ("/:householdId/*" also matches "/:householdId" itself)
 	.use("/:householdId/*", requireHouseholdMember)
@@ -67,6 +84,11 @@ export const householdRoutes = new Hono<{ Variables: HouseholdVariables }>()
 		async (c) =>
 			c.json(await updateHousehold(c.get("membership"), c.req.valid("json"))),
 	)
+	// Only a demo household can be deleted, by its owner
+	.delete("/:householdId", requireHouseholdOwner, async (c) => {
+		await deleteDemoHousehold(c.get("membership"));
+		return c.body(null, 204);
+	})
 	.get(
 		"/:householdId/members",
 		validate("query", membersQuerySchema),

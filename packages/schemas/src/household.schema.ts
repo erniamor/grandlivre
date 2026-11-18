@@ -78,6 +78,18 @@ export const createHouseholdSchema = z.strictObject({
 export type CreateHousehold = z.infer<typeof createHouseholdSchema>;
 
 /**
+ * A demo household for the signed-in user: in `currency` (CAD when
+ * missing), in the browser's time zone. It replaces their demo household,
+ * if they had one.
+ */
+export const createDemoHouseholdSchema = z.strictObject({
+	currency: householdCurrencySchema.optional(),
+	timeZone: householdTimeZoneSchema.optional(),
+});
+
+export type CreateDemoHousehold = z.infer<typeof createDemoHouseholdSchema>;
+
+/**
  * Every field is optional: only the ones sent are changed.
  * `expenseSharing` turns on settling shared expenses between members.
  */
@@ -95,6 +107,11 @@ export const householdSchema = z.object({
 	timeZone: z.string(),
 	/** Whether its members settle the expenses they share; off by default. */
 	expenseSharing: z.boolean(),
+	/**
+	 * A household of made-up data, to try the app or show it; it can be
+	 * deleted whole. Missing for a real one.
+	 */
+	demo: z.boolean().optional(),
 	/** Role of the signed-in user in this household. */
 	role: householdRoleSchema,
 	createdAt: dateTimeSchema,

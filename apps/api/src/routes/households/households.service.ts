@@ -29,6 +29,7 @@ export function toHousehold({ household, role }: Membership): Household {
 		currency: household.currency,
 		timeZone: household.timeZone,
 		expenseSharing: household.expenseSharing,
+		...(household.demo ? { demo: true } : {}),
 		role,
 		createdAt: household.createdAt.toISOString(),
 	};
