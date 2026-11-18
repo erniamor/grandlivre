@@ -20,6 +20,18 @@ const topic = (
 
 /** The notions explained in place, with a "?". */
 export const helpTopics = {
+	quickEntry: topic(
+		m.help_quick_entry_label,
+		m.help_quick_entry_title,
+		m.help_quick_entry_text,
+		"quick-entry",
+	),
+	receiptScan: topic(
+		m.help_receipt_scan_label,
+		m.help_receipt_scan_title,
+		m.help_receipt_scan_text,
+		"quick-entry",
+	),
 	accountVisibility: topic(
 		m.help_account_visibility_label,
 		m.help_account_visibility_title,

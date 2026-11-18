@@ -1,6 +1,5 @@
 import type { TransactionDraft } from "@repo/schemas";
 import {
-	buttonVariants,
 	cn,
 	Dialog,
 	DialogContent,
@@ -12,6 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CameraIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
+import { HelpHint } from "@/features/help/HelpHint";
 import {
 	PhotoEditor,
 	type PhotoEdits,
@@ -53,7 +53,6 @@ export function ReceiptScanButton({
 	onDraft,
 }: ReceiptScanButtonProps) {
 	const inputId = useId();
-	const hintId = useId();
 	const [editing, setEditing] = useState<Editing | null>(null);
 	const close = () => {
 		editing?.bitmap.close();
@@ -96,44 +95,55 @@ export function ReceiptScanButton({
 
 	return (
 		<div className="grid gap-2">
-			{/* The input is the control, its label the button the user sees */}
-			<label
-				htmlFor={inputId}
-				className={cn(
-					buttonVariants({ variant: "outline" }),
-					"cursor-pointer justify-self-start has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2",
-					scan.isPending && "pointer-events-none opacity-50",
-				)}
-			>
-				<CameraIcon aria-hidden />
-				{scan.isPending ? m.receipt_scan_pending() : m.receipt_scan_button()}
-				<input
-					id={inputId}
-					type="file"
-					accept="image/*"
-					className="sr-only"
-					aria-describedby={hintId}
-					disabled={scan.isPending}
-					onChange={async (event) => {
-						const file = event.currentTarget.files?.[0];
-						// The same photo can be chosen again after an error
-						event.currentTarget.value = "";
-						if (!file) {
-							return;
-						}
-						scan.reset();
-						const bitmap = await decodePhoto(file);
-						if (bitmap) {
-							setEditing({ file, bitmap });
-						} else {
-							scan.mutate({ file });
-						}
-					}}
-				/>
-			</label>
-			<p id={hintId} className="text-muted-foreground text-sm">
-				{m.receipt_scan_hint()}
-			</p>
+			<div className="flex items-start gap-2">
+				{/* The input is the control, its label the tile the user sees */}
+				<label
+					htmlFor={inputId}
+					className={cn(
+						"flex flex-1 cursor-pointer items-center gap-4 rounded-lg border border-border border-dashed p-4 hover:bg-muted",
+						"has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2",
+						scan.isPending && "pointer-events-none opacity-50",
+					)}
+				>
+					<span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+						<CameraIcon aria-hidden className="size-6" />
+					</span>
+					<span className="grid gap-0.5">
+						<span className="font-medium">
+							{scan.isPending
+								? m.receipt_scan_pending()
+								: m.receipt_scan_button()}
+						</span>
+						<span className="text-muted-foreground text-sm">
+							{m.receipt_scan_subtitle()}
+						</span>
+					</span>
+					<input
+						id={inputId}
+						type="file"
+						accept="image/*"
+						className="sr-only"
+						aria-label={m.receipt_scan_button()}
+						disabled={scan.isPending}
+						onChange={async (event) => {
+							const file = event.currentTarget.files?.[0];
+							// The same photo can be chosen again after an error
+							event.currentTarget.value = "";
+							if (!file) {
+								return;
+							}
+							scan.reset();
+							const bitmap = await decodePhoto(file);
+							if (bitmap) {
+								setEditing({ file, bitmap });
+							} else {
+								scan.mutate({ file });
+							}
+						}}
+					/>
+				</label>
+				<HelpHint topic="receiptScan" />
+			</div>
 			{!editing && <FormAlert message={error} />}
 			<Dialog open={editing !== null} onOpenChange={(open) => !open && close()}>
 				<DialogContent className="max-h-[95vh] overflow-y-auto">

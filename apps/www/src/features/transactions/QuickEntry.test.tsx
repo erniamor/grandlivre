@@ -7,7 +7,10 @@ import { base, household } from "@/features/transactions/transaction-test-data";
 import { localToday } from "@/features/transactions/use-local-today";
 import { setTestLocale } from "@/test/locale";
 import { type ApiResponse, mockApi } from "@/test/mock-api";
-import { renderWithQueryClient } from "@/test/render-with-router";
+import {
+	renderWithQueryClient,
+	renderWithRouter,
+} from "@/test/render-with-router";
 
 vi.mock("@/lib/api", () => ({ getApi: vi.fn() }));
 
@@ -71,15 +74,42 @@ describe("QuickEntry", () => {
 		]);
 	});
 
-	it("asks for a note before calling the assistant", async () => {
+	it("keeps Prepare off until there is a note, blanks aside", async () => {
 		const { user, requests } = setUp();
+		const prepare = screen.getByRole("button", { name: "Prepare" });
 
-		await user.click(screen.getByRole("button", { name: "Prepare" }));
-
-		expect(
-			await screen.findByText("Describe the transaction, like “gas 72 $”."),
-		).toBeVisible();
+		expect(prepare).toBeDisabled();
+		await user.type(screen.getByLabelText("Describe the transaction"), "   ");
+		expect(prepare).toBeDisabled();
+		await user.type(
+			screen.getByLabelText("Describe the transaction"),
+			"gas 72",
+		);
+		expect(prepare).toBeEnabled();
 		expect(requests).toEqual([]);
+	});
+
+	it('explains in its "?" what happens to the note, the voice and the photo', async () => {
+		mockApi(() => ({ status: 200, body: draft }));
+		// The "?" links to the help page: a router is needed
+		renderWithRouter(
+			<QuickEntry householdId={household.id} onDraft={vi.fn()} />,
+		);
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: "How does quick entry work?" }),
+		);
+		expect(
+			await screen.findByText(
+				/your voice is transcribed by Mistral, then deleted/,
+			),
+		).toBeVisible();
+		await user.keyboard("{Escape}");
+		await user.click(
+			screen.getByRole("button", { name: "How does scanning a receipt work?" }),
+		);
+		expect(await screen.findByText(/the photo is never kept/)).toBeVisible();
 	});
 
 	it.each([
