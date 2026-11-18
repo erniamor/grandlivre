@@ -1,7 +1,6 @@
 import type { Household, Profile } from "@repo/schemas";
-import { Link } from "@tanstack/react-router";
-import { HouseholdBalance } from "@/features/accounts/HouseholdBalance";
 import { BudgetsOverview } from "@/features/budgets/BudgetsOverview";
+import { KeyFigures } from "@/features/dashboard/KeyFigures";
 import { GettingStartedCard } from "@/features/getting-started/GettingStartedCard";
 import { InstallCard } from "@/features/pwa/InstallCard";
 import { PendingRecurring } from "@/features/recurring/PendingRecurring";
@@ -21,8 +20,8 @@ interface DashboardPageProps {
 /**
  * Home of a signed-in user: the starting point of their household's pages.
  * On a wide screen, a main column (entering, what waits, what happened)
- * beside a narrower one (where the household stands); on a phone, one
- * column, the main one first.
+ * beside a narrower one (sharing, budgets, what comes), under the key
+ * figures; on a phone, one column, the main one first.
  */
 export function DashboardPage({ me, household }: DashboardPageProps) {
 	const openDraft = useOpenDraft();
@@ -39,6 +38,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 				</p>
 			</header>
 			<GettingStartedCard household={household} />
+			<KeyFigures household={household} />
 			<div className="grid items-start gap-6 lg:grid-cols-3">
 				<div className="grid gap-6 lg:col-span-2">
 					<QuickEntry
@@ -49,14 +49,6 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 					<RecentTransactions household={household} />
 				</div>
 				<div className="grid gap-6">
-					<HouseholdBalance household={household}>
-						<Link
-							to="/accounts"
-							className="justify-self-start rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-						>
-							{m.summary_accounts_link()}
-						</Link>
-					</HouseholdBalance>
 					{/* Only for the households that settle shared expenses */}
 					{household.expenseSharing && (
 						<SharingSummary household={household} meId={me.id} />

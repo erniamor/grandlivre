@@ -178,6 +178,13 @@ export function respondWith(
 		if (request.path === `${base}/transactions`) {
 			return page(items, pagination);
 		}
+		// Nothing spent nor earned in the period asked
+		if (request.path === `${base}/reports/tags`) {
+			return {
+				status: 200,
+				body: { from: "2026-11-01", to: "2026-11-30", tags: [] },
+			};
+		}
 		// Every payee sorted
 		if (request.path === `${base}/transactions/uncategorized`) {
 			return page([], { pageSize: 200 });

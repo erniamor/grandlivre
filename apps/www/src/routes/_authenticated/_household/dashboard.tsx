@@ -5,10 +5,12 @@ import {
 } from "@/features/accounts/accounts-query";
 import { budgetsQueryOptions } from "@/features/budgets/budgets-query";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { monthToDate } from "@/features/dashboard/key-figures";
 import {
 	pendingQueryOptions,
 	upcomingQueryOptions,
 } from "@/features/recurring/recurring-query";
+import { tagReportQueryOptions } from "@/features/reports/reports-query";
 import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { RECENT_TRANSACTIONS_COUNT } from "@/features/transactions/RecentTransactions";
@@ -18,7 +20,16 @@ import { todayIn } from "@/lib/dates";
 export const Route = createFileRoute("/_authenticated/_household/dashboard")({
 	loader: ({ context }) => {
 		const { household, queryClient } = context;
+		const today = todayIn(household.timeZone);
+		// The key figures: this month, against last month at the same day
+		const periods = monthToDate(today);
 		return Promise.all([
+			queryClient.ensureQueryData(
+				tagReportQueryOptions(household.id, periods.current),
+			),
+			queryClient.ensureQueryData(
+				tagReportQueryOptions(household.id, periods.previous),
+			),
 			queryClient.ensureQueryData(accountsSummaryQueryOptions(household.id)),
 			queryClient.ensureQueryData(
 				transactionsQueryOptions(household.id, {
@@ -33,10 +44,7 @@ export const Route = createFileRoute("/_authenticated/_household/dashboard")({
 				? queryClient.ensureQueryData(sharingOverviewQueryOptions(household.id))
 				: undefined,
 			queryClient.ensureQueryData(
-				budgetsQueryOptions(
-					household.id,
-					todayIn(household.timeZone).slice(0, 7),
-				),
+				budgetsQueryOptions(household.id, today.slice(0, 7)),
 			),
 		]);
 	},

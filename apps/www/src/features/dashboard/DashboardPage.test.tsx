@@ -69,12 +69,18 @@ describe("DashboardPage", () => {
 
 		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
 
+		// Among the key figures, the first one
 		const balance = within(
-			await screen.findByRole("region", { name: "Household balance" }),
+			(
+				await within(
+					await screen.findByRole("region", { name: "Key figures" }),
+				).findByText("Household balance")
+			).parentElement as HTMLElement,
 		);
 		expect(balance.getByText("$10,800.50")).toBeVisible();
-		expect(balance.getByText("$11,250.50")).toBeVisible();
-		expect(balance.getByText("-$450.00")).toBeVisible();
+		expect(
+			balance.getByText("Assets $11,250.50 · debts -$450.00"),
+		).toBeVisible();
 		expect(
 			balance.getByRole("link", { name: "See the accounts" }),
 		).toHaveAttribute("href", "/accounts");
@@ -329,5 +335,58 @@ describe("DashboardPage", () => {
 				screen.queryByRole("region", { name: "Budgets this month" }),
 			).not.toBeInTheDocument();
 		});
+	});
+});
+
+describe("DashboardPage, the key figures", () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("shows the net balance, and this month's expenses against last month at the same day, incomes and savings", async () => {
+		// Only the clock: November 17th, 2026 in Montreal
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(new Date("2026-11-17T17:00:00Z"));
+		const reads = respondWith();
+		mockApi((request, url) => {
+			if (request.path === `${base}/reports/tags`) {
+				const thisMonth = url.searchParams.get("from") === "2026-11-01";
+				return {
+					status: 200,
+					body: {
+						from: url.searchParams.get("from"),
+						to: url.searchParams.get("to"),
+						tags: thisMonth
+							? [
+									{ tagId: food.id, expense: 3_210_00, income: 0 },
+									{ tagId: null, expense: 0, income: 6_400_00 },
+								]
+							: [{ tagId: food.id, expense: 2_972_22, income: 0 }],
+					},
+				};
+			}
+			return reads(request);
+		});
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		const figures = within(
+			await screen.findByRole("region", { name: "Key figures" }),
+		);
+		const tile = (label: string) =>
+			within(figures.getByText(label).parentElement as HTMLElement);
+		expect(tile("Household balance").getByText("$10,800.50")).toBeVisible();
+		expect(
+			tile("Household balance").getByText("Assets $11,250.50 · debts -$450.00"),
+		).toBeVisible();
+		expect(tile("Expenses this month").getByText("$3,210.00")).toBeVisible();
+		expect(
+			tile("Expenses this month").getByText("8% more than at Oct 17, 2026"),
+		).toBeVisible();
+		expect(tile("Incomes this month").getByText("$6,400.00")).toBeVisible();
+		expect(tile("Saved this month").getByText("$3,190.00")).toBeVisible();
+		expect(
+			tile("Saved this month").getByText("Savings rate: 50%"),
+		).toBeVisible();
 	});
 });
