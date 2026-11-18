@@ -37,7 +37,10 @@ export function ReceiptDetails({
 			aria-labelledby={titleId}
 			className="grid gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground"
 		>
-			<h2 id={titleId} className="flex items-center gap-2 font-medium">
+			<h2
+				id={titleId}
+				className={cn("flex items-center gap-2 font-medium", sensitiveClass)}
+			>
 				<ReceiptTextIcon aria-hidden className="size-4" />
 				{receipt.merchant
 					? m.receipt_title_from({ merchant: receipt.merchant })

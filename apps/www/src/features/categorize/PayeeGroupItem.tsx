@@ -63,7 +63,7 @@ export function PayeeGroupItem({
 			className="grid gap-2 rounded-lg border border-border p-4"
 		>
 			<div className="flex flex-wrap items-baseline justify-between gap-x-4">
-				<h2 id={titleId} className="font-medium">
+				<h2 id={titleId} className={cn("font-medium", sensitiveClass)}>
 					{group.payee}
 				</h2>
 				<p className={cn("tabular-nums", sensitiveClass)}>

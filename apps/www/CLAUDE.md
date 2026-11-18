@@ -105,7 +105,7 @@ Grand Livre's web app, for now: the header (language, appearance, account), sign
 
 ## Private mode
 
-- Every amount shown (not in a form's fields) carries `sensitiveClass` on the element that holds it, the value and not its label: `Amount` does it, and so must any new `formatAmount()` shown on a page, a chart (the whole figure) or a sentence holding an amount (the whole sentence). Forms are left as they are: the private mode is for showing the app, not for entering.
+- What is sensitive carries `sensitiveClass` on the element that holds it, the value and not its label: every amount shown (not in a form's fields), and the payees, notes, bank descriptions, receipts' contents and account numbers' ends (the names of accounts, tags and members stay readable). For the amounts, `Amount` does it, and so must any new `formatAmount()` shown on a page, a chart (the whole figure) or a sentence holding an amount (the whole sentence). Forms are left as they are: the private mode is for showing the app, not for entering.
 
 ## Forms
 

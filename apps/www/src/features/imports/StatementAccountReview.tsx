@@ -1,6 +1,7 @@
 import type { Account, StatementPreviewAccount } from "@repo/schemas";
 import { useId } from "react";
 import type { SelectOption } from "@/components/SelectField";
+import { sensitiveClass } from "@/components/sensitive";
 import { accountTypeLabels } from "@/features/accounts/account-type-labels";
 import { AccountSummaryLine } from "@/features/imports/AccountSummaryLine";
 import { DestinationField } from "@/features/imports/DestinationField";
@@ -10,7 +11,6 @@ import {
 	destinationAccounts,
 	type ImportDraft,
 	type LineChoice,
-	statementAccountName,
 } from "@/features/imports/import-draft";
 import type { ImportSummary } from "@/features/imports/import-summary";
 import { StatementLineList } from "@/features/imports/StatementLineList";
@@ -69,7 +69,8 @@ export function StatementAccountReview({
 		>
 			<header className="grid gap-1">
 				<h2 id={titleId} className="font-heading font-semibold text-lg">
-					{statementAccountName(account)}
+					{account.bankName}{" "}
+					<span className={sensitiveClass}>···{account.numberEnd}</span>
 				</h2>
 				<p className="text-muted-foreground text-sm">
 					{m.import_account_summary({

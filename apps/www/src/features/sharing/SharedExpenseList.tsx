@@ -36,7 +36,7 @@ export function SharedExpenseList({
 						className="grid gap-1 rounded-lg border border-border bg-card p-4 text-card-foreground"
 					>
 						<div className="flex flex-wrap items-baseline justify-between gap-x-4">
-							<span className="font-medium">
+							<span className={cn("font-medium", sensitiveClass)}>
 								{expense.payee ??
 									(expense.type === "income"
 										? m.transaction_type_income()

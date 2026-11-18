@@ -1,5 +1,6 @@
 import type { StatementPreviewAccount } from "@repo/schemas";
 import { TriangleAlertIcon } from "lucide-react";
+import { sensitiveClass } from "@/components/sensitive";
 import { m } from "@/paraglide/messages";
 
 interface AccountTabLabelProps {
@@ -31,7 +32,7 @@ export function AccountTabLabel({
 					<span className="sr-only">{m.import_tab_corrections()}</span>
 				</>
 			)}
-			<span>···{account.numberEnd}</span>
+			<span className={sensitiveClass}>···{account.numberEnd}</span>
 			<span className="max-w-40 truncate font-normal">
 				{destination === null
 					? m.import_tab_skipped()

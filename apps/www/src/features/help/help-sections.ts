@@ -104,6 +104,6 @@ export const helpSections: HelpSection[] = [
 	{
 		id: "app",
 		title: m.help_section_app_title,
-		paragraphs: [m.help_section_app_p1],
+		paragraphs: [m.help_section_app_p1, m.help_section_app_p2],
 	},
 ];

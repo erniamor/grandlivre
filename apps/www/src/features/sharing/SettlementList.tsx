@@ -45,7 +45,10 @@ export function SettlementList({
 							<span className={cn("font-medium", sensitiveClass)}>
 								{sentence}
 							</span>
-							<span className="text-muted-foreground text-sm">
+							{/* Its note, among these, may say more than the amount */}
+							<span
+								className={cn("text-muted-foreground text-sm", sensitiveClass)}
+							>
 								{[
 									formatDay(settlement.date, locale),
 									settlement.transactionId

@@ -42,7 +42,7 @@ export function OccurrenceItem({
 		<li className="grid gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground">
 			<div className="flex flex-wrap items-center gap-x-4 gap-y-1">
 				<div className="grid min-w-40 flex-1 gap-0.5">
-					<p className="break-words font-medium">
+					<p className={cn("break-words font-medium", sensitiveClass)}>
 						{templateTitle(transaction)}
 					</p>
 					<p className="break-words text-muted-foreground text-sm">

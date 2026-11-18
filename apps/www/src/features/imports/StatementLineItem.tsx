@@ -65,7 +65,13 @@ export function StatementLineItem({
 					<span className="text-muted-foreground text-sm">
 						{formatShortDay(line.date, locale)}
 					</span>{" "}
-					<span className={cn("font-medium", !known && "text-foreground")}>
+					<span
+						className={cn(
+							"font-medium",
+							!known && "text-foreground",
+							sensitiveClass,
+						)}
+					>
 						{line.payee}
 					</span>
 				</p>
@@ -73,7 +79,12 @@ export function StatementLineItem({
 					{formatAmount(line.amount, currency, locale, { signed: true })}
 				</p>
 			</div>
-			<p className="break-words text-muted-foreground text-xs">
+			<p
+				className={cn(
+					"break-words text-muted-foreground text-xs",
+					sensitiveClass,
+				)}
+			>
 				{line.description}
 			</p>
 			{known && (
