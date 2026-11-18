@@ -1,4 +1,5 @@
 import {
+	cn,
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -65,7 +66,7 @@ export function HouseholdMenu({ preferredHousehold }: HouseholdMenuProps) {
 								})
 							: m.household_menu_label({ name: household.name })
 					}
-					className={headerButtonClass}
+					className={cn(headerButtonClass, "min-w-0")}
 				>
 					<HouseIcon aria-hidden className="size-5" />
 					<span className="max-w-40 truncate">{household.name}</span>

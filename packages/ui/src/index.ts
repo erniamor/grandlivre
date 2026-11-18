@@ -40,6 +40,9 @@ export {
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
 	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@repo/ui/components/ui/dropdown-menu";
 export { Input } from "@repo/ui/components/ui/input";

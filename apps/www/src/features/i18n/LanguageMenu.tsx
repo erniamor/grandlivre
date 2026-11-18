@@ -1,22 +1,23 @@
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from "@repo/ui";
 import { headerButtonClass } from "@/components/header-styles";
+import { LanguageRadioGroup } from "@/features/i18n/LanguageRadioGroup";
 import { localeNames } from "@/features/i18n/locale-names";
 import { m } from "@/paraglide/messages";
-import { isLocale, type Locale, locales } from "@/paraglide/runtime";
+import type { Locale } from "@/paraglide/runtime";
 
 interface LanguageMenuProps {
 	locale: Locale;
 	onLocaleChange: (locale: Locale) => void;
 }
 
-/** The header's language menu: its button shows the current language's code. */
+/**
+ * The header's language menu for a visitor: its button shows the current
+ * language's code. A signed-in user finds it in their account menu.
+ */
 export function LanguageMenu({ locale, onLocaleChange }: LanguageMenuProps) {
 	return (
 		<DropdownMenu>
@@ -32,21 +33,7 @@ export function LanguageMenu({ locale, onLocaleChange }: LanguageMenuProps) {
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>{m.language_label()}</DropdownMenuLabel>
-				<DropdownMenuRadioGroup
-					value={locale}
-					onValueChange={(value) => {
-						if (isLocale(value) && value !== locale) {
-							onLocaleChange(value);
-						}
-					}}
-				>
-					{locales.map((value) => (
-						<DropdownMenuRadioItem key={value} value={value} lang={value}>
-							{localeNames[value]}
-						</DropdownMenuRadioItem>
-					))}
-				</DropdownMenuRadioGroup>
+				<LanguageRadioGroup locale={locale} onLocaleChange={onLocaleChange} />
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

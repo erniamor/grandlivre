@@ -3,6 +3,7 @@
 	"app_name": "Grand Livre",
 	"logo_home_link": "Grand Livre, inicio",
 	"language_label": "Idioma",
+	"appearance_label": "Apariencia",
 	"appearance_mode_label": "Modo",
 	"appearance_light": "Clara",
 	"appearance_dark": "Oscura",

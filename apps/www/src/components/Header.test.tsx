@@ -75,6 +75,47 @@ describe("Header", () => {
 		);
 	});
 
+	it("keeps a signed-in user's band on one line: the language and the appearance go in the account menu", async () => {
+		const header = await renderHeader(aliceProfile);
+
+		expect(
+			within(header).queryByRole("button", { name: "Language: English" }),
+		).toBeNull();
+		expect(
+			within(header).queryByRole("button", {
+				name: "Appearance: System, Ledger",
+			}),
+		).toBeNull();
+		expect(
+			within(header).getByRole("button", { name: "Private mode" }),
+		).toBeVisible();
+	});
+
+	it("chooses the language and the appearance from the account menu", async () => {
+		mockSystemAppearance(false);
+		const user = userEvent.setup();
+		const header = await renderHeader(aliceProfile);
+
+		await user.click(
+			within(header).getByRole("button", { name: "Account: Alice" }),
+		);
+		const menu = screen.getByRole("menu");
+		expect(
+			within(menu).getByRole("menuitem", { name: "Language: English" }),
+		).toHaveAttribute("aria-haspopup", "menu");
+		// Opened from the keyboard, as a pointer would hover it
+		within(menu)
+			.getByRole("menuitem", { name: "Appearance: System, Ledger" })
+			.focus();
+		await user.keyboard("{ArrowRight}");
+		const dark = await screen.findByRole("menuitemradio", { name: "Dark" });
+		dark.focus();
+		await user.keyboard("{Enter}");
+
+		expect(document.documentElement).toHaveClass("dark");
+		expect(readCookie(document.cookie, "appearance")).toBe("dark");
+	});
+
 	it("explains how to install the app from the account menu, where it isn't yet", async () => {
 		mockInstall("ios");
 		const user = userEvent.setup();
