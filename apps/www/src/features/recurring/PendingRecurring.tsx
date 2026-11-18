@@ -1,8 +1,9 @@
 import type { Household } from "@repo/schemas";
-import { buttonVariants } from "@repo/ui";
+import { buttonVariants, cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { OccurrenceItem } from "@/features/recurring/OccurrenceItem";
 import { pendingQueryOptions } from "@/features/recurring/recurring-query";
@@ -37,7 +38,7 @@ export function PendingRecurring({ household }: PendingRecurringProps) {
 	);
 
 	return (
-		<section aria-labelledby={titleId} className="grid gap-3">
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<div className="grid gap-1">
 				<h2 id={titleId} className="font-heading font-semibold text-lg">
 					{m.pending_recurring_title()}

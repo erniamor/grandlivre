@@ -1,6 +1,8 @@
 import type { Household } from "@repo/schemas";
+import { cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { type ReactNode, useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { Amount } from "@/features/accounts/Amount";
 import { accountsSummaryQueryOptions } from "@/features/accounts/accounts-query";
 import { HelpHint } from "@/features/help/HelpHint";
@@ -27,10 +29,7 @@ export function HouseholdBalance({
 	const { currency } = household;
 
 	return (
-		<section
-			aria-labelledby={titleId}
-			className="grid gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground"
-		>
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<div className="grid gap-1">
 				<div className="flex items-center gap-1">
 					<h2

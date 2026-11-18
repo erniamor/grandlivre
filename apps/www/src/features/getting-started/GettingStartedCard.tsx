@@ -1,9 +1,10 @@
 import type { Household } from "@repo/schemas";
-import { buttonVariants } from "@repo/ui";
+import { buttonVariants, cn } from "@repo/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon } from "lucide-react";
 import { useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { gettingStartedQueryOptions } from "@/features/getting-started/getting-started-query";
 import {
 	gettingStartedSteps,
@@ -37,10 +38,7 @@ export function GettingStartedCard({ household }: GettingStartedCardProps) {
 	const { done, total } = progressOf(steps);
 
 	return (
-		<section
-			aria-labelledby={titleId}
-			className="grid gap-3 rounded-lg border border-border p-4"
-		>
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<h2 id={titleId} className="font-heading font-semibold text-lg">
 				{m.getting_started_title()}
 			</h2>

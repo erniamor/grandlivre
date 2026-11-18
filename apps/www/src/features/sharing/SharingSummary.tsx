@@ -1,7 +1,9 @@
 import type { Household } from "@repo/schemas";
+import { cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -28,10 +30,7 @@ export function SharingSummary({ household, meId }: SharingSummaryProps) {
 	);
 
 	return (
-		<section
-			aria-labelledby={titleId}
-			className="grid gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground"
-		>
+		<section aria-labelledby={titleId} className={cn("grid gap-2", cardClass)}>
 			<h2 id={titleId} className="font-heading font-semibold text-lg">
 				{m.sharing_title()}
 			</h2>

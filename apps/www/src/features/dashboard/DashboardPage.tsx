@@ -18,45 +18,57 @@ interface DashboardPageProps {
 	household: Household;
 }
 
-/** Home of a signed-in user: the starting point of their household's pages. */
+/**
+ * Home of a signed-in user: the starting point of their household's pages.
+ * On a wide screen, a main column (entering, what waits, what happened)
+ * beside a narrower one (where the household stands); on a phone, one
+ * column, the main one first.
+ */
 export function DashboardPage({ me, household }: DashboardPageProps) {
 	const openDraft = useOpenDraft();
 	return (
-		<section className="mx-auto grid max-w-5xl gap-6 px-4 py-12">
-			<header className="grid gap-2">
+		<section className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:py-12">
+			<header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 				<h1 className="font-heading font-semibold text-3xl">
 					{m.dashboard_title()}
 				</h1>
-				<p className="text-muted-foreground">{me.name || me.email}</p>
-				<p className="max-w-prose text-muted-foreground">
-					{m.dashboard_household({ name: household.name })}
+				<p className="flex flex-wrap gap-x-2 text-muted-foreground">
+					<span>{m.dashboard_household({ name: household.name })}</span>
+					<span aria-hidden>·</span>
+					<span>{me.name || me.email}</span>
 				</p>
 			</header>
 			<GettingStartedCard household={household} />
-			<QuickEntry
-				householdId={household.id}
-				onDraft={(draft, photos) => openDraft(draft, { photos })}
-			/>
-			<PendingRecurring household={household} />
-			<HouseholdBalance household={household}>
-				<Link
-					to="/accounts"
-					className="justify-self-start rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-				>
-					{m.summary_accounts_link()}
-				</Link>
-			</HouseholdBalance>
-			{/* Only for the households that settle shared expenses */}
-			{household.expenseSharing && (
-				<SharingSummary household={household} meId={me.id} />
-			)}
-			<BudgetsOverview
-				household={household}
-				month={todayIn(household.timeZone).slice(0, 7)}
-			/>
-			<RecentTransactions household={household} />
-			<UpcomingRecurring household={household} />
-			<InstallCard />
+			<div className="grid items-start gap-6 lg:grid-cols-3">
+				<div className="grid gap-6 lg:col-span-2">
+					<QuickEntry
+						householdId={household.id}
+						onDraft={(draft, photos) => openDraft(draft, { photos })}
+					/>
+					<PendingRecurring household={household} />
+					<RecentTransactions household={household} />
+				</div>
+				<div className="grid gap-6">
+					<HouseholdBalance household={household}>
+						<Link
+							to="/accounts"
+							className="justify-self-start rounded-sm text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+						>
+							{m.summary_accounts_link()}
+						</Link>
+					</HouseholdBalance>
+					{/* Only for the households that settle shared expenses */}
+					{household.expenseSharing && (
+						<SharingSummary household={household} meId={me.id} />
+					)}
+					<BudgetsOverview
+						household={household}
+						month={todayIn(household.timeZone).slice(0, 7)}
+					/>
+					<UpcomingRecurring household={household} />
+					<InstallCard />
+				</div>
+			</div>
 		</section>
 	);
 }

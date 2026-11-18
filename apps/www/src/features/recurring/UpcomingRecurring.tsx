@@ -1,7 +1,9 @@
 import type { Household } from "@repo/schemas";
+import { cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { OccurrenceItem } from "@/features/recurring/OccurrenceItem";
 import {
@@ -39,7 +41,7 @@ export function UpcomingRecurring({ household }: UpcomingRecurringProps) {
 	}
 
 	return (
-		<section aria-labelledby={titleId} className="grid gap-3">
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<h2 id={titleId} className="font-heading font-semibold text-lg">
 				{m.upcoming_recurring_title({ days: UPCOMING_DAYS })}
 			</h2>

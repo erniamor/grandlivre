@@ -1,6 +1,7 @@
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { DownloadIcon } from "lucide-react";
 import { useId, useState } from "react";
+import { cardClass } from "@/components/card-styles";
 import { IosInstallDialog } from "@/features/pwa/IosInstallDialog";
 import { useInstall } from "@/features/pwa/use-install";
 import { m } from "@/paraglide/messages";
@@ -18,10 +19,7 @@ export function InstallCard() {
 		return null;
 	}
 	return (
-		<section
-			aria-labelledby={titleId}
-			className="grid gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground"
-		>
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<div className="grid gap-1">
 				<h2 id={titleId} className="font-medium">
 					{m.install_title()}

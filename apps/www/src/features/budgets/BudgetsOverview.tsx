@@ -1,7 +1,9 @@
 import type { Household } from "@repo/schemas";
+import { cn } from "@repo/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
+import { cardClass } from "@/components/card-styles";
 import { BudgetRow } from "@/features/budgets/BudgetRow";
 import { byRisk } from "@/features/budgets/budget-view";
 import { budgetsQueryOptions } from "@/features/budgets/budgets-query";
@@ -40,7 +42,7 @@ export function BudgetsOverview({ household, month }: BudgetsOverviewProps) {
 	const shown = byRisk(data.budgets).slice(0, OVERVIEW_BUDGETS);
 
 	return (
-		<section aria-labelledby={titleId} className="grid gap-3">
+		<section aria-labelledby={titleId} className={cn("grid gap-3", cardClass)}>
 			<h2 id={titleId} className="font-heading font-semibold text-lg">
 				{m.budgets_overview_title()}
 			</h2>
