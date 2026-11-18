@@ -9,8 +9,8 @@ import type {
 import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { Header } from "@/components/Header";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { AppSidebar } from "@/features/navigation/AppSidebar";
 import { ConfirmOccurrencePage } from "@/features/recurring/ConfirmOccurrencePage";
 import { NewRecurringPage } from "@/features/recurring/NewRecurringPage";
 import { SettlePage } from "@/features/sharing/SettlePage";
@@ -441,9 +441,7 @@ describe("SettlePage", () => {
 
 describe("the navigation", () => {
 	it("shows Sharing only to a household that shares expenses", async () => {
-		const { router } = renderWithRouter(
-			<Header appearance="system" theme="ledger" me={aliceProfile} />,
-		);
+		const { router } = renderWithRouter(<AppSidebar />);
 		const nav = await screen.findByRole("navigation", { name: "Main" });
 		expect(
 			within(nav).queryByRole("link", { name: "Sharing" }),
@@ -472,14 +470,9 @@ describe("the navigation", () => {
 			id: "00000000-0000-4000-8000-0000000000aa",
 			expenseSharing: false,
 		};
-		const renderHeader = (preferred: string) => {
+		const renderSidebar = (preferred: string) => {
 			const { router } = renderWithRouter(
-				<Header
-					appearance="system"
-					theme="ledger"
-					me={aliceProfile}
-					preferredHousehold={preferred}
-				/>,
+				<AppSidebar preferredHousehold={preferred} />,
 			);
 			const { queryClient } = router.options.context as {
 				queryClient: import("@tanstack/react-query").QueryClient;
@@ -495,7 +488,7 @@ describe("the navigation", () => {
 		};
 
 		// The second household, chosen: it shares expenses
-		renderHeader(sharing.id);
+		renderSidebar(sharing.id);
 		const nav = await screen.findByRole("navigation", { name: "Main" });
 		expect(
 			await within(nav).findByRole("link", { name: "Sharing" }),

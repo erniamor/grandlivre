@@ -9,6 +9,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { type ReactNode, useEffect } from "react";
+import { AppFrame } from "@/components/AppFrame";
 import { Header } from "@/components/Header";
 import {
 	type Appearance,
@@ -18,6 +19,7 @@ import {
 import { getAppearance } from "@/features/appearance/get-appearance";
 import { meQueryOptions } from "@/features/auth/me-query";
 import { getPreferredHousehold } from "@/features/households/preferred-household";
+import { toastOffsetAboveTabBar } from "@/features/navigation/tab-bar";
 import { getPrivateMode } from "@/features/privacy/get-private-mode";
 import { listenForInstallPrompt } from "@/features/pwa/install-prompt";
 import { registerServiceWorker } from "@/features/pwa/service-worker";
@@ -65,7 +67,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
-			{ name: "viewport", content: "width=device-width, initial-scale=1" },
+			{
+				name: "viewport",
+				content: "width=device-width, initial-scale=1, viewport-fit=cover",
+			},
 			{ title: m.app_name() },
 			{ name: "apple-mobile-web-app-title", content: m.app_name() },
 		],
@@ -128,9 +133,22 @@ function RootDocument({ children }: { children: ReactNode }) {
 						preferredHousehold={context.preferredHousehold}
 						privateMode={privateMode}
 					/>
-					<main>{children}</main>
+					<AppFrame
+						signedIn={me !== null}
+						preferredHousehold={context.preferredHousehold}
+					>
+						{children}
+					</AppFrame>
 				</TooltipProvider>
-				<Toaster theme={appearance} position="bottom-center" />
+				<Toaster
+					theme={appearance}
+					position="bottom-center"
+					// Above the tab bar of a signed-in user's phone
+					{...(me && {
+						offset: toastOffsetAboveTabBar,
+						mobileOffset: toastOffsetAboveTabBar,
+					})}
+				/>
 				<Scripts />
 			</body>
 		</html>

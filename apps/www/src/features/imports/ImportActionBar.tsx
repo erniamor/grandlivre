@@ -1,5 +1,6 @@
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { ArrowUpIcon } from "lucide-react";
+import { aboveTabBarClass } from "@/features/navigation/tab-bar";
 import { m } from "@/paraglide/messages";
 
 interface ImportActionBarProps {
@@ -34,7 +35,12 @@ export function ImportActionBar({
 	onSubmit,
 }: ImportActionBarProps) {
 	return (
-		<div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-2 border-border border-t bg-background/95 px-4 py-3 backdrop-blur">
+		<div
+			className={cn(
+				"sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-2 border-border border-t bg-background/95 px-4 py-3 backdrop-blur",
+				aboveTabBarClass,
+			)}
+		>
 			<p className="font-medium text-sm">
 				{m.import_bar_count({ count: newTransactions })}
 			</p>

@@ -52,6 +52,15 @@ export {
 	PopoverContent,
 	PopoverTrigger,
 } from "@repo/ui/components/ui/popover";
+export {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@repo/ui/components/ui/sheet";
 export { Toaster } from "@repo/ui/components/ui/sonner";
 export {
 	Tabs,

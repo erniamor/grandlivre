@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import { LogInIcon } from "lucide-react";
 import { headerButtonClass } from "@/components/header-styles";
 import { Logo } from "@/components/Logo";
-import { MainNav } from "@/components/MainNav";
 import { AppearanceMenu } from "@/features/appearance/AppearanceMenu";
 import type { Appearance } from "@/features/appearance/appearance";
 import { UserMenu } from "@/features/auth/UserMenu";
@@ -30,7 +29,8 @@ interface HeaderProps {
  * The app's band, on one line: the logo (its mark alone on a phone) and the
  * current household on one side; on the other, the private mode and the
  * account menu, which holds the language and the appearance. A visitor has
- * the language and appearance menus instead, and the sign-in link.
+ * the language and appearance menus instead, and the sign-in link. The
+ * app's pages are in the side bar or the tab bar (`AppFrame`).
  */
 export function Header({
 	appearance,
@@ -41,7 +41,7 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header className="border-inverse-border border-b bg-inverse text-inverse-foreground">
-			<div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:gap-4">
+			<div className="flex items-center justify-between gap-2 px-4 py-3 sm:gap-4">
 				<div className="flex min-w-0 items-center gap-1 sm:gap-3">
 					<Logo />
 					{me && <HouseholdMenu preferredHousehold={preferredHousehold} />}
@@ -74,12 +74,6 @@ export function Header({
 					)}
 				</div>
 			</div>
-			{/* The app's pages are reserved to signed-in users */}
-			{me && (
-				<div className="mx-auto max-w-5xl px-4 pb-2">
-					<MainNav preferredHousehold={preferredHousehold} />
-				</div>
-			)}
 		</header>
 	);
 }

@@ -1,5 +1,5 @@
 import type { Household } from "@repo/schemas";
-import { Button, toast } from "@repo/ui";
+import { Button, cn, toast } from "@repo/ui";
 import {
 	useMutation,
 	useQueryClient,
@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
+import { aboveTabBarClass } from "@/features/navigation/tab-bar";
 import { SuggestedTagTree } from "@/features/tags/SuggestedTagTree";
 import {
 	suggestedKeys,
@@ -94,7 +95,12 @@ export function SuggestedTagsPage({
 				message={add.error ? actionErrorMessage(add.error) : undefined}
 			/>
 			{/* Stays in view at the bottom of a long list */}
-			<div className="sticky bottom-0 -mx-4 border-border border-t bg-background px-4 py-3">
+			<div
+				className={cn(
+					"sticky bottom-0 -mx-4 border-border border-t bg-background px-4 py-3",
+					aboveTabBarClass,
+				)}
+			>
 				<Button
 					type="button"
 					disabled={selected.size === 0 || add.isPending}
