@@ -51,8 +51,8 @@ Variables:
 | `COOKIE_DOMAIN` | `grandlivre.romain.re` |
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (Railway reference: the database's private URL) |
 | `BETTER_AUTH_SECRET` | A new secret for production, never the development one: `openssl rand -base64 32` (see "What must stay as it is") |
-| `RESEND_API_KEY` | A Resend key with "Sending access", restricted to the sending domain (required: the API refuses to start without it in production) |
-| `EMAIL_FROM` | `Grand Livre <bonjour@grandlivre.romain.re>`, on the domain verified in Resend |
+| `RESEND_API_KEY` | A Resend key of Grand Livre's own, with "Sending access", restricted to `mail.romain.re` (required: the API refuses to start without it in production) |
+| `EMAIL_FROM` | `Grand Livre <grandlivre@mail.romain.re>`, on the domain verified in Resend |
 | `ANTHROPIC_API_KEY` | A key of its own for production, in a Claude Console workspace with a monthly spend limit: notes, receipts and tag suggestions. Without it, the assistant answers that it is unavailable |
 | `MISTRAL_API_KEY` | A key of its own for production, with a spending limit: the notes dictated through the microphone. Without it, dictating is unavailable |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Not set for now: sign-in by email only. To add Google later: an OAuth client in Google Cloud Console, with the redirect URI `https://api.grandlivre.romain.re/v1/auth/callback/google` |
@@ -95,11 +95,11 @@ Variables:
 
 ## Emails (Resend)
 
-1. In Resend, add the domain `grandlivre.romain.re` (EU region). Resend shows its DNS records: a DKIM TXT record, and the MX and SPF TXT records of its return path (on a `send.grandlivre` subdomain).
-2. Add them in the DNS zone of `romain.re`, beside the others, and wait for Resend to verify the domain.
-3. Create an API key with "Sending access", restricted to that domain: it is `RESEND_API_KEY`.
+The emails are sent from `mail.romain.re`, a domain already verified in Resend for another family project: no DNS record to add for Grand Livre.
 
-These records are separate from Railway's: changing one never needs the other. The `romain.re` address you receive mail on is untouched: the records are on subdomains.
+- Create an API key of Grand Livre's own, with "Sending access", restricted to `mail.romain.re`: it is `RESEND_API_KEY`, revoked without touching the other project.
+- The sender, `grandlivre@mail.romain.re`, tells Grand Livre's emails apart; nobody reads its replies, and the emails never ask for one.
+- Both projects share the domain's sending reputation and Resend's quota (100 emails a day, 3,000 a month on the free plan): far above what sign-in links and invitations need. A project of its own sending more would need a domain of its own (for instance `grandlivre.romain.re`, with its DKIM and SPF records at the DNS provider).
 
 ## First deployment
 
@@ -107,7 +107,7 @@ These records are separate from Railway's: changing one never needs the other. T
 2. Create the Railway project (Hobby plan, US East) and connect the GitHub repository.
 3. Add PostgreSQL and enable its backups, then the `api` and `www` services with the settings above.
 4. Deploy `api` first (the pre-deploy command creates the tables), then `www`.
-5. Add the domains and the DNS records (Railway's and Resend's), and wait for the certificates and Resend's verification.
+5. Add the domains and Railway's DNS records, and wait for the certificates.
 6. Run the checks below.
 
 ## Checks after a deployment
