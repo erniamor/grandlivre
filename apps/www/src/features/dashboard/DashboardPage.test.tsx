@@ -390,3 +390,72 @@ describe("DashboardPage, the key figures", () => {
 		).toBeVisible();
 	});
 });
+
+describe("DashboardPage, the charts", () => {
+	it("breaks this month's expenses down by tag, and charts the twelve months", async () => {
+		const reads = respondWith();
+		mockApi((request, url) => {
+			if (request.path === `${base}/reports/tags`) {
+				return {
+					status: 200,
+					body: {
+						from: url.searchParams.get("from"),
+						to: url.searchParams.get("to"),
+						tags: [
+							{ tagId: food.id, expense: 300_00, income: 0 },
+							{ tagId: gas.id, expense: 100_00, income: 0 },
+							{ tagId: null, expense: 100_00, income: 0 },
+						],
+					},
+				};
+			}
+			if (request.path === `${base}/reports/monthly`) {
+				return {
+					status: 200,
+					body: {
+						months: [
+							{
+								month: "2026-11",
+								expense: 500_00,
+								income: 0,
+								tags: [{ tagId: food.id, expense: 500_00, income: 0 }],
+							},
+						],
+					},
+				};
+			}
+			return reads(request);
+		});
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		const breakdown = within(
+			await screen.findByRole("region", {
+				name: "This month's expenses by tag",
+			}),
+		);
+		expect(
+			breakdown.getAllByRole("listitem").map((item) => item.textContent),
+		).toEqual(["Food$300.0060%", "Gas$100.0020%", "Uncategorized$100.0020%"]);
+		expect(
+			breakdown.getByRole("link", { name: "See the reports" }),
+		).toHaveAttribute("href", "/reports");
+		// The chart, loaded apart, named for screen readers
+		expect(
+			await screen.findByRole("figure", {
+				name: "Expenses over twelve months",
+			}),
+		).toBeInTheDocument();
+	});
+
+	it("says when there is nothing to chart", async () => {
+		mockSummary([]);
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		expect(await screen.findByText("No expense this month yet.")).toBeVisible();
+		expect(
+			screen.getByText("No expense over the last twelve months."),
+		).toBeVisible();
+	});
+});

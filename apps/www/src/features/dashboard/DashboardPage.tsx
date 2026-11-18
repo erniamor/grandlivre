@@ -1,6 +1,8 @@
 import type { Household, Profile } from "@repo/schemas";
 import { BudgetsOverview } from "@/features/budgets/BudgetsOverview";
+import { ExpenseBreakdownCard } from "@/features/dashboard/ExpenseBreakdownCard";
 import { KeyFigures } from "@/features/dashboard/KeyFigures";
+import { MonthlyExpensesCard } from "@/features/dashboard/MonthlyExpensesCard";
 import { GettingStartedCard } from "@/features/getting-started/GettingStartedCard";
 import { InstallCard } from "@/features/pwa/InstallCard";
 import { PendingRecurring } from "@/features/recurring/PendingRecurring";
@@ -46,6 +48,10 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 						onDraft={(draft, photos) => openDraft(draft, { photos })}
 					/>
 					<PendingRecurring household={household} />
+					<div className="grid items-start gap-6 xl:grid-cols-2">
+						<ExpenseBreakdownCard household={household} />
+						<MonthlyExpensesCard household={household} />
+					</div>
 					<RecentTransactions household={household} />
 				</div>
 				<div className="grid gap-6">

@@ -10,7 +10,11 @@ import {
 	pendingQueryOptions,
 	upcomingQueryOptions,
 } from "@/features/recurring/recurring-query";
-import { tagReportQueryOptions } from "@/features/reports/reports-query";
+import { monthOf } from "@/features/reports/period";
+import {
+	monthlyReportQueryOptions,
+	tagReportQueryOptions,
+} from "@/features/reports/reports-query";
 import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { RECENT_TRANSACTIONS_COUNT } from "@/features/transactions/RecentTransactions";
@@ -29,6 +33,10 @@ export const Route = createFileRoute("/_authenticated/_household/dashboard")({
 			),
 			queryClient.ensureQueryData(
 				tagReportQueryOptions(household.id, periods.previous),
+			),
+			// The chart of the twelve months ending with this one
+			queryClient.ensureQueryData(
+				monthlyReportQueryOptions(household.id, monthOf(today)),
 			),
 			queryClient.ensureQueryData(accountsSummaryQueryOptions(household.id)),
 			queryClient.ensureQueryData(

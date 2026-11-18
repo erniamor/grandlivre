@@ -185,6 +185,10 @@ export function respondWith(
 				body: { from: "2026-11-01", to: "2026-11-30", tags: [] },
 			};
 		}
+		// No month with a line
+		if (request.path === `${base}/reports/monthly`) {
+			return { status: 200, body: { months: [] } };
+		}
 		// Every payee sorted
 		if (request.path === `${base}/transactions/uncategorized`) {
 			return page([], { pageSize: 200 });
