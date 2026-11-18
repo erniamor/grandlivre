@@ -1,3 +1,4 @@
+import { matchesSearch, searchWords } from "@/lib/search";
 import { m } from "@/paraglide/messages";
 
 /** A question asked often, and its answer. */
@@ -27,30 +28,17 @@ export const faq: FaqItem[] = [
 	{ question: m.faq_language_q, answer: m.faq_language_a },
 ];
 
-/** A text's words, without accents nor case: "Dépôt" is "depot". */
-function wordsOf(text: string): string[] {
-	return text
-		.normalize("NFD")
-		.replace(/[̀-ͯ]/g, "")
-		.toLowerCase()
-		.split(/[^\p{L}\p{N}]+/u)
-		.filter(Boolean);
-}
-
 /**
  * The questions whose question or answer holds every word searched (the
  * start of a word is enough: "rel" finds "relevé"), accents and case aside.
  * All of them for an empty search.
  */
 export function searchFaq(items: FaqItem[], search: string): FaqItem[] {
-	const searched = wordsOf(search);
+	const searched = searchWords(search);
 	if (searched.length === 0) {
 		return items;
 	}
-	return items.filter((item) => {
-		const words = wordsOf(`${item.question()} ${item.answer()}`);
-		return searched.every((part) =>
-			words.some((word) => word.startsWith(part)),
-		);
-	});
+	return items.filter((item) =>
+		matchesSearch(`${item.question()} ${item.answer()}`, searched),
+	);
 }

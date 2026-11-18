@@ -1,0 +1,125 @@
+import type { Tag } from "@repo/schemas";
+import {
+	Button,
+	cn,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@repo/ui";
+import { ChevronsUpDownIcon } from "lucide-react";
+import { useState } from "react";
+import { TagBrowser } from "@/features/tags/TagBrowser";
+import { tagPath } from "@/features/tags/tag-browser";
+import { buildTagTree } from "@/features/tags/tag-tree";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
+
+interface TagPickerProps {
+	/** What the tag is for: "Tag for COSTCO", named with the tag shown. */
+	label: string;
+	tags: Tag[];
+	/** The tag chosen, null for none. */
+	value: string | null;
+	onChange: (tagId: string | null) => void;
+	/** Shown while no tag is chosen ("Choose a tag"). */
+	placeholder: string;
+	/** Offers to choose no tag, under this name ("Uncategorized"). */
+	noneLabel?: string;
+	className?: string;
+}
+
+/**
+ * A button showing the tag chosen, with its path, that opens the household's
+ * tags to choose another (`TagBrowser`): under it on a wide screen, in a
+ * panel rising from the bottom on a phone, where the list has room.
+ */
+export function TagPicker({
+	label,
+	tags,
+	value,
+	onChange,
+	placeholder,
+	noneLabel,
+	className,
+}: TagPickerProps) {
+	const [open, setOpen] = useState(false);
+	const wide = useMediaQuery("(min-width: 48rem)");
+	const shown =
+		tagPath(buildTagTree(tags, getLocale()), value) ??
+		(value === null && noneLabel ? noneLabel : placeholder);
+	const choose = (tagId: string | null) => {
+		onChange(tagId);
+		setOpen(false);
+	};
+
+	const trigger = (
+		<button
+			type="button"
+			aria-label={m.tag_picker_trigger({ label, tag: shown })}
+			className={cn(
+				"flex h-9 min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+				className,
+			)}
+		>
+			<span className="truncate">{shown}</span>
+			<ChevronsUpDownIcon
+				aria-hidden
+				className="size-4 shrink-0 text-muted-foreground"
+			/>
+		</button>
+	);
+	const browser = (autoFocus: boolean) => (
+		<TagBrowser
+			tags={tags}
+			value={value}
+			onSelect={choose}
+			noneLabel={noneLabel}
+			autoFocus={autoFocus}
+		/>
+	);
+
+	if (wide) {
+		return (
+			<Popover open={open} onOpenChange={setOpen}>
+				<PopoverTrigger asChild>{trigger}</PopoverTrigger>
+				<PopoverContent
+					align="start"
+					aria-label={label}
+					className="max-h-[min(28rem,var(--radix-popover-content-available-height))] w-80 overflow-y-auto p-2"
+				>
+					{browser(true)}
+				</PopoverContent>
+			</Popover>
+		);
+	}
+	return (
+		<Sheet open={open} onOpenChange={setOpen}>
+			<SheetTrigger asChild>{trigger}</SheetTrigger>
+			<SheetContent
+				side="bottom"
+				showCloseButton={false}
+				aria-describedby={undefined}
+				className="max-h-[85svh] gap-2 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
+			>
+				<SheetHeader className="pb-0">
+					<SheetTitle>{label}</SheetTitle>
+				</SheetHeader>
+				<div className="min-h-0 overflow-y-auto px-4">{browser(false)}</div>
+				<div className="p-4 pt-2">
+					<SheetClose asChild>
+						<Button type="button" variant="outline" className="w-full">
+							{m.nav_more_close()}
+						</Button>
+					</SheetClose>
+				</div>
+			</SheetContent>
+		</Sheet>
+	);
+}

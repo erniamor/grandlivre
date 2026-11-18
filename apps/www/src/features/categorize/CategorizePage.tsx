@@ -15,10 +15,8 @@ import {
 import { uncategorizedQueryOptions } from "@/features/categorize/uncategorized-query";
 import { useApplyTags } from "@/features/categorize/use-apply-tags";
 import { useTagSuggestions } from "@/features/categorize/use-tag-suggestions";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 interface CategorizePageProps {
 	household: Household;
@@ -39,13 +37,6 @@ export function CategorizePage({
 		uncategorizedQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
-	const tagOptions = [
-		{ value: "", label: m.categorize_tag_choose() },
-		...flattenTagTree(buildTagTree(tags, getLocale())).map(({ tag, path }) => ({
-			value: tag.id,
-			label: path,
-		})),
-	];
 	const tagIds = new Set(tags.map((tag) => tag.id));
 	const [choices, setChoices] = useState<ChoiceMap>(new Map());
 	const suggestions = useTagSuggestions(household.id, groups.items);
@@ -115,7 +106,7 @@ export function CategorizePage({
 									key={id}
 									household={household}
 									group={group}
-									tagOptions={tagOptions}
+									tags={tags}
 									tagId={shown.tagId}
 									suggested={shown.suggested}
 									noSuggestion={

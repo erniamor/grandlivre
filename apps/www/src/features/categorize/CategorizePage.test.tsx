@@ -126,9 +126,13 @@ describe("CategorizePage", () => {
 		const sort = await screen.findByRole("button", { name: "Sort" });
 
 		expect(sort).toBeDisabled();
-		await user.selectOptions(
-			screen.getByRole("combobox", { name: "Tag for COSTCO ESSENCE W100" }),
-			"Fuel",
+		await user.click(
+			screen.getByRole("button", {
+				name: "Tag for COSTCO ESSENCE W100: Choose a tag",
+			}),
+		);
+		await user.click(
+			within(screen.getByRole("dialog")).getByRole("button", { name: "Fuel" }),
 		);
 		await user.click(sort);
 
@@ -169,13 +173,11 @@ describe("CategorizePage, tags suggested by the assistant", () => {
 		);
 
 		const [fuel, registration] = screen.getAllByRole("listitem");
-		await vi.waitFor(() =>
-			expect(
-				within(fuel as HTMLElement).getByRole("combobox", {
-					name: "Tag for COSTCO ESSENCE W100",
-				}),
-			).toHaveDisplayValue("Fuel"),
-		);
+		expect(
+			await within(fuel as HTMLElement).findByRole("button", {
+				name: "Tag for COSTCO ESSENCE W100: Fuel",
+			}),
+		).toBeVisible();
 		expect(within(fuel as HTMLElement).getByText("Suggested")).toBeVisible();
 		expect(
 			within(registration as HTMLElement).getByText(
@@ -212,10 +214,13 @@ describe("CategorizePage, tags suggested by the assistant", () => {
 			await screen.findByRole("button", { name: "Suggest tags" }),
 		);
 		// The user's own choice for the refund; none for SAAQ
-		const [, refundTag] = await screen.findAllByRole("combobox", {
-			name: "Tag for COSTCO ESSENCE W100",
+		const [, refundTag] = await screen.findAllByRole("button", {
+			name: /^Tag for COSTCO ESSENCE W100:/,
 		});
-		await user.selectOptions(refundTag as HTMLElement, "Fuel");
+		await user.click(refundTag as HTMLElement);
+		await user.click(
+			within(screen.getByRole("dialog")).getByRole("button", { name: "Fuel" }),
+		);
 
 		await user.click(
 			screen.getByRole("button", { name: "Apply the tags shown (2)" }),

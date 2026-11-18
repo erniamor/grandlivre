@@ -1,11 +1,11 @@
-import type { Household, UncategorizedPayee } from "@repo/schemas";
+import type { Household, Tag, UncategorizedPayee } from "@repo/schemas";
 import { Button, cn, toast } from "@repo/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SparklesIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
-import { SelectField, type SelectOption } from "@/components/SelectField";
 import { sensitiveClass } from "@/components/sensitive";
+import { TagPicker } from "@/features/tags/TagPicker";
 import { getApi } from "@/lib/api";
 import { formatShortDay } from "@/lib/dates";
 import { formErrors } from "@/lib/error-messages";
@@ -16,8 +16,8 @@ import { getLocale } from "@/paraglide/runtime";
 interface PayeeGroupItemProps {
 	household: Household;
 	group: UncategorizedPayee;
-	/** The household's tags, by their path; an empty value first, for none chosen. */
-	tagOptions: SelectOption<string>[];
+	/** The household's tags, to choose one from. */
+	tags: Tag[];
 	/** The tag shown: chosen by the user, or suggested by the assistant; "" for none. */
 	tagId: string;
 	/** The tag shown is the assistant's. */
@@ -34,7 +34,7 @@ interface PayeeGroupItemProps {
 export function PayeeGroupItem({
 	household,
 	group,
-	tagOptions,
+	tags,
 	tagId,
 	suggested,
 	noSuggestion,
@@ -80,13 +80,13 @@ export function PayeeGroupItem({
 				})}
 			</p>
 			<div className="flex flex-wrap items-center gap-2">
-				<SelectField
+				<TagPicker
 					label={m.categorize_tag_label({ payee: group.payee })}
-					hideLabel
-					value={tagId}
-					options={tagOptions}
-					onChange={onTagChange}
-					tone="default"
+					tags={tags}
+					value={tagId === "" ? null : tagId}
+					onChange={(next) => onTagChange(next ?? "")}
+					placeholder={m.categorize_tag_choose()}
+					className="w-full sm:w-72"
 				/>
 				{suggested && (
 					<span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 font-medium text-xs">
