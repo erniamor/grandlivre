@@ -86,7 +86,7 @@ describe("ConfirmOccurrencePage", () => {
 			),
 		).toBeVisible();
 		expect(screen.getByLabelText("Amount")).toHaveValue("90.00");
-		expect(screen.getByLabelText("Tag")).toHaveValue(gas.id);
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName("Tag: Gas");
 		expect(screen.getByLabelText("Date")).toHaveValue("2026-11-10");
 		expect(screen.getByLabelText("Paid to (optional)")).toHaveValue("Hydro");
 	});

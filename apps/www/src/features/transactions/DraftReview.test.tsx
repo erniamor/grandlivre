@@ -24,6 +24,7 @@ import {
 	savings,
 	tags,
 } from "@/features/transactions/transaction-test-data";
+import { chooseTag, firstTagChoices } from "@/test/choose-tag";
 import { type ApiRequest, mockApi } from "@/test/mock-api";
 import { renderWithRouter } from "@/test/render-with-router";
 
@@ -141,7 +142,7 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 		);
 
 		expect(await screen.findByLabelText("Amount")).toHaveValue("72.40");
-		expect(screen.getByLabelText("Tag")).toHaveValue(gas.id);
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName("Tag: Gas");
 		expect(screen.getByLabelText("Account")).toHaveValue(savings.id);
 		expect(screen.getByLabelText("Date")).toHaveValue("2026-11-14");
 		expect(screen.getByLabelText("Paid to (optional)")).toHaveValue(
@@ -183,7 +184,7 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 	});
 
 	it("shows the proposed tag with the existing tags that look like it", async () => {
-		setUp(draft());
+		const { user } = setUp(draft());
 
 		const panel = within(await proposal());
 
@@ -191,12 +192,13 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 		expect(panel.getByText("Loterie · Lotería")).toBeVisible();
 		expect(panel.getByText("Food")).toBeVisible();
 		expect(panel.getByText(/close name/)).toBeVisible();
-		expect(screen.getByLabelText("Tag")).toHaveValue("proposed");
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName(
+			"Tag: New: Lottery (to create)",
+		);
+		// Offered first, after "uncategorized", before the household's tags
 		expect(
-			within(screen.getByLabelText("Tag")).getByRole("option", {
-				name: "New: Lottery (to create)",
-			}),
-		).toBeInTheDocument();
+			(await firstTagChoices(user, screen.getByLabelText("Tag"))).slice(0, 2),
+		).toEqual(["Uncategorized", "New: Lottery (to create), chosen"]);
 	});
 
 	it("creates the proposed tag, then records the transaction on it", async () => {
@@ -240,7 +242,7 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 				name: "New tag proposed by the assistant",
 			}),
 		).not.toBeInTheDocument();
-		expect(screen.getByLabelText("Tag")).toHaveValue(food.id);
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName("Tag: Food");
 		await user.click(save());
 		await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
 		expect(writes().map((request) => request.path)).toEqual([
@@ -260,12 +262,12 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 			}),
 		);
 
-		expect(screen.getByLabelText("Tag")).toHaveValue("");
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName(
+			"Tag: Uncategorized",
+		);
 		expect(
-			within(screen.getByLabelText("Tag")).queryByRole("option", {
-				name: "New: Lottery (to create)",
-			}),
-		).not.toBeInTheDocument();
+			await firstTagChoices(user, screen.getByLabelText("Tag")),
+		).not.toContain("New: Lottery (to create)");
 		await user.click(save());
 		await vi.waitFor(() => expect(onCreated).toHaveBeenCalledOnce());
 		expect(writes()).toHaveLength(1);
@@ -278,7 +280,7 @@ describe("NewTransactionPage, on a draft of the assistant", () => {
 		const { user, onCreated, writes } = setUp(draft());
 
 		await proposal();
-		await user.selectOptions(screen.getByLabelText("Tag"), "Gas");
+		await chooseTag(user, screen.getByLabelText("Tag"), "Gas");
 		expect(
 			screen.queryByRole("region", {
 				name: "New tag proposed by the assistant",

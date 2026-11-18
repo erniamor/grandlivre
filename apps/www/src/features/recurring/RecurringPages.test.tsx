@@ -16,6 +16,7 @@ import {
 	respondWith,
 	savings,
 } from "@/features/transactions/transaction-test-data";
+import { chooseTag } from "@/test/choose-tag";
 import { setTestLocale } from "@/test/locale";
 import { type ApiRequest, type ApiResponse, mockApi } from "@/test/mock-api";
 import { renderWithRouter } from "@/test/render-with-router";
@@ -338,7 +339,7 @@ describe("NewRecurringPage", () => {
 		const { requests, onCreated, user } = setUp();
 
 		await user.type(await screen.findByLabelText("Amount"), "1500");
-		await user.selectOptions(screen.getByLabelText("Tag"), "Gas");
+		await chooseTag(user, screen.getByLabelText("Tag"), "Gas");
 		await user.type(screen.getByLabelText("Paid to (optional)"), "Landlord");
 		fireEvent.change(screen.getByLabelText("First date"), {
 			target: { value: "2026-12-01" },

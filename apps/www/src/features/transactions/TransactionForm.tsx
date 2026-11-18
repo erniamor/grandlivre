@@ -11,11 +11,11 @@ import { Button } from "@repo/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
-import type { SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { SharesField } from "@/features/sharing/SharesField";
 import { shareStateOf, toShareSplit } from "@/features/sharing/share-form";
 import type { SharingContext } from "@/features/sharing/sharing-query";
+import type { ExtraTagChoice } from "@/features/tags/TagBrowser";
 import { useLastAccountId } from "@/features/transactions/last-account";
 import { ProposedTagPanel } from "@/features/transactions/ProposedTagPanel";
 import { TransactionFields } from "@/features/transactions/TransactionFields";
@@ -154,7 +154,7 @@ export function TransactionForm({
 		accounts.find((account) => account.id === current.accountId)?.holders
 			.length === 1;
 
-	const proposedTagOption: SelectOption<string>[] = proposal
+	const proposedTagOption: ExtraTagChoice[] = proposal
 		? [
 				{
 					value: PROPOSED_TAG,

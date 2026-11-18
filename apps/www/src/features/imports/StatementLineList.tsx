@@ -1,6 +1,5 @@
 import type { Account, StatementPreviewAccount } from "@repo/schemas";
 import { useState } from "react";
-import type { SelectOption } from "@/components/SelectField";
 import {
 	type ImportDraft,
 	type LineChoice,
@@ -18,6 +17,7 @@ import {
 	visibleLines,
 } from "@/features/imports/line-filters";
 import { StatementLineItem } from "@/features/imports/StatementLineItem";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { m } from "@/paraglide/messages";
 
 interface StatementLineListProps {
@@ -25,7 +25,8 @@ interface StatementLineListProps {
 	draft: ImportDraft;
 	accounts: Account[];
 	currency: string;
-	tagOptions: SelectOption<string>[];
+	/** The household's tags (`buildTagTree()`), built once for every line. */
+	tagTree: TagNode[];
 	/** The name an account of the file goes by, where it goes. */
 	nameOf: (index: number) => string | null;
 	/** The lines whose transfer misses its account. */
@@ -44,7 +45,7 @@ export function StatementLineList({
 	draft,
 	accounts,
 	currency,
-	tagOptions,
+	tagTree,
 	nameOf,
 	missing,
 	onChoice,
@@ -78,7 +79,7 @@ export function StatementLineList({
 				}
 				currency={currency}
 				transferAccounts={transferAccounts(accounts, line, destination)}
-				tagOptions={tagOptions}
+				tagTree={tagTree}
 				missing={
 					missing.has(line.externalId) ? m.import_transfer_missing() : undefined
 				}

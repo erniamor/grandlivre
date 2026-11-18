@@ -1,4 +1,3 @@
-import type { Tag } from "@repo/schemas";
 import {
 	Button,
 	cn,
@@ -14,17 +13,17 @@ import {
 } from "@repo/ui";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { useState } from "react";
-import { TagBrowser } from "@/features/tags/TagBrowser";
+import { type ExtraTagChoice, TagBrowser } from "@/features/tags/TagBrowser";
 import { tagPath } from "@/features/tags/tag-browser";
-import { buildTagTree } from "@/features/tags/tag-tree";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 interface TagPickerProps {
 	/** What the tag is for: "Tag for COSTCO", named with the tag shown. */
 	label: string;
-	tags: Tag[];
+	/** The household's tags (`buildTagTree()`), built once for a whole list of pickers. */
+	tree: TagNode[];
 	/** The tag chosen, null for none. */
 	value: string | null;
 	onChange: (tagId: string | null) => void;
@@ -32,6 +31,10 @@ interface TagPickerProps {
 	placeholder: string;
 	/** Offers to choose no tag, under this name ("Uncategorized"). */
 	noneLabel?: string;
+	/** Offered at the top, after "no tag": a tag proposed, still to create. */
+	extras?: ExtraTagChoice[];
+	/** The button's id, for a label of its own. */
+	id?: string;
 	className?: string;
 }
 
@@ -42,17 +45,20 @@ interface TagPickerProps {
  */
 export function TagPicker({
 	label,
-	tags,
+	tree,
 	value,
 	onChange,
 	placeholder,
 	noneLabel,
+	extras = [],
+	id,
 	className,
 }: TagPickerProps) {
 	const [open, setOpen] = useState(false);
 	const wide = useMediaQuery("(min-width: 48rem)");
 	const shown =
-		tagPath(buildTagTree(tags, getLocale()), value) ??
+		tagPath(tree, value) ??
+		extras.find((extra) => extra.value === value)?.label ??
 		(value === null && noneLabel ? noneLabel : placeholder);
 	const choose = (tagId: string | null) => {
 		onChange(tagId);
@@ -62,6 +68,7 @@ export function TagPicker({
 	const trigger = (
 		<button
 			type="button"
+			id={id}
 			aria-label={m.tag_picker_trigger({ label, tag: shown })}
 			className={cn(
 				"flex h-9 min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
@@ -77,10 +84,11 @@ export function TagPicker({
 	);
 	const browser = (autoFocus: boolean) => (
 		<TagBrowser
-			tags={tags}
+			tree={tree}
 			value={value}
 			onSelect={choose}
 			noneLabel={noneLabel}
+			extras={extras}
 			autoFocus={autoFocus}
 		/>
 	);

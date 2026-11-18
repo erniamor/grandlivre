@@ -3,6 +3,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TagPicker } from "@/features/tags/TagPicker";
+import { buildTagTree } from "@/features/tags/tag-tree";
 import { renderWithQueryClient } from "@/test/render-with-router";
 
 afterEach(() => {
@@ -37,7 +38,7 @@ function setUp(value: string | null = null, noneLabel?: string) {
 	renderWithQueryClient(
 		<TagPicker
 			label="Tag for COSTCO"
-			tags={tags}
+			tree={buildTagTree(tags, "en")}
 			value={value}
 			onChange={onChange}
 			placeholder="Choose a tag"

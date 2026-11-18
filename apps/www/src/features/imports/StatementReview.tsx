@@ -17,7 +17,7 @@ import {
 } from "@/features/imports/import-summary";
 import { StatementAccountReview } from "@/features/imports/StatementAccountReview";
 import type { StatementImporter } from "@/features/imports/use-statement-import";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
+import { buildTagTree } from "@/features/tags/tag-tree";
 import { formErrors } from "@/lib/error-messages";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -47,13 +47,7 @@ export function StatementReview({
 		return null;
 	}
 	const { preview, draft } = reviewing;
-	const tagOptions = [
-		{ value: "", label: m.transaction_uncategorized() },
-		...flattenTagTree(buildTagTree(tags, getLocale())).map(({ tag, path }) => ({
-			value: tag.id,
-			label: path,
-		})),
-	];
+	const tagTree = buildTagTree(tags, getLocale());
 	const nameOf = (index: number) => {
 		const destination = draft.destinations[index];
 		if (destination?.kind === "account") {
@@ -103,7 +97,7 @@ export function StatementReview({
 			draft={draft}
 			accounts={accounts}
 			currency={currency}
-			tagOptions={tagOptions}
+			tagTree={tagTree}
 			nameOf={nameOf}
 			companions={preview.accounts
 				.filter(

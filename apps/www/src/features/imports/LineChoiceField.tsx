@@ -1,6 +1,6 @@
 import type { Account, StatementPreviewLine } from "@repo/schemas";
 import { FormAlert } from "@/components/FormAlert";
-import { SelectField, type SelectOption } from "@/components/SelectField";
+import { SelectField } from "@/components/SelectField";
 import { correctionMark } from "@/features/imports/first-correction";
 import {
 	actionOf,
@@ -9,6 +9,8 @@ import {
 	type LineChoice,
 	lineActions,
 } from "@/features/imports/import-draft";
+import { TagField } from "@/features/tags/TagField";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { formatShortDay } from "@/lib/dates";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -23,7 +25,8 @@ interface LineChoiceFieldProps {
 	/** The account the transaction it matches is on. */
 	matchAccountName: string | null;
 	transferAccounts: Account[];
-	tagOptions: SelectOption<string>[];
+	/** The household's tags (`buildTagTree()`), built once for every line. */
+	tagTree: TagNode[];
 	/** Says a transfer's account is missing. */
 	missing?: string;
 	onChange: (choice: LineChoice) => void;
@@ -37,7 +40,7 @@ export function LineChoiceField({
 	pairName,
 	matchAccountName,
 	transferAccounts,
-	tagOptions,
+	tagTree,
 	missing,
 	onChange,
 }: LineChoiceFieldProps) {
@@ -81,13 +84,12 @@ export function LineChoiceField({
 				tone="default"
 			/>
 			{choice.action === "create" && (
-				<SelectField
+				<TagField
 					label={m.transaction_tag_label()}
 					hideLabel
+					tree={tagTree}
 					value={choice.tagId ?? ""}
-					options={tagOptions}
 					onChange={(tagId) => onChange({ ...choice, tagId: tagId || null })}
-					tone="default"
 				/>
 			)}
 			{choice.action === "transfer" && !choice.pair && (

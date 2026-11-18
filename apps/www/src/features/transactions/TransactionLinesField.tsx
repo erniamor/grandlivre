@@ -1,9 +1,11 @@
 import { Button } from "@repo/ui";
 import { PlusIcon, SplitIcon, XIcon } from "lucide-react";
 import { IconButton } from "@/components/IconButton";
-import { SelectField, type SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { HelpHint } from "@/features/help/HelpHint";
+import type { ExtraTagChoice } from "@/features/tags/TagBrowser";
+import { TagField } from "@/features/tags/TagField";
+import type { TagNode } from "@/features/tags/tag-tree";
 import {
 	draftTotal,
 	emptyLine,
@@ -16,8 +18,10 @@ import { getLocale } from "@/paraglide/runtime";
 interface TransactionLinesFieldProps {
 	lines: LineDraft[];
 	onChange: (lines: LineDraft[]) => void;
-	/** The tags to choose among, the first one standing for "uncategorized". */
-	tagOptions: SelectOption<string>[];
+	/** The household's tags (`buildTagTree()`) to choose among, "uncategorized" too. */
+	tagTree: TagNode[];
+	/** Offered before the tags: a tag the assistant proposed, still to create. */
+	extraTags?: ExtraTagChoice[];
 	currency: string;
 	/** A transfer has one amount, no tag, and isn't split. */
 	amountOnly: boolean;
@@ -32,7 +36,8 @@ interface TransactionLinesFieldProps {
 export function TransactionLinesField({
 	lines,
 	onChange,
-	tagOptions,
+	tagTree,
+	extraTags,
 	currency,
 	amountOnly,
 	errors,
@@ -60,13 +65,13 @@ export function TransactionLinesField({
 				/>
 				{!amountOnly && (
 					<>
-						<SelectField
+						<TagField
 							label={m.transaction_tag_label()}
+							tree={tagTree}
+							extras={extraTags}
 							value={first.tagId}
-							options={tagOptions}
 							onChange={(tagId) => update(first.key, { tagId })}
-							tone="default"
-							className="grid items-stretch font-medium"
+							className="font-medium"
 						/>
 						<Button
 							type="button"
@@ -122,13 +127,13 @@ export function TransactionLinesField({
 								}
 							/>
 						</div>
-						<SelectField
+						<TagField
 							label={m.transaction_line_tag_label({ n })}
+							tree={tagTree}
+							extras={extraTags}
 							value={line.tagId}
-							options={tagOptions}
 							onChange={(tagId) => update(line.key, { tagId })}
-							tone="default"
-							className="grid items-stretch font-medium"
+							className="font-medium"
 						/>
 						{errors[`lines.${index}.tagId`] && (
 							<p className="text-destructive text-sm">

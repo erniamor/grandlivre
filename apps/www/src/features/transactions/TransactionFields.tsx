@@ -4,7 +4,8 @@ import { FormAlert } from "@/components/FormAlert";
 import { SelectField, type SelectOption } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { HelpHint } from "@/features/help/HelpHint";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
+import type { ExtraTagChoice } from "@/features/tags/TagBrowser";
+import { buildTagTree } from "@/features/tags/tag-tree";
 import { TransactionLinesField } from "@/features/transactions/TransactionLinesField";
 import { TransactionTypeField } from "@/features/transactions/TransactionTypeField";
 import {
@@ -25,7 +26,7 @@ interface TransactionFieldsProps {
 	/** Messages by field, named as the API names them ("lines.0.amount"). */
 	errors: Record<string, string>;
 	/** Tag choices offered before the household's: the proposed tag. */
-	extraTagOptions?: SelectOption<string>[];
+	extraTagOptions?: ExtraTagChoice[];
 	/** Shown between the type and the lines: the proposed tag's panel. */
 	aside?: ReactNode;
 	/** Shown after the accounts: the day of a transaction, or a schedule. */
@@ -63,14 +64,7 @@ export function TransactionFields({
 			.filter((account) => !account.archived && account.id !== value.accountId)
 			.map((account) => ({ value: account.id, label: account.name })),
 	];
-	const tagOptions: SelectOption<string>[] = [
-		{ value: NONE, label: m.transaction_uncategorized() },
-		...extraTagOptions,
-		...flattenTagTree(buildTagTree(tags, locale)).map(({ tag, path }) => ({
-			value: tag.id,
-			label: path,
-		})),
-	];
+	const tagTree = buildTagTree(tags, locale);
 
 	return (
 		<>
@@ -85,7 +79,8 @@ export function TransactionFields({
 			<TransactionLinesField
 				lines={value.lines}
 				onChange={(lines) => onChange({ lines })}
-				tagOptions={tagOptions}
+				tagTree={tagTree}
+				extraTags={extraTagOptions}
 				currency={currency}
 				amountOnly={isTransfer}
 				errors={errors}

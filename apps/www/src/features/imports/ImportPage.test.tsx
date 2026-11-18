@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ImportPage } from "@/features/imports/ImportPage";
 import { statementPreview } from "@/features/imports/import-test-data";
+import { chooseTag } from "@/test/choose-tag";
 import { setTestLocale } from "@/test/locale";
 import {
 	type ApiRequest,
@@ -397,10 +398,7 @@ describe("ImportPage", () => {
 			name: "What to do with this line",
 		});
 
-		await user.selectOptions(
-			everyday.getByRole("combobox", { name: "Tag" }),
-			"Uncategorized",
-		);
+		await chooseTag(user, everyday.getByLabelText("Tag"), "Uncategorized");
 		await user.selectOptions(fuel as HTMLElement, "Don't import");
 		await user.selectOptions(cash as HTMLElement, "Expense");
 		await user.click(screen.getByRole("button", { name: "Import" }));

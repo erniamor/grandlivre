@@ -1,4 +1,3 @@
-import type { Tag } from "@repo/schemas";
 import { cn, Input } from "@repo/ui";
 import {
 	CheckIcon,
@@ -8,17 +7,25 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { searchTags, tagLevel, trailTo } from "@/features/tags/tag-browser";
-import { buildTagTree } from "@/features/tags/tag-tree";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
+
+/** A choice that isn't one of the household's tags: a tag proposed, still to create. */
+export interface ExtraTagChoice {
+	value: string;
+	label: string;
+}
 
 interface TagBrowserProps {
-	tags: Tag[];
+	/** The household's tags (`buildTagTree()`). */
+	tree: TagNode[];
 	/** The tag chosen, null for none. */
 	value: string | null;
 	onSelect: (tagId: string | null) => void;
 	/** Offers to choose no tag, under this name ("Uncategorized"). */
 	noneLabel?: string;
+	/** Offered at the top, after "no tag". */
+	extras?: ExtraTagChoice[];
 	/** Puts the cursor in the search: on a wide screen, not where a keyboard would cover the list. */
 	autoFocus?: boolean;
 }
@@ -34,13 +41,13 @@ const rowClass =
  * It opens on the level of the tag chosen.
  */
 export function TagBrowser({
-	tags,
+	tree,
 	value,
 	onSelect,
 	noneLabel,
+	extras = [],
 	autoFocus = false,
 }: TagBrowserProps) {
-	const tree = buildTagTree(tags, getLocale());
 	const [trail, setTrail] = useState(() => trailTo(tree, value));
 	const [search, setSearch] = useState("");
 	const level = tagLevel(tree, trail);
@@ -172,6 +179,19 @@ export function TagBrowser({
 								</button>
 							</li>
 						)}
+						{!opened &&
+							extras.map((extra) => (
+								<li key={extra.value}>
+									<button
+										type="button"
+										className={cn(rowClass, "font-medium")}
+										onClick={() => onSelect(extra.value)}
+									>
+										<span className="flex-1">{extra.label}</span>
+										{chosenMark(extra.value === value)}
+									</button>
+								</li>
+							))}
 						{level.children.map((node) => (
 							<li key={node.tag.id}>
 								{node.children.length > 0 ? (

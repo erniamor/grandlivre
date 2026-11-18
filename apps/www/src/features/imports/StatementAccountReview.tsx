@@ -1,6 +1,5 @@
 import type { Account, StatementPreviewAccount } from "@repo/schemas";
 import { useId } from "react";
-import type { SelectOption } from "@/components/SelectField";
 import { sensitiveClass } from "@/components/sensitive";
 import { accountTypeLabels } from "@/features/accounts/account-type-labels";
 import { AccountSummaryLine } from "@/features/imports/AccountSummaryLine";
@@ -14,6 +13,7 @@ import {
 } from "@/features/imports/import-draft";
 import type { ImportSummary } from "@/features/imports/import-summary";
 import { StatementLineList } from "@/features/imports/StatementLineList";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { formatShortDay } from "@/lib/dates";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -25,7 +25,8 @@ interface StatementAccountReviewProps {
 	draft: ImportDraft;
 	accounts: Account[];
 	currency: string;
-	tagOptions: SelectOption<string>[];
+	/** The household's tags (`buildTagTree()`), built once for every line. */
+	tagTree: TagNode[];
 	nameOf: (index: number) => string | null;
 	/** The other accounts of the file going to a new account: this one can go with them. */
 	companions: { index: number; name: string }[];
@@ -42,7 +43,7 @@ export function StatementAccountReview({
 	draft,
 	accounts,
 	currency,
-	tagOptions,
+	tagTree,
 	nameOf,
 	companions,
 	problems,
@@ -110,7 +111,7 @@ export function StatementAccountReview({
 					draft={draft}
 					accounts={accounts}
 					currency={currency}
-					tagOptions={tagOptions}
+					tagTree={tagTree}
 					nameOf={nameOf}
 					missing={missing}
 					onChoice={onChoice}

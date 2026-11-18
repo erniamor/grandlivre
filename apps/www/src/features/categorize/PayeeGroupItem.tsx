@@ -1,4 +1,4 @@
-import type { Household, Tag, UncategorizedPayee } from "@repo/schemas";
+import type { Household, UncategorizedPayee } from "@repo/schemas";
 import { Button, cn, toast } from "@repo/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SparklesIcon } from "lucide-react";
@@ -6,6 +6,7 @@ import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { sensitiveClass } from "@/components/sensitive";
 import { TagPicker } from "@/features/tags/TagPicker";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { getApi } from "@/lib/api";
 import { formatShortDay } from "@/lib/dates";
 import { formErrors } from "@/lib/error-messages";
@@ -16,8 +17,8 @@ import { getLocale } from "@/paraglide/runtime";
 interface PayeeGroupItemProps {
 	household: Household;
 	group: UncategorizedPayee;
-	/** The household's tags, to choose one from. */
-	tags: Tag[];
+	/** The household's tags (`buildTagTree()`), to choose one from. */
+	tagTree: TagNode[];
 	/** The tag shown: chosen by the user, or suggested by the assistant; "" for none. */
 	tagId: string;
 	/** The tag shown is the assistant's. */
@@ -34,7 +35,7 @@ interface PayeeGroupItemProps {
 export function PayeeGroupItem({
 	household,
 	group,
-	tags,
+	tagTree,
 	tagId,
 	suggested,
 	noSuggestion,
@@ -82,7 +83,7 @@ export function PayeeGroupItem({
 			<div className="flex flex-wrap items-center gap-2">
 				<TagPicker
 					label={m.categorize_tag_label({ payee: group.payee })}
-					tags={tags}
+					tree={tagTree}
 					value={tagId === "" ? null : tagId}
 					onChange={(next) => onTagChange(next ?? "")}
 					placeholder={m.categorize_tag_choose()}

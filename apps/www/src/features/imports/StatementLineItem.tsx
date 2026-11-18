@@ -1,10 +1,10 @@
 import type { Account, StatementPreviewLine } from "@repo/schemas";
 import { cn } from "@repo/ui";
-import type { SelectOption } from "@/components/SelectField";
 import { sensitiveClass } from "@/components/sensitive";
 import type { LineChoice } from "@/features/imports/import-draft";
 import { LineChoiceField } from "@/features/imports/LineChoiceField";
 import { LineStatusBadge } from "@/features/imports/LineStatusBadge";
+import type { TagNode } from "@/features/tags/tag-tree";
 import { formatShortDay } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -24,7 +24,8 @@ interface StatementLineItemProps {
 	matchAccountName: string | null;
 	currency: string;
 	transferAccounts: Account[];
-	tagOptions: SelectOption<string>[];
+	/** The household's tags (`buildTagTree()`), built once for every line. */
+	tagTree: TagNode[];
 	missing?: string;
 	onChange: (choice: LineChoice) => void;
 }
@@ -44,7 +45,7 @@ export function StatementLineItem({
 	matchAccountName,
 	currency,
 	transferAccounts,
-	tagOptions,
+	tagTree,
 	missing,
 	onChange,
 }: StatementLineItemProps) {
@@ -105,7 +106,7 @@ export function StatementLineItem({
 						pairName={pairName}
 						matchAccountName={matchAccountName}
 						transferAccounts={transferAccounts}
-						tagOptions={tagOptions}
+						tagTree={tagTree}
 						missing={missing}
 						onChange={onChange}
 					/>

@@ -21,6 +21,7 @@ import {
 	toSavings,
 } from "@/features/transactions/transaction-test-data";
 import { localToday } from "@/features/transactions/use-local-today";
+import { chooseTag } from "@/test/choose-tag";
 import { setTestLocale } from "@/test/locale";
 import { type ApiRequest, type ApiResponse, mockApi } from "@/test/mock-api";
 import { renderWithRouter } from "@/test/render-with-router";
@@ -152,7 +153,7 @@ describe("NewTransactionPage", () => {
 		const { user, onCreated, writes } = renderNew();
 
 		await user.type(await screen.findByLabelText("Amount"), "72.50");
-		await user.selectOptions(screen.getByLabelText("Tag"), "Gas");
+		await chooseTag(user, screen.getByLabelText("Tag"), "Gas");
 		await user.selectOptions(screen.getByLabelText("Account"), "Savings");
 		fireEvent.change(screen.getByLabelText("Date"), {
 			target: { value: "2026-11-14" },
@@ -201,16 +202,18 @@ describe("NewTransactionPage", () => {
 		const { user, onCreated, writes } = renderNew();
 
 		await user.type(await screen.findByLabelText("Amount"), "120");
-		await user.selectOptions(screen.getByLabelText("Tag"), "Food");
+		await chooseTag(user, screen.getByLabelText("Tag"), "Food");
 		await user.click(
 			screen.getByRole("button", { name: "Split into several tags" }),
 		);
 		expect(screen.getByLabelText("Amount of line 1")).toHaveValue("120");
-		expect(screen.getByLabelText("Tag of line 1")).toHaveValue(food.id);
+		expect(screen.getByLabelText("Tag of line 1")).toHaveAccessibleName(
+			"Tag of line 1: Food",
+		);
 		expect(screen.getByText("Total: —")).toBeVisible();
 
 		await user.type(screen.getByLabelText("Amount of line 2"), "45");
-		await user.selectOptions(screen.getByLabelText("Tag of line 2"), "Gas");
+		await chooseTag(user, screen.getByLabelText("Tag of line 2"), "Gas");
 		await user.click(screen.getByRole("button", { name: "Add a line" }));
 		await user.type(screen.getByLabelText("Amount of line 3"), "15");
 		expect(screen.getByText("Total: $180.00")).toBeVisible();
@@ -413,7 +416,7 @@ describe("EditTransactionPage", () => {
 
 		expect(await screen.findByLabelText("Amount")).toHaveValue("72.00");
 		expect(screen.getByRole("radio", { name: "Expense" })).toBeChecked();
-		expect(screen.getByLabelText("Tag")).toHaveValue(gas.id);
+		expect(screen.getByLabelText("Tag")).toHaveAccessibleName("Tag: Gas");
 		expect(screen.getByLabelText("Account")).toHaveValue(chequing.id);
 		expect(screen.getByLabelText("Date")).toHaveValue("2026-11-14");
 		expect(screen.getByLabelText("Paid to (optional)")).toHaveValue("Shell");
@@ -425,8 +428,12 @@ describe("EditTransactionPage", () => {
 		expect(await screen.findByLabelText("Amount of line 1")).toHaveValue(
 			"120.00",
 		);
-		expect(screen.getByLabelText("Tag of line 1")).toHaveValue(food.id);
-		expect(screen.getByLabelText("Tag of line 3")).toHaveValue("");
+		expect(screen.getByLabelText("Tag of line 1")).toHaveAccessibleName(
+			"Tag of line 1: Food",
+		);
+		expect(screen.getByLabelText("Tag of line 3")).toHaveAccessibleName(
+			"Tag of line 3: Uncategorized",
+		);
 		expect(screen.getByText("Total: $180.00")).toBeVisible();
 		expect(screen.getByLabelText("Note (optional)")).toHaveValue("Monthly run");
 	});
