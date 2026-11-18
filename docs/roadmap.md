@@ -12,8 +12,8 @@ The steps of Grand Livre, in the order they are built. A step is ticked once mer
 - [ ] The dashboard as a grid, with a few charts that don't weigh on the page.
 - [ ] A private mode, per device, hiding what is sensitive on screen (amounts, balances, payees, charts) to show the app to someone.
 - [ ] A demo mode: a household of made-up data, to try the app or show it without one's own.
-- [ ] Nightly backups of the production database: a Railway cron service runs `pg_dump` over the private network and sends it to a private Cloudflare R2 bucket, outside Railway, kept 30 days; the restore written down in [deployment.md](deployment.md) and tried once on an empty database. Railway's own backups need its Pro plan.
-- [ ] The launch: the production database emptied once, real data from then on. From that point, migrations must keep the data in place.
+- [x] Nightly backups of the production database: a Railway cron service runs `pg_dump` over the private network and sends it to a private Cloudflare R2 bucket, outside Railway, kept 30 days; the restore written down in [deployment.md](deployment.md) and tried once on an empty database. Railway's own backups need its Pro plan.
+- [x] The launch, on 2026-11-18: the production database emptied once, real data from then on. From that point, migrations must keep the data in place.
 
 ## Postponed
 

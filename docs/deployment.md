@@ -10,9 +10,9 @@ How to deploy Grand Livre to [Railway](https://railway.com) (Hobby plan), from t
 
 The front end and the API share the parent domain `grandlivre.romain.re`: the session cookie is set for it (`COOKIE_DOMAIN`), so the front end's server receives it and renders signed-in pages. The cookie stays within `grandlivre.romain.re`: nothing else under `romain.re` receives it.
 
-## Before the launch: a pre-launch
+## In service since 2026-11-18
 
-The first deployment is a **pre-launch**: until the launch is declared (see [roadmap.md](roadmap.md)), the production database is disposable, reset at will (see "Resetting the database before the launch"), and nobody keeps real data in it. From the launch on, it is never reset again, and migrations must keep the data in place.
+The app was deployed as a pre-launch on 2026-11-17, its database disposable, then launched on 2026-11-18: the production database was emptied once, after a last backup, and holds real data since. It is never reset again, and every migration must keep the data in place (see "Day to day").
 
 ## What must stay as it is
 
@@ -123,7 +123,7 @@ In R2, a lifecycle rule on the bucket deletes the backups older than 30 days.
    `restore.key` is the private key, written to a file for the time of the restore, then deleted.
 3. To put it back in production: empty the production database as in "Resetting the database", without redeploying, then restore into it with the same command over a connection to it (`railway connect Postgres`, or from the `api` service with `railway ssh`); then redeploy `api`, whose pre-deploy command applies the migrations newer than the backup.
 
-The restore was tried on 2026-11-18: a dump of the development database, restored into an empty one, gave the same rows, table by table.
+The restore was tried on 2026-11-18 with the first production backup: downloaded from R2, decrypted and restored into an empty local database, it gave the same rows as production, table by table.
 
 ## Domains
 
@@ -164,9 +164,9 @@ On a computer and on a phone (Android, in Brave), at `https://grandlivre.romain.
 - **Recurring transactions and tags:** the suggestions from the history, and the tags suggested when sorting by payee.
 - **Reports, budgets, help:** each page opens; the help's FAQ searches.
 
-## Resetting the database before the launch
+## Resetting the database
 
-Only during the pre-launch, never after it:
+Done once, at the launch: never again on the production database, which holds real data. Kept for a new environment of its own (a `stage`, say):
 
 1. Open a `psql` session on the production database with Railway's CLI (`railway link` to the project once, then `railway connect Postgres`), and run:
    ```sql
