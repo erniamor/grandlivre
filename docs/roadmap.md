@@ -7,13 +7,14 @@ The steps of Grand Livre, in the order they are built. A step is ticked once mer
 - [x] The hand cursor on everything clickable.
 - [x] The household's page as settings (General, Members), its members and invitations apart.
 - [x] Styled emails, in the default theme's colors and with the logo.
-- [x] A first deployment as a pre-launch, on 2026-11-17: `https://grandlivre.romain.re` (Railway, see [deployment.md](deployment.md)). Until the launch is declared, the production database is disposable: it can be reset at will.
+- [x] A first deployment as a pre-launch, on 2026-11-17: `https://grandlivre.romain.re` (Railway, see [deployment.md](deployment.md)).
 - [ ] The checks after the deployment, on a phone too: voice entry in Brave on Android, the photo editor by touch, the import review with hundreds of lines.
-- [ ] The dashboard as a grid, with a few charts that don't weigh on the page.
-- [ ] A private mode, per device, hiding what is sensitive on screen (amounts, balances, payees, charts) to show the app to someone.
-- [ ] A demo mode: a household of made-up data, to try the app or show it without one's own.
+- [x] The dashboard as a grid, with a few charts that don't weigh on the page.
+- [x] A private mode, per device, hiding what is sensitive on screen (amounts, balances, payees, charts) to show the app to someone.
+- [x] A demo mode: a household of made-up data, to try the app or show it without one's own.
 - [x] Nightly backups of the production database: a Railway cron service runs `pg_dump` over the private network and sends it to a private Cloudflare R2 bucket, outside Railway, kept 30 days; the restore written down in [deployment.md](deployment.md) and tried once on an empty database. Railway's own backups need its Pro plan.
 - [x] The launch, on 2026-11-18: the production database emptied once, real data from then on. From that point, migrations must keep the data in place.
+- [x] The repository public again, on 2026-11-18: the real names and amounts taken out of the tests, then out of the whole Git history (rewritten, the merged branches deleted).
 
 ## Postponed
 
