@@ -1,4 +1,6 @@
+import { cn } from "@repo/ui";
 import { useId } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import type { ImportSummary, Tally } from "@/features/imports/import-summary";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -88,7 +90,9 @@ export function ImportSummaryPanel({
 						{recorded.map(({ label, value }) => (
 							<div key={label} className="contents">
 								<dt className="text-muted-foreground">{label}</dt>
-								<dd className="text-right tabular-nums">{value}</dd>
+								<dd className={cn("text-right tabular-nums", sensitiveClass)}>
+									{value}
+								</dd>
 							</div>
 						))}
 					</dl>

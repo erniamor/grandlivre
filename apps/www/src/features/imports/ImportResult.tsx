@@ -1,6 +1,7 @@
 import type { Account } from "@repo/schemas";
 import { Button, buttonVariants, cn } from "@repo/ui";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { sensitiveClass } from "@/components/sensitive";
 import { statementAccountName } from "@/features/imports/import-draft";
 import type { Imported } from "@/features/imports/use-statement-import";
 import { formatDay } from "@/lib/dates";
@@ -62,14 +63,19 @@ export function ImportResult({
 								})}
 							</p>
 							{counts.openingBalance !== null && (
-								<p className="text-sm">
+								<p className={cn("text-sm", sensitiveClass)}>
 									{m.import_done_opening({
 										amount: money(counts.openingBalance),
 									})}
 								</p>
 							)}
 							{account && statement && bank !== null && (
-								<p className="text-muted-foreground text-sm">
+								<p
+									className={cn(
+										"text-muted-foreground text-sm",
+										sensitiveClass,
+									)}
+								>
 									{bank === account.balance
 										? m.import_done_balance_same({
 												date: formatDay(statement.to, locale),

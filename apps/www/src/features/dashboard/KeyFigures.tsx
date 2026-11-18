@@ -2,6 +2,7 @@ import type { Household } from "@repo/schemas";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import { Amount } from "@/features/accounts/Amount";
 import { accountsSummaryQueryOptions } from "@/features/accounts/accounts-query";
 import { KeyFigureTile } from "@/features/dashboard/KeyFigureTile";
@@ -59,10 +60,18 @@ export function KeyFigures({ household }: KeyFiguresProps) {
 				<KeyFigureTile
 					label={m.summary_title()}
 					value={<Amount amount={summary.balance} currency={currency} />}
-					detail={m.dashboard_figure_balance_detail({
-						assets: formatAmount(summary.assets, currency, locale),
-						liabilities: formatAmount(summary.liabilities, currency, locale),
-					})}
+					detail={
+						<span className={sensitiveClass}>
+							{m.dashboard_figure_balance_detail({
+								assets: formatAmount(summary.assets, currency, locale),
+								liabilities: formatAmount(
+									summary.liabilities,
+									currency,
+									locale,
+								),
+							})}
+						</span>
+					}
 					link={
 						<Link
 							to="/accounts"

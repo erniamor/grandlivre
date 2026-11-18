@@ -1,6 +1,7 @@
 import type { Account, Tag, Transaction } from "@repo/schemas";
 import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import { sensitiveClass } from "@/components/sensitive";
 import {
 	transactionDirection,
 	transactionTagNames,
@@ -86,6 +87,7 @@ export function TransactionItem({
 			</div>
 			<span
 				className={cn(
+					sensitiveClass,
 					"whitespace-nowrap font-medium tabular-nums",
 					// Money coming in stands out; a transfer between accounts doesn't
 					direction === 1 && "text-primary",

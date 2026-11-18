@@ -8,5 +8,9 @@
 @import "@repo/themes/citrus.css";
 @import "@repo/ui/styles.css";
 
+/* The private mode (`data-private` on <html>): `private:blur-…` blurs what
+   is marked sensitive (see components/sensitive.ts) */
+@custom-variant private (&:where([data-private] *));
+
 /* Lets Tailwind generate the classes used by the shared components */
 @source "../../../packages/ui/src";

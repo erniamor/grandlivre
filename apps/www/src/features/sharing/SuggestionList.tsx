@@ -1,6 +1,7 @@
 import type { SettlementSuggestion } from "@repo/schemas";
 import { buttonVariants } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import { sensitiveClass } from "@/components/sensitive";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -40,7 +41,7 @@ export function SuggestionList({
 						key={`${fromUserId}-${toUserId}`}
 						className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted p-3"
 					>
-						<span>{sentence}</span>
+						<span className={sensitiveClass}>{sentence}</span>
 						{(fromUserId === meId || toUserId === meId) && (
 							<Link
 								to="/shared/settle"

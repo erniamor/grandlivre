@@ -6,10 +6,12 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
+	cn,
 	XAxis,
 	YAxis,
 } from "@repo/ui";
 import { useId } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import { monthLabel } from "@/features/reports/month-label";
 import { formatAmount, formatAmountCompact } from "@/lib/money";
 import { getLocale } from "@/paraglide/runtime";
@@ -52,7 +54,10 @@ export function MonthlyBarChart({
 	}));
 
 	return (
-		<figure aria-labelledby={titleId} className="grid gap-2">
+		<figure
+			aria-labelledby={titleId}
+			className={cn("grid gap-2", sensitiveClass)}
+		>
 			<figcaption id={titleId} className="font-medium text-sm">
 				{title}
 			</figcaption>

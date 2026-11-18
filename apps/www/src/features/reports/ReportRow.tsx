@@ -1,3 +1,5 @@
+import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { formatAmount } from "@/lib/money";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -28,7 +30,12 @@ export function ReportRow({ name, amount, share, currency }: ReportRowProps) {
 					<span className="text-muted-foreground text-sm tabular-nums">
 						{percent.format(share)}
 					</span>
-					<span className="whitespace-nowrap font-medium tabular-nums">
+					<span
+						className={cn(
+							"whitespace-nowrap font-medium tabular-nums",
+							sensitiveClass,
+						)}
+					>
 						{formatAmount(amount, currency, locale)}
 					</span>
 				</span>

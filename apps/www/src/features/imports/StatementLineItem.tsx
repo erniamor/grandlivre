@@ -1,6 +1,7 @@
 import type { Account, StatementPreviewLine } from "@repo/schemas";
 import { cn } from "@repo/ui";
 import type { SelectOption } from "@/components/SelectField";
+import { sensitiveClass } from "@/components/sensitive";
 import type { LineChoice } from "@/features/imports/import-draft";
 import { LineChoiceField } from "@/features/imports/LineChoiceField";
 import { LineStatusBadge } from "@/features/imports/LineStatusBadge";
@@ -68,7 +69,7 @@ export function StatementLineItem({
 						{line.payee}
 					</span>
 				</p>
-				<p className="tabular-nums">
+				<p className={cn("tabular-nums", sensitiveClass)}>
 					{formatAmount(line.amount, currency, locale, { signed: true })}
 				</p>
 			</div>

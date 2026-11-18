@@ -1,5 +1,6 @@
 import { cn } from "@repo/ui";
 import { CircleAlertIcon, TriangleAlertIcon } from "lucide-react";
+import { sensitiveClass } from "@/components/sensitive";
 import type { BudgetProgress } from "@/features/budgets/budget-view";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -35,7 +36,7 @@ export function BudgetFigures({
 				: null;
 
 	return (
-		<div className="grid gap-0.5 text-sm">
+		<div className={cn("grid gap-0.5 text-sm", sensitiveClass)}>
 			<p>
 				{m.budget_spent_of({ spent: money(spent), amount: money(amount) })}
 				{upcoming > 0 && (

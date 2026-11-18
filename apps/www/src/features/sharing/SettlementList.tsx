@@ -1,4 +1,6 @@
 import type { Settlement } from "@repo/schemas";
+import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { DeleteSettlementButton } from "@/features/sharing/DeleteSettlementButton";
 import { formatDay } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
@@ -40,7 +42,9 @@ export function SettlementList({
 						className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground"
 					>
 						<div className="grid gap-0.5">
-							<span className="font-medium">{sentence}</span>
+							<span className={cn("font-medium", sensitiveClass)}>
+								{sentence}
+							</span>
 							<span className="text-muted-foreground text-sm">
 								{[
 									formatDay(settlement.date, locale),

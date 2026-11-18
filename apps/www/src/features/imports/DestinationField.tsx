@@ -4,8 +4,10 @@ import {
 	type AccountType,
 	type StatementPreviewAccount,
 } from "@repo/schemas";
+import { cn } from "@repo/ui";
 import { FormAlert } from "@/components/FormAlert";
 import { SelectField } from "@/components/SelectField";
+import { sensitiveClass } from "@/components/sensitive";
 import { TextField } from "@/components/TextField";
 import { accountTypeOptions } from "@/features/accounts/account-options";
 import { correctionMark } from "@/features/imports/first-correction";
@@ -148,7 +150,7 @@ export function DestinationField({
 							/>
 						</div>
 					) : (
-						<p className="text-sm">
+						<p className={cn("text-sm", sensitiveClass)}>
 							{m.import_destination_opening({
 								amount: formatAmount(account.openingBalance, currency, locale),
 							})}

@@ -10,6 +10,7 @@ import type { Appearance } from "@/features/appearance/appearance";
 import { UserMenu } from "@/features/auth/UserMenu";
 import { HouseholdMenu } from "@/features/households/HouseholdMenu";
 import { LanguageMenu } from "@/features/i18n/LanguageMenu";
+import { PrivateModeToggle } from "@/features/privacy/PrivateModeToggle";
 import { m } from "@/paraglide/messages";
 import { getLocale, setLocale } from "@/paraglide/runtime";
 
@@ -21,6 +22,8 @@ interface HeaderProps {
 	me: Profile | null;
 	/** The household chosen on this device, if any. */
 	preferredHousehold?: string;
+	/** This device hides what is sensitive on screen. */
+	privateMode?: boolean;
 }
 
 export function Header({
@@ -28,6 +31,7 @@ export function Header({
 	theme,
 	me,
 	preferredHousehold,
+	privateMode = false,
 }: HeaderProps) {
 	return (
 		<header className="border-inverse-border border-b bg-inverse text-inverse-foreground">
@@ -40,6 +44,7 @@ export function Header({
 					{/* Changing the language reloads the page in that language */}
 					<LanguageMenu locale={getLocale()} onLocaleChange={setLocale} />
 					<AppearanceMenu initialAppearance={appearance} initialTheme={theme} />
+					{me && <PrivateModeToggle initialPrivate={privateMode} />}
 					{me ? (
 						<UserMenu me={me} />
 					) : (

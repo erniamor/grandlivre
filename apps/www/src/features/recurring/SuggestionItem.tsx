@@ -1,6 +1,7 @@
 import type { Account, RecurringSuggestion, Tag } from "@repo/schemas";
 import { buttonVariants, cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import { sensitiveClass } from "@/components/sensitive";
 import { DismissSuggestionButton } from "@/features/recurring/DismissSuggestionButton";
 import {
 	suggestionId,
@@ -75,6 +76,7 @@ export function SuggestionItem({
 				<div className="grid justify-items-end gap-0.5">
 					<span
 						className={cn(
+							sensitiveClass,
 							"whitespace-nowrap font-medium tabular-nums",
 							direction === 1 && "text-primary",
 							direction === 0 && "text-muted-foreground",
@@ -83,7 +85,12 @@ export function SuggestionItem({
 						{money(suggestion.amount)}
 					</span>
 					{varies && (
-						<span className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">
+						<span
+							className={cn(
+								"whitespace-nowrap text-muted-foreground text-sm tabular-nums",
+								sensitiveClass,
+							)}
+						>
 							{m.recurring_suggestion_range({
 								min: formatAmount(suggestion.minAmount, currency, locale),
 								max: formatAmount(suggestion.maxAmount, currency, locale),

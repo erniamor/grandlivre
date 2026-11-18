@@ -1,4 +1,5 @@
 import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { formatAmount } from "@/lib/money";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -14,6 +15,7 @@ export function Amount({ amount, currency, className }: AmountProps) {
 	return (
 		<span
 			className={cn(
+				sensitiveClass,
 				"whitespace-nowrap tabular-nums",
 				amount < 0 && "text-destructive",
 				className,

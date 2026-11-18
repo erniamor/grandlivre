@@ -18,6 +18,7 @@ import {
 import { getAppearance } from "@/features/appearance/get-appearance";
 import { meQueryOptions } from "@/features/auth/me-query";
 import { getPreferredHousehold } from "@/features/households/preferred-household";
+import { getPrivateMode } from "@/features/privacy/get-private-mode";
 import { listenForInstallPrompt } from "@/features/pwa/install-prompt";
 import { registerServiceWorker } from "@/features/pwa/service-worker";
 import { themeColorMetas } from "@/features/pwa/theme-color";
@@ -42,6 +43,8 @@ interface ShellContext {
 	me: Profile | null;
 	/** The household chosen on this device, if any (see currentHousehold). */
 	preferredHousehold: string | undefined;
+	/** This device hides what is sensitive on screen. */
+	privateMode: boolean;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -56,6 +59,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 			theme: getTheme(),
 			me,
 			preferredHousehold: getPreferredHousehold(),
+			privateMode: getPrivateMode(),
 		};
 	},
 	head: () => ({
@@ -82,6 +86,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 	const appearance = context.appearance ?? getAppearance();
 	const theme = context.theme ?? getTheme();
 	const me = context.me ?? null;
+	const privateMode = context.privateMode ?? getPrivateMode();
 
 	// Syncs with the browser: installable app, offline page
 	useEffect(() => {
@@ -94,6 +99,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 		<html
 			lang={getLocale()}
 			data-theme={theme}
+			data-private={privateMode ? "" : undefined}
 			className={serverHtmlClass(appearance)}
 			suppressHydrationWarning
 		>
@@ -120,6 +126,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 						theme={theme}
 						me={me}
 						preferredHousehold={context.preferredHousehold}
+						privateMode={privateMode}
 					/>
 					<main>{children}</main>
 				</TooltipProvider>

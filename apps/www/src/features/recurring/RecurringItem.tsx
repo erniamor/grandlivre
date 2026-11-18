@@ -1,6 +1,7 @@
 import type { Account, RecurringTransaction, Tag } from "@repo/schemas";
 import { cn } from "@repo/ui";
 import { Link } from "@tanstack/react-router";
+import { sensitiveClass } from "@/components/sensitive";
 import {
 	templateDirection,
 	templateTitle,
@@ -69,6 +70,7 @@ export function RecurringItem({
 			</div>
 			<span
 				className={cn(
+					sensitiveClass,
 					"whitespace-nowrap font-medium tabular-nums",
 					direction === 1 && "text-primary",
 					direction === 0 && "text-muted-foreground",

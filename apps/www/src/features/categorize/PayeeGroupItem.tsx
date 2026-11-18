@@ -1,10 +1,11 @@
 import type { Household, UncategorizedPayee } from "@repo/schemas";
-import { Button, toast } from "@repo/ui";
+import { Button, cn, toast } from "@repo/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SparklesIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { SelectField, type SelectOption } from "@/components/SelectField";
+import { sensitiveClass } from "@/components/sensitive";
 import { getApi } from "@/lib/api";
 import { formatShortDay } from "@/lib/dates";
 import { formErrors } from "@/lib/error-messages";
@@ -65,7 +66,7 @@ export function PayeeGroupItem({
 				<h2 id={titleId} className="font-medium">
 					{group.payee}
 				</h2>
-				<p className="tabular-nums">
+				<p className={cn("tabular-nums", sensitiveClass)}>
 					{formatAmount(group.total, household.currency, locale)}
 				</p>
 			</div>

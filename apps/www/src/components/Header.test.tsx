@@ -41,6 +41,11 @@ describe("Header", () => {
 	it("offers a visitor to sign in", async () => {
 		const header = await renderHeader();
 
+		// Nothing of theirs to hide
+		expect(
+			within(header).queryByRole("button", { name: "Private mode" }),
+		).not.toBeInTheDocument();
+
 		expect(
 			within(header).getByRole("link", { name: "Sign in" }),
 		).toHaveAttribute("href", "/sign-in");

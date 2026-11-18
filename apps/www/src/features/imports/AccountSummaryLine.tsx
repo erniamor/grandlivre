@@ -1,3 +1,5 @@
+import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import type { ImportSummary } from "@/features/imports/import-summary";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -18,7 +20,7 @@ export function AccountSummaryLine({
 	const money = (amount: number) => formatAmount(amount, currency, locale);
 
 	return (
-		<p className="text-sm">
+		<p className={cn("text-sm", sensitiveClass)}>
 			{m.import_account_record({
 				count: summary.newTransactions,
 				expenses: money(record.expenses.amount),

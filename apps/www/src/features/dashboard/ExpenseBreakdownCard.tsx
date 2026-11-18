@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 import { cardClass } from "@/components/card-styles";
+import { sensitiveClass } from "@/components/sensitive";
 import {
 	type BreakdownRow,
 	expenseBreakdown,
@@ -68,7 +69,12 @@ export function ExpenseBreakdownCard({ household }: ExpenseBreakdownCardProps) {
 						<li key={`${row.kind}-${row.tagId}`} className="grid gap-1">
 							<div className="flex items-baseline justify-between gap-3 text-sm">
 								<span className="min-w-0 truncate">{rowName(row)}</span>
-								<span className="whitespace-nowrap tabular-nums">
+								<span
+									className={cn(
+										"whitespace-nowrap tabular-nums",
+										sensitiveClass,
+									)}
+								>
 									{formatAmount(row.amount, household.currency, locale)}
 									<span className="ml-2 text-muted-foreground">
 										{percent.format(row.share)}
@@ -77,7 +83,10 @@ export function ExpenseBreakdownCard({ household }: ExpenseBreakdownCardProps) {
 							</div>
 							<div
 								aria-hidden
-								className="h-2 overflow-hidden rounded-full bg-muted"
+								className={cn(
+									"h-2 overflow-hidden rounded-full bg-muted",
+									sensitiveClass,
+								)}
 							>
 								<div
 									className="h-full rounded-full bg-primary"

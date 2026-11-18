@@ -1,4 +1,5 @@
 import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import type { ReportView } from "@/features/reports/report-tree";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -36,6 +37,7 @@ export function ReportSummary({ view, currency }: ReportSummaryProps) {
 					<dt className="text-muted-foreground text-sm">{label}</dt>
 					<dd
 						className={cn(
+							sensitiveClass,
 							"whitespace-nowrap font-heading font-semibold text-2xl tabular-nums",
 							signed && amount > 0 && "text-primary",
 							signed && amount < 0 && "text-destructive",

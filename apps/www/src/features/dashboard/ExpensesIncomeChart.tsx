@@ -8,11 +8,13 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 	ComposedChart,
+	cn,
 	Line,
 	XAxis,
 	YAxis,
 } from "@repo/ui";
 import { useId } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import { monthLabel } from "@/features/reports/month-label";
 import { formatAmount, formatAmountCompact } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -68,7 +70,10 @@ export function ExpensesIncomeChart({
 	);
 
 	return (
-		<figure aria-labelledby={titleId} className="grid gap-2">
+		<figure
+			aria-labelledby={titleId}
+			className={cn("grid gap-2", sensitiveClass)}
+		>
 			<figcaption id={titleId} className="sr-only">
 				{title}
 			</figcaption>

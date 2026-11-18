@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 import { cardClass } from "@/components/card-styles";
+import { sensitiveClass } from "@/components/sensitive";
 import { sharingOverviewQueryOptions } from "@/features/sharing/sharing-query";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -41,7 +42,7 @@ export function SharingSummary({ household, meId }: SharingSummaryProps) {
 					{mine.map(({ fromUserId, toUserId, amount }) => {
 						const money = formatAmount(amount, household.currency, locale);
 						return (
-							<li key={`${fromUserId}-${toUserId}`}>
+							<li key={`${fromUserId}-${toUserId}`} className={sensitiveClass}>
 								{fromUserId === meId
 									? m.sharing_you_owe({ name: nameOf(toUserId), amount: money })
 									: m.sharing_owes_you({

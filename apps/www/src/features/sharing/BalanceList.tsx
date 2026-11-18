@@ -1,5 +1,6 @@
 import type { SharingBalance } from "@repo/schemas";
 import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -33,6 +34,7 @@ export function BalanceList({ balances, meId, currency }: BalanceListProps) {
 					<span
 						className={cn(
 							"tabular-nums",
+							sensitiveClass,
 							balance > 0 && "text-primary",
 							balance === 0 && "text-muted-foreground",
 						)}

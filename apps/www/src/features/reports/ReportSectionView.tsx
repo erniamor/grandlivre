@@ -1,4 +1,6 @@
+import { cn } from "@repo/ui";
 import { useId } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import type { Period } from "@/features/reports/period";
 import { ReportNodeItem } from "@/features/reports/ReportNodeItem";
 import { ReportRow } from "@/features/reports/ReportRow";
@@ -33,7 +35,12 @@ export function ReportSectionView({
 				<h2 id={titleId} className="font-heading font-semibold text-lg">
 					{title}
 				</h2>
-				<p className="whitespace-nowrap font-medium tabular-nums">
+				<p
+					className={cn(
+						"whitespace-nowrap font-medium tabular-nums",
+						sensitiveClass,
+					)}
+				>
 					{formatAmount(section.total, currency, getLocale())}
 				</p>
 			</div>

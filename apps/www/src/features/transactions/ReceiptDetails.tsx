@@ -1,7 +1,8 @@
 import type { Receipt } from "@repo/schemas";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { ReceiptTextIcon } from "lucide-react";
 import { useId, useState } from "react";
+import { sensitiveClass } from "@/components/sensitive";
 import type { ReceiptPhotos } from "@/features/transactions/note-draft";
 import { useObjectUrl } from "@/features/transactions/use-object-url";
 import { formatAmount } from "@/lib/money";
@@ -82,8 +83,15 @@ export function ReceiptDetails({
 							{receipt.items.map((item, index) => (
 								// Two items can have the same name and amount: their place tells them apart
 								<tr key={index}>
-									<td className="py-0.5 pr-2">{item.name}</td>
-									<td className="py-0.5 text-right tabular-nums">
+									<td className={cn("py-0.5 pr-2", sensitiveClass)}>
+										{item.name}
+									</td>
+									<td
+										className={cn(
+											"py-0.5 text-right tabular-nums",
+											sensitiveClass,
+										)}
+									>
 										{money(item.amount)}
 									</td>
 								</tr>
@@ -96,7 +104,7 @@ export function ReceiptDetails({
 				{receipt.subtotal !== null && (
 					<>
 						<dt className="text-muted-foreground">{m.receipt_subtotal()}</dt>
-						<dd className="text-right tabular-nums">
+						<dd className={cn("text-right tabular-nums", sensitiveClass)}>
 							{money(receipt.subtotal)}
 						</dd>
 					</>
@@ -105,11 +113,15 @@ export function ReceiptDetails({
 					// A div groups a name and its amount, which a list of descriptions allows
 					<div key={index} className="contents">
 						<dt className="text-muted-foreground">{tax.name}</dt>
-						<dd className="text-right tabular-nums">{money(tax.amount)}</dd>
+						<dd className={cn("text-right tabular-nums", sensitiveClass)}>
+							{money(tax.amount)}
+						</dd>
 					</div>
 				))}
 				<dt className="font-medium">{m.receipt_total()}</dt>
-				<dd className="text-right font-medium tabular-nums">
+				<dd
+					className={cn("text-right font-medium tabular-nums", sensitiveClass)}
+				>
 					{money(receipt.total)}
 				</dd>
 			</dl>

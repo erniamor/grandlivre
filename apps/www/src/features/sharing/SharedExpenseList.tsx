@@ -1,4 +1,6 @@
 import type { SharedExpense } from "@repo/schemas";
+import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { formatDay } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -40,7 +42,7 @@ export function SharedExpenseList({
 										? m.transaction_type_income()
 										: m.transaction_type_expense())}
 							</span>
-							<span className="tabular-nums">
+							<span className={cn("tabular-nums", sensitiveClass)}>
 								{formatAmount(
 									expense.type === "income" ? expense.amount : -expense.amount,
 									currency,

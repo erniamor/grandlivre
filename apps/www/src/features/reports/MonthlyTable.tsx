@@ -1,3 +1,5 @@
+import { cn } from "@repo/ui";
+import { sensitiveClass } from "@/components/sensitive";
 import { monthLabel } from "@/features/reports/month-label";
 import { formatAmount } from "@/lib/money";
 import { m } from "@/paraglide/messages";
@@ -41,10 +43,16 @@ export function MonthlyTable({ months, currency }: MonthlyTableProps) {
 							>
 								{monthLabel(month, locale, "long")}
 							</th>
-							<td className="py-1 text-right tabular-nums">
+							<td
+								className={cn("py-1 text-right tabular-nums", sensitiveClass)}
+							>
 								{amount(expense)}
 							</td>
-							<td className="py-1 text-right tabular-nums">{amount(income)}</td>
+							<td
+								className={cn("py-1 text-right tabular-nums", sensitiveClass)}
+							>
+								{amount(income)}
+							</td>
 						</tr>
 					))}
 				</tbody>
