@@ -13,7 +13,6 @@ import { useMutation } from "@tanstack/react-query";
 import { ScaleIcon } from "lucide-react";
 import { useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
-import { SelectField } from "@/components/SelectField";
 import { TextField } from "@/components/TextField";
 import { isDebtType } from "@/features/accounts/account-form";
 import {
@@ -22,7 +21,8 @@ import {
 	toAdjustInput,
 	typedBalance,
 } from "@/features/accounts/adjust-form";
-import { buildTagTree, flattenTagTree } from "@/features/tags/tag-tree";
+import { TagField } from "@/features/tags/TagField";
+import { buildTagTree } from "@/features/tags/tag-tree";
 import { useLocalToday } from "@/features/transactions/use-local-today";
 import { useTransactionChange } from "@/features/transactions/use-transaction-change";
 import { getApi } from "@/lib/api";
@@ -83,13 +83,7 @@ export function AdjustBalanceDialog({
 	const money = (amount: number) => formatAmount(amount, currency, locale);
 	const actual = typedBalance(current.balance, account.type, currency, locale);
 	const gap = actual === null ? null : adjustmentGap(account.balance, actual);
-	const tagOptions = [
-		{ value: "", label: m.transaction_uncategorized() },
-		...flattenTagTree(buildTagTree(tags, locale)).map(({ tag, path }) => ({
-			value: tag.id,
-			label: path,
-		})),
-	];
+	const tagTree = buildTagTree(tags, locale);
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -169,13 +163,12 @@ export function AdjustBalanceDialog({
 						error={errors.date}
 					/>
 					<div className="grid gap-2">
-						<SelectField
+						<TagField
 							label={m.account_adjust_tag_label()}
+							tree={tagTree}
 							value={current.tagId}
-							options={tagOptions}
 							onChange={(tagId) => change({ tagId })}
-							tone="default"
-							className="grid items-stretch font-medium"
+							className="font-medium"
 						/>
 						<FormAlert message={errors.tagId} />
 					</div>

@@ -1,4 +1,4 @@
-import type { Account, Household } from "@repo/schemas";
+import type { Account, Household, Tag } from "@repo/schemas";
 import { toast } from "@repo/ui";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -34,9 +34,16 @@ interface Setup {
 	account?: Account;
 	role?: Household["role"];
 	respond?: (request: ApiRequest) => ApiResponse | undefined;
+	/** The household's tags. */
+	tags?: Tag[];
 }
 
-function setUp({ account = chequing, role = "owner", respond }: Setup = {}) {
+function setUp({
+	account = chequing,
+	role = "owner",
+	respond,
+	tags = [],
+}: Setup = {}) {
 	const requests = mockApi((request) => {
 		if (request.method !== "GET") {
 			return respond?.(request) ?? { status: 200, body: account };
@@ -46,6 +53,9 @@ function setUp({ account = chequing, role = "owner", respond }: Setup = {}) {
 		}
 		if (request.path === accountPath) {
 			return { status: 200, body: account };
+		}
+		if (request.path === `${base}/tags`) {
+			return page(tags);
 		}
 		// Refreshed after a change: the list and the summary
 		return page([]);
@@ -396,6 +406,49 @@ describe("EditAccountPage", () => {
 
 			await vi.waitFor(() =>
 				expect(writes()[0]?.body).toMatchObject({ balance: -52_000 }),
+			);
+		});
+
+		it("records the gap under the tag chosen, level by level", async () => {
+			const leisure: Tag = {
+				id: "00000000-0000-4000-8000-000000000081",
+				householdId: household.id,
+				names: { en: "Leisure" },
+				parentId: null,
+				createdAt: NOW,
+			};
+			const outings: Tag = {
+				...leisure,
+				id: "00000000-0000-4000-8000-000000000082",
+				names: { en: "Outings" },
+				parentId: leisure.id,
+			};
+			const { user, writes } = setUp({
+				account: wallet,
+				tags: [leisure, outings],
+				respond: (request) =>
+					request.path.endsWith("/adjust") ? adjusted(12_000) : undefined,
+			});
+
+			await user.click(
+				await screen.findByRole("button", { name: "Count my wallet" }),
+			);
+			await user.type(screen.getByLabelText("Cash in the wallet"), "150");
+			await user.click(screen.getByLabelText("Tag of the adjustment"));
+			await user.click(
+				screen.getByRole("button", { name: "Leisure, shows its tags" }),
+			);
+			await user.click(screen.getByRole("button", { name: "Outings" }));
+			expect(
+				screen.getByLabelText("Tag of the adjustment"),
+			).toHaveAccessibleName("Tag of the adjustment: Leisure › Outings");
+			await user.click(screen.getByRole("button", { name: "Record" }));
+
+			await vi.waitFor(() =>
+				expect(writes()[0]?.body).toMatchObject({
+					balance: 15_000,
+					tagId: outings.id,
+				}),
 			);
 		});
 
