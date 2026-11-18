@@ -13,20 +13,20 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 // The chart library loads apart: the rest of the dashboard doesn't wait for it
-const MonthlyBarChart = lazy(() =>
-	import("@/features/reports/MonthlyBarChart").then((module) => ({
-		default: module.MonthlyBarChart,
+const ExpensesIncomeChart = lazy(() =>
+	import("@/features/dashboard/ExpensesIncomeChart").then((module) => ({
+		default: module.ExpensesIncomeChart,
 	})),
 );
 
 /** The height of the chart, kept while it loads: nothing moves when it shows. */
-const CHART_HEIGHT = "h-44";
+const CHART_HEIGHT = "h-52";
 
 interface MonthlyExpensesCardProps {
 	household: Household;
 }
 
-/** The household's expenses over the twelve months ending with this one. */
+/** The household's expenses, and incomes, over the twelve months ending with this one. */
 export function MonthlyExpensesCard({ household }: MonthlyExpensesCardProps) {
 	const locale = getLocale();
 	const titleId = useId();
@@ -39,9 +39,11 @@ export function MonthlyExpensesCard({ household }: MonthlyExpensesCardProps) {
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
 	const months = report.months.map((month) => ({
 		month: month.month,
-		amount: monthTotals(month, tags, locale).expense,
+		...monthTotals(month, tags, locale),
 	}));
-	const max = Math.max(0, ...months.map(({ amount }) => amount));
+	const empty = months.every(
+		({ expense, income }) => expense === 0 && income === 0,
+	);
 	const title = m.dashboard_monthly_title();
 
 	return (
@@ -49,7 +51,7 @@ export function MonthlyExpensesCard({ household }: MonthlyExpensesCardProps) {
 			<h2 id={titleId} className="font-heading font-semibold text-lg">
 				{title}
 			</h2>
-			{max === 0 ? (
+			{empty ? (
 				<p className="text-muted-foreground text-sm">
 					{m.dashboard_monthly_empty()}
 				</p>
@@ -62,12 +64,10 @@ export function MonthlyExpensesCard({ household }: MonthlyExpensesCardProps) {
 						/>
 					}
 				>
-					<MonthlyBarChart
+					<ExpensesIncomeChart
 						title={title}
-						hideTitle
 						months={months}
 						currency={household.currency}
-						max={max}
 					/>
 				</Suspense>
 			)}

@@ -27,8 +27,6 @@ interface MonthlyBarChartProps {
 	currency: string;
 	/** The top of the scale: the same for the charts read side by side. */
 	max: number;
-	/** The title is read by screen readers only: a heading above already shows it. */
-	hideTitle?: boolean;
 }
 
 /**
@@ -40,7 +38,6 @@ export function MonthlyBarChart({
 	months,
 	currency,
 	max,
-	hideTitle = false,
 }: MonthlyBarChartProps) {
 	const locale = getLocale();
 	const titleId = useId();
@@ -56,10 +53,7 @@ export function MonthlyBarChart({
 
 	return (
 		<figure aria-labelledby={titleId} className="grid gap-2">
-			<figcaption
-				id={titleId}
-				className={hideTitle ? "sr-only" : "font-medium text-sm"}
-			>
+			<figcaption id={titleId} className="font-medium text-sm">
 				{title}
 			</figcaption>
 			<ChartContainer config={config} className="aspect-auto h-44 w-full">

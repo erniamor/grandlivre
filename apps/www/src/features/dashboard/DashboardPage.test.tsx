@@ -443,7 +443,7 @@ describe("DashboardPage, the charts", () => {
 		// The chart, loaded apart, named for screen readers
 		expect(
 			await screen.findByRole("figure", {
-				name: "Expenses over twelve months",
+				name: "Expenses and incomes over twelve months",
 			}),
 		).toBeInTheDocument();
 	});
@@ -455,7 +455,7 @@ describe("DashboardPage, the charts", () => {
 
 		expect(await screen.findByText("No expense this month yet.")).toBeVisible();
 		expect(
-			screen.getByText("No expense over the last twelve months."),
+			screen.getByText("Nothing spent nor earned over the last twelve months."),
 		).toBeVisible();
 	});
 });
