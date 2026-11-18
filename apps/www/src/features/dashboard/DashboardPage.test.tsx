@@ -118,6 +118,25 @@ describe("DashboardPage", () => {
 		expect(screen.getByLabelText("Describe the transaction")).toBeVisible();
 	});
 
+	it("reads the quick entry first, then the key figures, the charts and the latest transactions", async () => {
+		mockSummary();
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		const regions = await Promise.all(
+			[
+				"Quick entry",
+				"Key figures",
+				"This month's expenses by tag",
+				"Latest transactions",
+			].map((name) => screen.findByRole("region", { name })),
+		);
+		const all = screen.getAllByRole("region");
+		expect(regions.map((region) => all.indexOf(region))).toEqual(
+			regions.map((region) => all.indexOf(region)).sort((a, b) => a - b),
+		);
+	});
+
 	it("says when the household has no transaction yet", async () => {
 		mockSummary([]);
 
