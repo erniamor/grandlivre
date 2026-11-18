@@ -269,6 +269,7 @@
 	"nav_more": "More",
 	"nav_import": "Import",
 	"nav_more_close": "Close",
+	"nav_new_transaction_form": "Fill in the form",
 	"transactions_title": "Transactions",
 	"transactions_intro": "The money coming in and going out of the household's accounts, most recent first.",
 	"transactions_account_filter_label": "Account",

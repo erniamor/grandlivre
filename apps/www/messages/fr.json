@@ -269,6 +269,7 @@
 	"nav_more": "Plus",
 	"nav_import": "Importer",
 	"nav_more_close": "Fermer",
+	"nav_new_transaction_form": "Remplir le formulaire",
 	"transactions_title": "Transactions",
 	"transactions_intro": "Les entrées et les sorties d'argent des comptes du foyer, les plus récentes d'abord.",
 	"transactions_account_filter_label": "Compte",
