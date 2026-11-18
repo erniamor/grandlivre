@@ -21,9 +21,9 @@ interface DashboardPageProps {
 
 /**
  * Home of a signed-in user: the starting point of their household's pages.
- * On a wide screen, a main column (entering, what waits, the twelve
- * months' expenses, what happened) beside a narrower one (the month's
- * expenses by tag, sharing, budgets, what comes), under the key figures;
+ * On a wide screen, a main column (entering, what waits, what happened)
+ * beside a narrower one (the month's expenses by tag and over twelve
+ * months, sharing, budgets, what comes), under the key figures;
  * on a phone, one column, the main one first.
  */
 export function DashboardPage({ me, household }: DashboardPageProps) {
@@ -49,13 +49,13 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 						onDraft={(draft, photos) => openDraft(draft, { photos })}
 					/>
 					<PendingRecurring household={household} />
-					<MonthlyExpensesCard household={household} />
 					<RecentTransactions household={household} />
 				</div>
 				<div className="grid gap-6">
 					{/* Always there, so the column never stands empty: the blocks
 					under it show only when they have something */}
 					<ExpenseBreakdownCard household={household} />
+					<MonthlyExpensesCard household={household} />
 					{/* Only for the households that settle shared expenses */}
 					{household.expenseSharing && (
 						<SharingSummary household={household} meId={me.id} />
