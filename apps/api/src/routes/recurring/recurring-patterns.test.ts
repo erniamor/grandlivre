@@ -302,7 +302,9 @@ describe("findRecurringPatterns", () => {
 		const history = [
 			...monthlyDays("2026-01-15", 10),
 			...monthlyDays("2026-01-30", 10),
-		].map((date) => past(date, 2_150_00, "ATELIER BOREAL INC.", { type: "income" }));
+		].map((date) =>
+			past(date, 2_150_00, "ATELIER BOREAL INC.", { type: "income" }),
+		);
 		const pay = {
 			accountId: "chequing",
 			toAccountId: null,

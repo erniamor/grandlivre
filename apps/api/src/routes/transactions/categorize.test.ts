@@ -123,7 +123,7 @@ describe("GET /v1/households/:householdId/transactions/uncategorized", () => {
 			{
 				key: "costcoessencew",
 				// Both spellings alike: the first in order, as often written
-				payee: "COSTCO ESSENCE W1234",
+				payee: "COSTCO ESSENCE W100",
 				type: "expense",
 				count: 2,
 				total: 100_00,

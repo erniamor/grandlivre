@@ -134,7 +134,7 @@ describe("POST /v1/households/:householdId/transactions/uncategorized/suggest", 
 		// Alice's own, the most transactions first, as most of them write it
 		expect(request?.payees).toBe(
 			[
-				"p1 | expense | COSTCO ESSENCE W1234 | 2 times | usually 60.00",
+				"p1 | expense | COSTCO ESSENCE W100 | 2 times | usually 60.00",
 				"p2 | expense | SAAQ | 1 time | usually 350.86",
 			].join("\n"),
 		);
