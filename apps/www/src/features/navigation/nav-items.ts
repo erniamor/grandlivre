@@ -15,7 +15,7 @@ import { m } from "@/paraglide/messages";
 
 /**
  * The app's pages, in the order the side bar lists them. `tab` marks the
- * four a phone's tab bar shows, named by `tabLabel` when the page's name is
+ * three a phone's tab bar shows, two of them left of its "+", named by `tabLabel` when the page's name is
  * too long for it; the others are under its "More". `sharing` marks the
  * page shown only to the households that settle shared expenses.
  */
@@ -34,7 +34,7 @@ const allItems = [
 		tab: true,
 	},
 	{ to: "/recurring", label: m.recurring_title, icon: RepeatIcon, tab: false },
-	{ to: "/budgets", label: m.budgets_title, icon: PiggyBankIcon, tab: true },
+	{ to: "/budgets", label: m.budgets_title, icon: PiggyBankIcon, tab: false },
 	{ to: "/reports", label: m.reports_title, icon: ChartPieIcon, tab: true },
 	{ to: "/accounts", label: m.accounts_title, icon: WalletIcon, tab: false },
 	{ to: "/tags", label: m.tags_title, icon: TagsIcon, tab: false },

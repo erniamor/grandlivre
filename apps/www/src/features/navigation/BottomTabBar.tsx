@@ -16,10 +16,10 @@ interface BottomTabBarProps {
 }
 
 /**
- * The app's pages at the bottom of a phone's screen, under the thumb: four
- * tabs, each its icon above a short name, and "More" for the others; in the
- * middle, once a household is chosen, "+" records a transaction from any
- * page. From a tablet up, the side bar takes its place.
+ * The app's pages at the bottom of a phone's screen, under the thumb: three
+ * tabs, each its icon above a short name, and "More" for the others; right
+ * in the middle, two on each side, once a household is chosen, "+" records
+ * a transaction from any page. From a tablet up, the side bar takes its place.
  */
 export function BottomTabBar({ preferredHousehold }: BottomTabBarProps) {
 	const household = useCachedHousehold(preferredHousehold);
@@ -58,7 +58,7 @@ export function BottomTabBar({ preferredHousehold }: BottomTabBarProps) {
 			<ul
 				className={cn(
 					"grid",
-					household ? "grid-cols-6" : "grid-cols-5",
+					household ? "grid-cols-5" : "grid-cols-4",
 					tabBarHeightClass,
 				)}
 			>

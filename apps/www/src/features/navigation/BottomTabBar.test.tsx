@@ -8,7 +8,7 @@ import { setTestLocale } from "@/test/locale";
 import { renderWithRouter } from "@/test/render-with-router";
 
 describe("BottomTabBar", () => {
-	it("shows four pages, each its icon above a short name, then More", async () => {
+	it("shows three pages, each its icon above a short name, then More", async () => {
 		setTestLocale("fr");
 		renderWithRouter(<BottomTabBar />);
 
@@ -20,7 +20,6 @@ describe("BottomTabBar", () => {
 		).toEqual([
 			["Accueil", "/dashboard"],
 			["Transactions", "/transactions"],
-			["Budgets", "/budgets"],
 			["Rapports", "/reports"],
 		]);
 		expect(within(nav).getByRole("button", { name: "Plus" })).toHaveAttribute(
@@ -44,6 +43,7 @@ describe("BottomTabBar", () => {
 				.map((link) => link.getAttribute("href")),
 		).toEqual([
 			"/recurring",
+			"/budgets",
 			"/accounts",
 			"/tags",
 			"/shared",

@@ -34,7 +34,7 @@ async function renderTabBar() {
 }
 
 describe("the new transaction button", () => {
-	it("sits in the middle of the tab bar once a household is chosen", async () => {
+	it("sits right in the middle of the tab bar, two tabs on each side, once a household is chosen", async () => {
 		await renderTabBar();
 
 		const nav = screen.getByRole("navigation", { name: "Main" });
@@ -47,14 +47,7 @@ describe("the new transaction button", () => {
 						within(item).getByRole("button").getAttribute("aria-label") ??
 						within(item).getByRole("button").textContent,
 				),
-		).toEqual([
-			"Home",
-			"Transactions",
-			"New transaction",
-			"Budgets",
-			"Reports",
-			"More",
-		]);
+		).toEqual(["Home", "Transactions", "New transaction", "Reports", "More"]);
 	});
 
 	it("isn't offered before a household is chosen", async () => {

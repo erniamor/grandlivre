@@ -13,14 +13,14 @@ describe("navItems", () => {
 		expect(navItems(null).map(({ to }) => to)).not.toContain("/shared");
 	});
 
-	it("puts four pages in the tab bar, the dashboard under a shorter name", () => {
+	it("puts three pages in the tab bar, the dashboard under a shorter name", () => {
 		setTestLocale("fr");
 
 		expect(
 			navItems(household)
 				.filter((item) => item.tab)
 				.map(tabLabel),
-		).toEqual(["Accueil", "Transactions", "Budgets", "Rapports"]);
+		).toEqual(["Accueil", "Transactions", "Rapports"]);
 	});
 });
 
