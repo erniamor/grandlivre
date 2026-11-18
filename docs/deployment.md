@@ -82,7 +82,7 @@ Variables:
 ### `Postgres`
 
 - Added from Railway's PostgreSQL template, in the same project and region.
-- **Backups:** enable the daily schedule in the service's Backups tab (kept 6 days), and the weekly one (kept 27 days). Backups can only be restored into the same project and environment, and deleting the volume deletes them.
+- **Backups:** Railway's own backups (the Backups tab) need its Pro plan. On the Hobby plan, the database is backed up by a nightly cron service to Cloudflare R2, outside Railway: to set up before the launch (see [roadmap.md](roadmap.md)). Until then, nothing is backed up: the data is disposable during the pre-launch.
 
 ## Domains
 
