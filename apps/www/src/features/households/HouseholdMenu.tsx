@@ -10,14 +10,22 @@ import {
 } from "@repo/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronDownIcon, HouseIcon, MailIcon, PlusIcon } from "lucide-react";
+import {
+	ChevronDownIcon,
+	FlaskConicalIcon,
+	HouseIcon,
+	MailIcon,
+	PlusIcon,
+} from "lucide-react";
 import { headerButtonClass } from "@/components/header-styles";
+import { DemoBadge } from "@/features/households/DemoBadge";
 import {
 	currentHousehold,
 	householdsQueryOptions,
 } from "@/features/households/households-query";
 import { receivedInvitationsQueryOptions } from "@/features/households/received-invitations-query";
 import { roleLabels } from "@/features/households/role-options";
+import { useDemoHousehold } from "@/features/households/use-demo-household";
 import { useSwitchHousehold } from "@/features/households/use-switch-household";
 import { m } from "@/paraglide/messages";
 
@@ -35,6 +43,7 @@ export function HouseholdMenu({ preferredHousehold }: HouseholdMenuProps) {
 	const { data: households } = useQuery(householdsQueryOptions());
 	const { data: invitations } = useQuery(receivedInvitationsQueryOptions());
 	const switchHousehold = useSwitchHousehold();
+	const demo = useDemoHousehold();
 	const household = households
 		? currentHousehold(households, preferredHousehold)
 		: null;
@@ -60,6 +69,7 @@ export function HouseholdMenu({ preferredHousehold }: HouseholdMenuProps) {
 				>
 					<HouseIcon aria-hidden className="size-5" />
 					<span className="max-w-40 truncate">{household.name}</span>
+					{household.demo && <DemoBadge />}
 					{invited > 0 && (
 						<span
 							aria-hidden
@@ -84,7 +94,10 @@ export function HouseholdMenu({ preferredHousehold }: HouseholdMenuProps) {
 					{households.items.map((item) => (
 						<DropdownMenuRadioItem key={item.id} value={item.id}>
 							<span className="grid min-w-0">
-								<span className="truncate">{item.name}</span>
+								<span className="flex items-center gap-1.5 truncate">
+									{item.name}
+									{item.demo && <DemoBadge />}
+								</span>
 								<span className="text-muted-foreground text-xs">
 									{roleLabels[item.role]()}
 								</span>
@@ -106,6 +119,15 @@ export function HouseholdMenu({ preferredHousehold }: HouseholdMenuProps) {
 						<PlusIcon aria-hidden className="size-4" />
 						{m.household_menu_new()}
 					</Link>
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					disabled={demo.creating}
+					onSelect={() => demo.create(household.currency)}
+				>
+					<FlaskConicalIcon aria-hidden className="size-4" />
+					{households.items.some((item) => item.demo)
+						? m.demo_restart()
+						: m.household_menu_demo()}
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

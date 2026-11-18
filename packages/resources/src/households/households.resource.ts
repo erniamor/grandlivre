@@ -1,5 +1,7 @@
 import {
+	type CreateDemoHousehold,
 	type CreateHousehold,
+	createDemoHouseholdSchema,
 	createHouseholdSchema,
 	type GettingStarted,
 	gettingStartedSchema,
@@ -75,6 +77,30 @@ export function createHouseholdsResource(client: ApiClient) {
 				path: "/households",
 				body: parseInput(createHouseholdSchema, input),
 				response: householdSchema,
+			});
+		},
+
+		/**
+		 * A household of made-up data for the user, to try the app or show it:
+		 * it replaces their demo household, if they had one.
+		 */
+		async createDemo(input: CreateDemoHousehold = {}): Promise<Household> {
+			return client.request({
+				method: "POST",
+				path: "/households/demo",
+				body: parseInput(createDemoHouseholdSchema, input),
+				response: householdSchema,
+			});
+		},
+
+		/**
+		 * Deletes a demo household and everything in it, for its owner. A real
+		 * household rejects with an ApiError `household_not_demo` (409).
+		 */
+		async remove(householdId: string): Promise<void> {
+			await client.request({
+				method: "DELETE",
+				path: householdPath(householdId),
 			});
 		},
 

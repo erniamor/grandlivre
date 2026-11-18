@@ -106,6 +106,39 @@ describe("households", () => {
 		);
 	});
 
+	it("makes a demo household, in the currency and time zone given", async () => {
+		const demo = { ...household, name: "Foyer de démo", demo: true };
+		const { api, requests } = fakeApi(201, demo);
+
+		expect(
+			await api.households.createDemo({
+				currency: "EUR",
+				timeZone: "Europe/Paris",
+			}),
+		).toEqual(demo);
+		expect(requests[0]).toMatchObject({
+			url: "http://api.test/v1/households/demo",
+			method: "POST",
+			body: { currency: "EUR", timeZone: "Europe/Paris" },
+		});
+	});
+
+	it("deletes a demo household, and says why a real one can't be", async () => {
+		const deleted = fakeApi(204);
+		await deleted.api.households.remove(HOUSEHOLD_ID);
+		expect(deleted.requests[0]).toMatchObject({
+			url: `http://api.test/v1/households/${HOUSEHOLD_ID}`,
+			method: "DELETE",
+		});
+
+		const refused = fakeApi(409, {
+			error: { code: "household_not_demo", message: "Not a demo" },
+		});
+		await expect(
+			refused.api.households.remove(HOUSEHOLD_ID),
+		).rejects.toMatchObject({ status: 409, code: "household_not_demo" });
+	});
+
 	it("creates a household", async () => {
 		const { api, requests } = fakeApi(201, household);
 

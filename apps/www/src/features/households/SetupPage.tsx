@@ -8,6 +8,7 @@ import {
 	receivedInvitationsQueryKey,
 	receivedInvitationsQueryOptions,
 } from "@/features/households/received-invitations-query";
+import { TryDemoSection } from "@/features/households/TryDemoSection";
 import { m } from "@/paraglide/messages";
 
 interface SetupPageProps {
@@ -68,6 +69,7 @@ export function SetupPage({ another = false, onReady }: SetupPageProps) {
 					onCreated={(household) => onReady(household, "created")}
 				/>
 			</section>
+			<TryDemoSection />
 		</section>
 	);
 }

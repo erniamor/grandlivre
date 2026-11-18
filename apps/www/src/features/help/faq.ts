@@ -23,6 +23,7 @@ export const faq: FaqItem[] = [
 	{ question: m.faq_currency_q, answer: m.faq_currency_a },
 	{ question: m.faq_households_q, answer: m.faq_households_a },
 	{ question: m.faq_private_q, answer: m.faq_private_a },
+	{ question: m.faq_demo_q, answer: m.faq_demo_a },
 	{ question: m.faq_language_q, answer: m.faq_language_a },
 ];
 

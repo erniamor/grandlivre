@@ -4,6 +4,7 @@ import { ExpenseBreakdownCard } from "@/features/dashboard/ExpenseBreakdownCard"
 import { KeyFigures } from "@/features/dashboard/KeyFigures";
 import { MonthlyExpensesCard } from "@/features/dashboard/MonthlyExpensesCard";
 import { GettingStartedCard } from "@/features/getting-started/GettingStartedCard";
+import { DemoBanner } from "@/features/households/DemoBanner";
 import { InstallCard } from "@/features/pwa/InstallCard";
 import { PendingRecurring } from "@/features/recurring/PendingRecurring";
 import { UpcomingRecurring } from "@/features/recurring/UpcomingRecurring";
@@ -40,6 +41,7 @@ export function DashboardPage({ me, household }: DashboardPageProps) {
 					<span>{me.name || me.email}</span>
 				</p>
 			</header>
+			<DemoBanner household={household} />
 			<GettingStartedCard household={household} />
 			<KeyFigures household={household} />
 			<div className="grid items-start gap-6 lg:grid-cols-3">
