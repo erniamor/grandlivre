@@ -16,6 +16,11 @@ The steps of Grand Livre, in the order they are built. A step is ticked once mer
 - [x] The launch, on 2026-11-18: the production database emptied once, real data from then on. From that point, migrations must keep the data in place.
 - [x] The repository public again, on 2026-11-18: the real names and amounts taken out of the tests, then out of the whole Git history (rewritten, the merged branches deleted).
 - [x] The header on one line (the language and appearance in the account menu), the pages in a side bar from a tablet up and a tab bar on a phone, with "+" to record a transaction from any page.
+- [ ] The dashboard's four summary blocks rearranged on a phone: the balance and the gap side by side on the first row, the expenses and the incomes on the second.
+- [ ] The household's button moved into the side bar on a desktop and into the "+" menu on a phone, and perhaps renamed to something more fitting ("Settings" or another name).
+- [ ] The quick entry block taken off the transactions page, where the "+" now does its job.
+- [ ] More filters on the transactions page: a global search (payee, description and the other fields worth searching), a range slider on the amount, and the type (income, expense, transfer) to tell money coming in and going out apart from transfers between accounts.
+- [ ] Notifications from the installed app (PWA).
 
 ## Postponed
 
