@@ -33,14 +33,40 @@ interface EditableRectProps {
 /** One step of the keyboard, in proportions of the photo. */
 const STEP = 0.01;
 
-const corners: Handle[] = ["nw", "ne", "sw", "se"];
+const corners = ["nw", "ne", "sw", "se"] as const satisfies Handle[];
 
-const cornerPlaces: Record<string, string> = {
-	nw: "-top-2 -left-2 cursor-nwse-resize",
-	ne: "-top-2 -right-2 cursor-nesw-resize",
-	sw: "-bottom-2 -left-2 cursor-nesw-resize",
-	se: "-bottom-2 -right-2 cursor-nwse-resize",
+/**
+ * Where each corner's grip lies: mostly inside the rectangle, so it stays
+ * whole when the rectangle reaches the photo's edge (the photo cuts what
+ * goes beyond), with its bracket on the corner itself.
+ */
+const cornerPlaces: Record<
+	(typeof corners)[number],
+	{ grip: string; bracket: string }
+> = {
+	nw: {
+		grip: "-top-3.5 -left-3.5 cursor-nwse-resize",
+		bracket: "top-3 left-3 rounded-tl-sm border-t-4 border-l-4",
+	},
+	ne: {
+		grip: "-top-3.5 -right-3.5 cursor-nesw-resize",
+		bracket: "top-3 right-3 rounded-tr-sm border-t-4 border-r-4",
+	},
+	sw: {
+		grip: "-bottom-3.5 -left-3.5 cursor-nesw-resize",
+		bracket: "bottom-3 left-3 rounded-bl-sm border-b-4 border-l-4",
+	},
+	se: {
+		grip: "-bottom-3.5 -right-3.5 cursor-nwse-resize",
+		bracket: "bottom-3 right-3 rounded-br-sm border-b-4 border-r-4",
+	},
 };
+
+/**
+ * A grip as big as a fingertip (44 px), but never more than a quarter of
+ * the rectangle inside it: the middle stays free to move a small one.
+ */
+const GRIP_SIDE = "min(2.75rem, calc(25% + 0.875rem))";
 
 /**
  * A rectangle on a photo, moved by its body and resized by its corners,
@@ -149,15 +175,20 @@ export function EditableRect({
 				<span
 					key={handle}
 					aria-hidden
-					className={cn(
-						"absolute size-4 rounded-full border-2 border-primary bg-background",
-						cornerPlaces[handle],
-					)}
+					className={cn("absolute", cornerPlaces[handle].grip)}
+					style={{ width: GRIP_SIDE, height: GRIP_SIDE }}
 					onPointerDown={(event) => start(event, handle)}
 					onPointerMove={follow}
 					onPointerUp={stop}
 					onPointerCancel={stop}
-				/>
+				>
+					<span
+						className={cn(
+							"absolute size-5 border-primary",
+							cornerPlaces[handle].bracket,
+						)}
+					/>
+				</span>
 			))}
 		</div>
 	);
