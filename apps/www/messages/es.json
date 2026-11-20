@@ -384,6 +384,7 @@
 	"receipt_scan_button": "Escanear un ticket",
 	"receipt_scan_subtitle": "Una foto de un ticket de caja",
 	"receipt_scan_pending": "Leyendo el ticket…",
+	"receipt_scan_choose": "Elegir una imagen existente",
 	"receipt_title": "El ticket",
 	"receipt_title_from": "El ticket de {merchant}",
 	"receipt_photo_alt": "Foto del ticket",

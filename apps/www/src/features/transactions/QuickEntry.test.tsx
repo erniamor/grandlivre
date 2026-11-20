@@ -161,16 +161,37 @@ describe("QuickEntry", () => {
 			});
 
 		it.each([
-			["en", "Scan a receipt"],
-			["fr", "Scanner un ticket"],
-			["es", "Escanear un ticket"],
-		] as const)("offers to take a photo, in %s", (locale, label) => {
-			setTestLocale(locale);
-			setUp();
+			["en", "Scan a receipt", "Choose an existing image"],
+			["fr", "Scanner un ticket", "Choisir une image existante"],
+			["es", "Escanear un ticket", "Elegir una imagen existente"],
+		] as const)(
+			"offers to take a photo with the camera, or to choose one, in %s",
+			(locale, label, choose) => {
+				setTestLocale(locale);
+				setUp();
 
-			const input = screen.getByLabelText(label);
-			expect(input).toHaveAttribute("type", "file");
-			expect(input).toHaveAttribute("accept", "image/*");
+				const camera = screen.getByLabelText(label);
+				expect(camera).toHaveAttribute("type", "file");
+				expect(camera).toHaveAttribute("accept", "image/*");
+				// The back camera at once, not the pictures
+				expect(camera).toHaveAttribute("capture", "environment");
+				const pictures = screen.getByLabelText(choose);
+				expect(pictures).toHaveAttribute("type", "file");
+				expect(pictures).toHaveAttribute("accept", "image/*");
+				expect(pictures).not.toHaveAttribute("capture");
+			},
+		);
+
+		it("reads a photo chosen among the pictures as one taken", async () => {
+			const { user, onDraft } = setUp({ status: 200, body: receiptDraft });
+
+			await user.upload(
+				screen.getByLabelText("Choose an existing image"),
+				photo(),
+			);
+
+			await vi.waitFor(() => expect(onDraft).toHaveBeenCalledOnce());
+			expect(onDraft.mock.calls[0]?.[0]).toEqual(receiptDraft);
 		});
 
 		it("sends a photo the browser can't decode as it is, and hands the draft on with it", async () => {

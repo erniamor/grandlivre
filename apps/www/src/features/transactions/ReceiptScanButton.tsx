@@ -8,8 +8,8 @@ import {
 	DialogTitle,
 } from "@repo/ui";
 import { useMutation } from "@tanstack/react-query";
-import { CameraIcon } from "lucide-react";
-import { useId, useState } from "react";
+import { CameraIcon, ImageIcon } from "lucide-react";
+import { type ChangeEvent, useId, useState } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { HelpHint } from "@/features/help/HelpHint";
 import {
@@ -42,8 +42,8 @@ interface Editing {
 }
 
 /**
- * Takes the photo of a receipt (the phone offers its camera or its
- * pictures), lets the member crop it and mask what shouldn't leave the
+ * Takes the photo of a receipt (the tile opens the phone's camera, a link
+ * under it the pictures already taken), lets the member crop it and mask what shouldn't leave the
  * device, then has the assistant read the photo prepared into a draft. The
  * original never leaves the browser; neither is kept, by the API or here
  * once the draft is reviewed.
@@ -53,6 +53,7 @@ export function ReceiptScanButton({
 	onDraft,
 }: ReceiptScanButtonProps) {
 	const inputId = useId();
+	const galleryId = useId();
 	const [editing, setEditing] = useState<Editing | null>(null);
 	const close = () => {
 		editing?.bitmap.close();
@@ -93,6 +94,22 @@ export function ReceiptScanButton({
 	});
 	const error = scan.error ? receiptErrorMessage(scan.error) : undefined;
 
+	const pick = async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.currentTarget.files?.[0];
+		// The same photo can be chosen again after an error
+		event.currentTarget.value = "";
+		if (!file) {
+			return;
+		}
+		scan.reset();
+		const bitmap = await decodePhoto(file);
+		if (bitmap) {
+			setEditing({ file, bitmap });
+		} else {
+			scan.mutate({ file });
+		}
+	};
+
 	return (
 		<div className="grid gap-2">
 			<div className="flex items-start gap-2">
@@ -122,28 +139,36 @@ export function ReceiptScanButton({
 						id={inputId}
 						type="file"
 						accept="image/*"
+						// The camera at once: some browsers would open the pictures
+						capture="environment"
 						className="sr-only"
 						aria-label={m.receipt_scan_button()}
 						disabled={scan.isPending}
-						onChange={async (event) => {
-							const file = event.currentTarget.files?.[0];
-							// The same photo can be chosen again after an error
-							event.currentTarget.value = "";
-							if (!file) {
-								return;
-							}
-							scan.reset();
-							const bitmap = await decodePhoto(file);
-							if (bitmap) {
-								setEditing({ file, bitmap });
-							} else {
-								scan.mutate({ file });
-							}
-						}}
+						onChange={pick}
 					/>
 				</label>
 				<HelpHint topic="receiptScan" />
 			</div>
+			{/* A photo already taken, or a screenshot */}
+			<label
+				htmlFor={galleryId}
+				className={cn(
+					"flex w-fit cursor-pointer items-center gap-2 rounded-md text-muted-foreground text-sm underline-offset-4 hover:text-foreground hover:underline",
+					"has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-2",
+					scan.isPending && "pointer-events-none opacity-50",
+				)}
+			>
+				<ImageIcon aria-hidden className="size-4" />
+				{m.receipt_scan_choose()}
+				<input
+					id={galleryId}
+					type="file"
+					accept="image/*"
+					className="sr-only"
+					disabled={scan.isPending}
+					onChange={pick}
+				/>
+			</label>
 			{!editing && <FormAlert message={error} />}
 			<Dialog open={editing !== null} onOpenChange={(open) => !open && close()}>
 				<DialogContent className="max-h-[95vh] overflow-y-auto">

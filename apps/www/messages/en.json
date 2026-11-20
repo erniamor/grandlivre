@@ -384,6 +384,7 @@
 	"receipt_scan_button": "Scan a receipt",
 	"receipt_scan_subtitle": "A photo of a till receipt",
 	"receipt_scan_pending": "Reading the receipt…",
+	"receipt_scan_choose": "Choose an existing image",
 	"receipt_title": "The receipt",
 	"receipt_title_from": "The receipt from {merchant}",
 	"receipt_photo_alt": "Photo of the receipt",
