@@ -6,8 +6,6 @@ import { PlusIcon } from "lucide-react";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
 import { SortByPayeeLink } from "@/features/categorize/SortByPayeeLink";
 import { tagsQueryOptions } from "@/features/tags/tags-query";
-import { useOpenDraft } from "@/features/transactions/note-draft";
-import { QuickEntry } from "@/features/transactions/QuickEntry";
 import { TransactionFilters } from "@/features/transactions/TransactionFilters";
 import { TransactionList } from "@/features/transactions/TransactionList";
 import { TransactionsPagination } from "@/features/transactions/TransactionsPagination";
@@ -27,7 +25,10 @@ interface TransactionsPageProps {
 	onFiltersChange: (filters: TransactionListFilters) => void;
 }
 
-/** The household's transactions the user may see, most recent first. */
+/**
+ * The household's transactions the user may see, most recent first. No quick
+ * entry here: the navigation's "+" opens it from any page.
+ */
 export function TransactionsPage({
 	household,
 	filters,
@@ -41,7 +42,6 @@ export function TransactionsPage({
 		accountsQueryOptions(household.id),
 	);
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions(household.id));
-	const openDraft = useOpenDraft();
 
 	return (
 		<section className="mx-auto grid max-w-2xl gap-6 px-4 py-12">
@@ -62,10 +62,6 @@ export function TransactionsPage({
 				</Link>
 				<SortByPayeeLink householdId={household.id} />
 			</div>
-			<QuickEntry
-				householdId={household.id}
-				onDraft={(draft, photos) => openDraft(draft, { photos })}
-			/>
 			<TransactionFilters
 				filters={filters}
 				accounts={accounts.items}

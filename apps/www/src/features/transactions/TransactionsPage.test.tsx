@@ -145,6 +145,17 @@ describe("TransactionsPage", () => {
 		expect(await screen.findByText("No transaction yet.")).toBeVisible();
 	});
 
+	it("leaves the quick entry to the navigation's +", async () => {
+		setUp();
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Transactions" }),
+		).toBeVisible();
+		expect(
+			screen.queryByRole("region", { name: "Quick entry" }),
+		).not.toBeInTheDocument();
+	});
+
 	describe("filtered on an account", () => {
 		it("asks for the transactions of that account, and says when none matches", async () => {
 			const { transactionsQuery } = setUp({
