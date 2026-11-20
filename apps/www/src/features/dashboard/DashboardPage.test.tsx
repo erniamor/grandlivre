@@ -408,6 +408,24 @@ describe("DashboardPage, the key figures", () => {
 			tile("Saved this month").getByText("Savings rate: 50%"),
 		).toBeVisible();
 	});
+
+	it("reads the balance and the savings first, then the expenses and the incomes", async () => {
+		mockApi(respondWith());
+
+		renderWithRouter(<DashboardPage me={aliceProfile} household={household} />);
+
+		const figures = within(
+			await screen.findByRole("region", { name: "Key figures" }),
+		);
+		expect(
+			figures.getAllByRole("term").map((term) => term.textContent),
+		).toEqual([
+			"Household balance",
+			"Saved this month",
+			"Expenses this month",
+			"Incomes this month",
+		]);
+	});
 });
 
 describe("DashboardPage, the charts", () => {

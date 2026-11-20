@@ -10,6 +10,7 @@ interface KeyFigureTileProps {
 	detail?: ReactNode;
 	/** A link to where it comes from. */
 	link?: ReactNode;
+	className?: string;
 }
 
 /** One of the dashboard's key figures: its name, the figure, a line under it. */
@@ -18,11 +19,16 @@ export function KeyFigureTile({
 	value,
 	detail,
 	link,
+	className,
 }: KeyFigureTileProps) {
 	return (
-		<div className={cn("grid content-start gap-1", cardClass)}>
+		<div
+			className={cn("grid min-w-0 content-start gap-1", cardClass, className)}
+		>
 			<dt className="text-muted-foreground text-sm">{label}</dt>
-			<dd className="font-heading font-semibold text-2xl">{value}</dd>
+			<dd className="break-words font-heading font-semibold text-xl sm:text-2xl">
+				{value}
+			</dd>
 			{detail && <dd className="text-muted-foreground text-sm">{detail}</dd>}
 			{link && <dd className="text-sm">{link}</dd>}
 		</div>

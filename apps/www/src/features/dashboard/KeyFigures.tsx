@@ -22,7 +22,9 @@ interface KeyFiguresProps {
 /**
  * Where the household stands, at a glance: its net balance, and this
  * month's expenses (against last month at the same day), incomes and
- * savings, counted as the reports count them.
+ * savings, counted as the reports count them. Two by two below a wide
+ * screen, the balance and the savings first; across on a wide one, the
+ * savings last.
  */
 export function KeyFigures({ household }: KeyFiguresProps) {
 	const locale = getLocale();
@@ -56,7 +58,7 @@ export function KeyFigures({ household }: KeyFiguresProps) {
 			<h2 id={titleId} className="sr-only">
 				{m.dashboard_figures_title()}
 			</h2>
-			<dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 				<KeyFigureTile
 					label={m.summary_title()}
 					value={<Amount amount={summary.balance} currency={currency} />}
@@ -82,6 +84,18 @@ export function KeyFigures({ household }: KeyFiguresProps) {
 					}
 				/>
 				<KeyFigureTile
+					label={m.dashboard_figure_savings()}
+					className="lg:order-last"
+					value={<Amount amount={figures.savings} currency={currency} />}
+					detail={
+						figures.savingsRate === null
+							? m.dashboard_figure_savings_no_incomes()
+							: m.dashboard_figure_savings_rate({
+									percent: `${figures.savingsRate < 0 ? "-" : ""}${percent(figures.savingsRate)}`,
+								})
+					}
+				/>
+				<KeyFigureTile
 					label={m.dashboard_figure_expenses()}
 					value={<Amount amount={figures.expenses} currency={currency} />}
 					detail={
@@ -103,17 +117,6 @@ export function KeyFigures({ household }: KeyFiguresProps) {
 					detail={m.dashboard_figure_since({
 						date: formatShortDay(periods.current.from, locale),
 					})}
-				/>
-				<KeyFigureTile
-					label={m.dashboard_figure_savings()}
-					value={<Amount amount={figures.savings} currency={currency} />}
-					detail={
-						figures.savingsRate === null
-							? m.dashboard_figure_savings_no_incomes()
-							: m.dashboard_figure_savings_rate({
-									percent: `${figures.savingsRate < 0 ? "-" : ""}${percent(figures.savingsRate)}`,
-								})
-					}
 				/>
 			</dl>
 		</section>
