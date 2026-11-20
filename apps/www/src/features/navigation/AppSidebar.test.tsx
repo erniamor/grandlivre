@@ -24,6 +24,7 @@ describe("AppSidebar", () => {
 			["Accounts", "/accounts"],
 			["Tags", "/tags"],
 			["Import", "/import"],
+			["Settings", "/household"],
 			["Help", "/help"],
 		]);
 	});

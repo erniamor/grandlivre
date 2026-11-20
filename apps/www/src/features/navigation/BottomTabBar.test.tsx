@@ -48,6 +48,7 @@ describe("BottomTabBar", () => {
 			"/tags",
 			"/shared",
 			"/import",
+			"/household",
 			"/help",
 		]);
 		await user.click(within(sheet).getByRole("link", { name: "Accounts" }));

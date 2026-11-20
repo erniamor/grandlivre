@@ -14,7 +14,6 @@ import {
 	CircleHelpIcon,
 	CircleUserRoundIcon,
 	DownloadIcon,
-	HouseIcon,
 	LogOutIcon,
 	UserIcon,
 } from "lucide-react";
@@ -41,7 +40,7 @@ interface UserMenuProps {
 }
 
 /**
- * The signed-in user's menu in the header: profile, household, help,
+ * The signed-in user's menu in the header: profile, help,
  * installing the app, the language and the appearance, sign-out.
  */
 export function UserMenu({
@@ -86,12 +85,6 @@ export function UserMenu({
 						<Link to="/profile">
 							<UserIcon aria-hidden className="size-4" />
 							{m.profile_link()}
-						</Link>
-					</DropdownMenuItem>
-					<DropdownMenuItem asChild>
-						<Link to="/household">
-							<HouseIcon aria-hidden className="size-4" />
-							{m.household_link()}
 						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>

@@ -8,6 +8,7 @@ import {
 	PiggyBankIcon,
 	RepeatIcon,
 	ScaleIcon,
+	SettingsIcon,
 	TagsIcon,
 	WalletIcon,
 } from "lucide-react";
@@ -46,6 +47,7 @@ const allItems = [
 		sharing: true,
 	},
 	{ to: "/import", label: m.nav_import, icon: FileUpIcon, tab: false },
+	{ to: "/household", label: m.nav_settings, icon: SettingsIcon, tab: false },
 	{ to: "/help", label: m.help_link, icon: CircleHelpIcon, tab: false },
 ] as const;
 
