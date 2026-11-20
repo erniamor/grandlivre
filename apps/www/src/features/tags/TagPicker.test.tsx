@@ -167,7 +167,21 @@ describe("TagPicker", () => {
 		expect(onChange).toHaveBeenCalledWith(null);
 	});
 
-	it("opens under its button on a wide screen, the cursor in the search", async () => {
+	it("opens in a panel on a phone without the cursor in the search, so no keyboard covers the list", async () => {
+		const { user } = setUp();
+
+		await user.click(screen.getByRole("button", { name: /^Tag for COSTCO/ }));
+
+		expect(
+			await screen.findByRole("dialog", { name: "Tag for COSTCO" }),
+		).toHaveFocus();
+		const search = screen.getByRole("searchbox", { name: "Search a tag" });
+		expect(search).not.toHaveFocus();
+		await user.tab();
+		expect(search).toHaveFocus();
+	});
+
+	it("opens under its button on a wide screen, without the cursor in the search", async () => {
 		wideScreen();
 		const { user } = setUp();
 
@@ -178,6 +192,9 @@ describe("TagPicker", () => {
 		).toBeVisible();
 		expect(
 			screen.getByRole("searchbox", { name: "Search a tag" }),
+		).not.toHaveFocus();
+		expect(
+			screen.getByRole("dialog", { name: "Tag for COSTCO" }),
 		).toHaveFocus();
 		// No close button: a click outside or Escape closes it
 		expect(screen.queryByRole("button", { name: "Close" })).toBeNull();

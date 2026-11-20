@@ -43,6 +43,17 @@ interface TagPickerProps {
  * tags to choose another (`TagBrowser`): under it on a wide screen, in a
  * panel rising from the bottom on a phone, where the list has room.
  */
+/**
+ * Opens on the panel itself rather than its search: no keyboard rising over
+ * the list on a phone, and the tags read first; Tab still reaches the search.
+ */
+function focusPanel(event: Event) {
+	event.preventDefault();
+	if (event.currentTarget instanceof HTMLElement) {
+		event.currentTarget.focus();
+	}
+}
+
 export function TagPicker({
 	label,
 	tree,
@@ -82,14 +93,13 @@ export function TagPicker({
 			/>
 		</button>
 	);
-	const browser = (autoFocus: boolean) => (
+	const browser = (
 		<TagBrowser
 			tree={tree}
 			value={value}
 			onSelect={choose}
 			noneLabel={noneLabel}
 			extras={extras}
-			autoFocus={autoFocus}
 		/>
 	);
 
@@ -100,9 +110,10 @@ export function TagPicker({
 				<PopoverContent
 					align="start"
 					aria-label={label}
+					onOpenAutoFocus={focusPanel}
 					className="max-h-[min(28rem,var(--radix-popover-content-available-height))] w-80 overflow-y-auto p-2"
 				>
-					{browser(true)}
+					{browser}
 				</PopoverContent>
 			</Popover>
 		);
@@ -114,12 +125,13 @@ export function TagPicker({
 				side="bottom"
 				showCloseButton={false}
 				aria-describedby={undefined}
+				onOpenAutoFocus={focusPanel}
 				className="max-h-[85svh] gap-2 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
 			>
 				<SheetHeader className="pb-0">
 					<SheetTitle>{label}</SheetTitle>
 				</SheetHeader>
-				<div className="min-h-0 overflow-y-auto px-4">{browser(false)}</div>
+				<div className="min-h-0 overflow-y-auto px-4">{browser}</div>
 				<div className="p-4 pt-2">
 					<SheetClose asChild>
 						<Button type="button" variant="outline" className="w-full">

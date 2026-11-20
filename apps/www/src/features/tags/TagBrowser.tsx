@@ -26,8 +26,6 @@ interface TagBrowserProps {
 	noneLabel?: string;
 	/** Offered at the top, after "no tag". */
 	extras?: ExtraTagChoice[];
-	/** Puts the cursor in the search: on a wide screen, not where a keyboard would cover the list. */
-	autoFocus?: boolean;
 }
 
 const rowClass =
@@ -46,7 +44,6 @@ export function TagBrowser({
 	onSelect,
 	noneLabel,
 	extras = [],
-	autoFocus = false,
 }: TagBrowserProps) {
 	const [trail, setTrail] = useState(() => trailTo(tree, value));
 	const [search, setSearch] = useState("");
@@ -76,8 +73,6 @@ export function TagBrowser({
 					placeholder={m.tag_picker_search()}
 					value={search}
 					onChange={(event) => setSearch(event.target.value)}
-					// Asked for where it helps: a wide screen, without a keyboard to open
-					autoFocus={autoFocus}
 					className="pl-8"
 				/>
 			</div>
