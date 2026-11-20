@@ -13,6 +13,10 @@ describe("the filters of the list", () => {
 		tagId: "food",
 		from: "2026-11-01",
 		to: "2026-11-30",
+		q: "café",
+		type: "expense" as const,
+		minAmount: 2_500,
+		maxAmount: 50_000,
 	};
 
 	it("are written in the address, and read back", () => {
@@ -21,6 +25,10 @@ describe("the filters of the list", () => {
 			tag: "food",
 			from: "2026-11-01",
 			to: "2026-11-30",
+			q: "café",
+			type: "expense",
+			min: 2_500,
+			max: 50_000,
 			page: 2,
 		});
 		expect(fromSearch(toSearch(filters))).toEqual(filters);
@@ -30,6 +38,7 @@ describe("the filters of the list", () => {
 		expect(hasFilters({})).toBe(false);
 		expect(hasFilters({ tagId: "food" })).toBe(true);
 		expect(hasFilters({ to: "2026-11-30" })).toBe(true);
+		expect(hasFilters({ minAmount: 0 })).toBe(true);
 	});
 });
 

@@ -1,5 +1,5 @@
 /** Number of decimals of a currency's minor unit: 2 for CAD, 0 for JPY. */
-function minorUnitDigits(currency: string): number {
+export function minorUnitDigits(currency: string): number {
 	return (
 		new Intl.NumberFormat("en", {
 			style: "currency",

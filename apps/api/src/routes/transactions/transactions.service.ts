@@ -41,6 +41,7 @@ import {
 	clearSharing,
 	sharingOf,
 } from "@/routes/sharing/transaction-sharing";
+import { searchCondition } from "@/routes/transactions/transaction-search";
 import type { TransactionsQuery } from "@/routes/transactions/transactions.schemas";
 
 type TransactionRow = InferSelectModel<typeof transactions>;
@@ -224,7 +225,17 @@ async function tagSubtree(
  */
 export async function listTransactions(
 	viewer: Viewer,
-	{ accountId, tagId, type, from, to, ...pagination }: TransactionsQuery,
+	{
+		accountId,
+		tagId,
+		type,
+		from,
+		to,
+		q,
+		minAmount,
+		maxAmount,
+		...pagination
+	}: TransactionsQuery,
 ): Promise<Paginated<Transaction>> {
 	const householdId = viewer.membership.household.id;
 	const access = await accountAccess(db, viewer);
@@ -245,6 +256,9 @@ export async function listTransactions(
 		type && eq(transactions.type, type),
 		from ? gte(transactions.date, from) : undefined,
 		to ? lte(transactions.date, to) : undefined,
+		minAmount === undefined ? undefined : gte(transactions.amount, minAmount),
+		maxAmount === undefined ? undefined : lte(transactions.amount, maxAmount),
+		searchCondition(q),
 	];
 	if (accountId) {
 		// An account the viewer can't see the details of shows nothing

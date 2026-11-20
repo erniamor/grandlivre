@@ -66,6 +66,7 @@ export function TransactionsPage({
 				filters={filters}
 				accounts={accounts.items}
 				tags={tags}
+				currency={household.currency}
 				onChange={onFiltersChange}
 			/>
 			{transactions.items.length === 0 ? (

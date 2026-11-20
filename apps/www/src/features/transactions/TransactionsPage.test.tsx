@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
@@ -259,6 +259,83 @@ describe("TransactionsPage", () => {
 				screen.getByText("Choose a first day that comes before the last."),
 			).toBeVisible();
 			expect(onFiltersChange).not.toHaveBeenCalled();
+		});
+
+		it("search once typing pauses, the words trimmed", async () => {
+			const { user, onFiltersChange } = setUp({
+				filters: { accountId: chequing.id },
+			});
+
+			await user.type(await screen.findByLabelText("Search"), " café ");
+
+			await waitFor(() =>
+				expect(onFiltersChange).toHaveBeenCalledWith({
+					accountId: chequing.id,
+					q: "café",
+				}),
+			);
+			expect(onFiltersChange).toHaveBeenCalledTimes(1);
+		});
+
+		it("ask for the words searched, a type and an amount range", async () => {
+			const { transactionsQuery } = setUp({
+				filters: {
+					q: "shell",
+					type: "expense",
+					minAmount: 2_500,
+					maxAmount: 50_000,
+				},
+			});
+
+			await screen.findByText("Shell");
+			expect(screen.getByLabelText("Search")).toHaveValue("shell");
+			expect(screen.getByRole("button", { name: "Expenses" })).toHaveAttribute(
+				"aria-pressed",
+				"true",
+			);
+			expect(screen.getByText("$25 to $500")).toBeVisible();
+			expect(
+				screen.getByRole("slider", { name: "Maximum amount" }),
+			).toHaveAttribute("aria-valuetext", "$500");
+			expect(transactionsQuery()).toBe(
+				"?q=shell&type=expense&minAmount=2500&maxAmount=50000&page=1&pageSize=50",
+			);
+		});
+
+		it("narrow on a type, or all of them", async () => {
+			const { user, onFiltersChange } = setUp({ filters: { type: "income" } });
+
+			await user.click(
+				await screen.findByRole("button", { name: "Transfers" }),
+			);
+			expect(onFiltersChange).toHaveBeenLastCalledWith({ type: "transfer" });
+			await user.click(screen.getByRole("button", { name: "All" }));
+			expect(onFiltersChange).toHaveBeenLastCalledWith({ type: undefined });
+		});
+
+		it("narrow on an amount range, moved by the keyboard from stop to stop", async () => {
+			const { user, onFiltersChange } = setUp();
+
+			const minimum = await screen.findByRole("slider", {
+				name: "Minimum amount",
+			});
+			expect(screen.getByText("Any amount")).toBeVisible();
+			minimum.focus();
+			await user.keyboard("{ArrowRight}");
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				minAmount: 1_000,
+				maxAmount: undefined,
+			});
+			expect(screen.getByText("$10 and more")).toBeVisible();
+			const maximum = screen.getByRole("slider", { name: "Maximum amount" });
+			expect(maximum).toHaveAttribute("aria-valuetext", "No maximum");
+			// The thumbs stay where they were moved while the list follows
+			maximum.focus();
+			await user.keyboard("{ArrowLeft}");
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				minAmount: 1_000,
+				maxAmount: 500_000,
+			});
 		});
 
 		it("are cleared in one go, once there is one", async () => {

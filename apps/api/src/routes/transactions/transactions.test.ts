@@ -447,6 +447,72 @@ describe("GET /v1/households/:householdId/transactions", () => {
 		expect(await ids(food.id)).toEqual([split.id]);
 	});
 
+	it("searches every word in the payee, the note and a receipt's merchant and items, accents and case aside", async () => {
+		const { alice, h, expense, idsOf } = await setUp();
+		const cafe = await h.created(
+			alice,
+			expense({ payee: "Café Olimpico", date: "2026-11-01" }),
+		);
+		const noted = await h.created(
+			alice,
+			expense({ note: "Croissants for the café", date: "2026-11-02" }),
+		);
+		const receipt = await h.created(
+			alice,
+			expense({
+				date: "2026-11-03",
+				origin: "receipt",
+				receipt: {
+					merchant: "Marché Jean-Talon",
+					items: [{ name: "Pommes Cortland", amount: 4_200 }],
+					subtotal: null,
+					taxes: [],
+					total: 4_200,
+				},
+			}),
+		);
+		const percent = await h.created(
+			alice,
+			expense({ payee: "100% bio", date: "2026-11-04" }),
+		);
+
+		const ids = async (q: string) =>
+			idsOf(await h.list(alice, `?q=${encodeURIComponent(q)}`));
+		expect(await ids("CAFE")).toEqual([noted.id, cafe.id]);
+		expect(await ids("café olimp")).toEqual([cafe.id]);
+		expect(await ids("marche")).toEqual([receipt.id]);
+		expect(await ids("cortland")).toEqual([receipt.id]);
+		expect(await ids("%")).toEqual([percent.id]);
+		expect(await ids("   ")).toHaveLength(4);
+	});
+
+	it("filters by the transaction's total, both bounds included", async () => {
+		const { alice, h, expense, idsOf } = await setUp();
+		const small = await h.created(
+			alice,
+			expense({ date: "2026-11-01", lines: [{ amount: 999 }] }),
+		);
+		const middle = await h.created(
+			alice,
+			expense({
+				date: "2026-11-02",
+				lines: [{ amount: 3_000 }, { amount: 2_000 }],
+			}),
+		);
+		const large = await h.created(
+			alice,
+			expense({ date: "2026-11-03", lines: [{ amount: 50_000 }] }),
+		);
+
+		const ids = async (query: string) => idsOf(await h.list(alice, query));
+		expect(await ids("?minAmount=5000")).toEqual([large.id, middle.id]);
+		expect(await ids("?maxAmount=5000")).toEqual([middle.id, small.id]);
+		expect(await ids("?minAmount=1000&maxAmount=50000")).toEqual([
+			large.id,
+			middle.id,
+		]);
+	});
+
 	it("paginates, with a page size bounded by the server, and rejects invalid filters", async () => {
 		const { alice, h, expense, idsOf } = await setUp();
 		const first = await h.created(alice, expense({ date: "2026-11-01" }));
@@ -460,6 +526,9 @@ describe("GET /v1/households/:householdId/transactions", () => {
 			"?from=yesterday",
 			"?type=refund",
 			"?accountId=chequing",
+			"?minAmount=-1",
+			"?maxAmount=12.5",
+			`?q=${"a".repeat(101)}`,
 		]) {
 			expect((await h.list(alice, query)).status).toBe(422);
 		}

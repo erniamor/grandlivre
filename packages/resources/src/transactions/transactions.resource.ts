@@ -81,6 +81,15 @@ export interface TransactionFilters {
 	from?: string;
 	/** Up to this day, included. */
 	to?: string;
+	/**
+	 * Words each found in the payee, the note, or a receipt's merchant or
+	 * items, accents and case aside.
+	 */
+	q?: string;
+	/** The transaction's total, in minor units: at least this much. */
+	minAmount?: number;
+	/** At most this much. */
+	maxAmount?: number;
 }
 
 /**

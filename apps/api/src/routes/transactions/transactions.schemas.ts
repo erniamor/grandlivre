@@ -15,6 +15,15 @@ export const transactionsQuerySchema = paginationQuerySchema({
 	from: calendarDateSchema.optional(),
 	/** Up to this day, included. */
 	to: calendarDateSchema.optional(),
+	/**
+	 * Words each found in the payee, the note, or a receipt's merchant or
+	 * items, accents and case aside.
+	 */
+	q: z.string().trim().max(100).optional(),
+	/** The total of the transaction, in minor units: at least this much. */
+	minAmount: z.coerce.number().int().min(0).optional(),
+	/** At most this much. */
+	maxAmount: z.coerce.number().int().min(0).optional(),
 });
 
 export type TransactionsQuery = z.infer<typeof transactionsQuerySchema>;

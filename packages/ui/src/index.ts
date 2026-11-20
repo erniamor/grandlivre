@@ -61,6 +61,7 @@ export {
 	SheetTitle,
 	SheetTrigger,
 } from "@repo/ui/components/ui/sheet";
+export { Slider } from "@repo/ui/components/ui/slider";
 export { Toaster } from "@repo/ui/components/ui/sonner";
 export {
 	Tabs,

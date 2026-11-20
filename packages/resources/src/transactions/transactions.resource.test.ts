@@ -76,11 +76,17 @@ describe("transactions", () => {
 			to: "2026-11-30",
 		});
 		await api.transactions.list(HOUSEHOLD_ID, { tagId: TAG_ID });
+		await api.transactions.list(HOUSEHOLD_ID, {
+			q: "café olimpico",
+			minAmount: 0,
+			maxAmount: 50_000,
+		});
 		await api.transactions.list(HOUSEHOLD_ID);
 
 		expect(requests.map((request) => request.url)).toEqual([
 			`${base}?accountId=${ACCOUNT_ID}&type=expense&from=2026-11-01&to=2026-11-30`,
 			`${base}?tagId=${TAG_ID}`,
+			`${base}?q=caf%C3%A9+olimpico&minAmount=0&maxAmount=50000`,
 			base,
 		]);
 	});

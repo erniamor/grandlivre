@@ -1,4 +1,4 @@
-import { calendarDateSchema } from "@repo/schemas";
+import { calendarDateSchema, transactionTypeSchema } from "@repo/schemas";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { accountsQueryOptions } from "@/features/accounts/accounts-query";
@@ -16,6 +16,17 @@ const searchSchema = z.object({
 	tag: z.uuid().optional().catch(undefined),
 	from: calendarDateSchema.optional().catch(undefined),
 	to: calendarDateSchema.optional().catch(undefined),
+	// An empty search is no search
+	q: z
+		.string()
+		.trim()
+		.max(100)
+		.transform((value) => value || undefined)
+		.optional()
+		.catch(undefined),
+	type: transactionTypeSchema.optional().catch(undefined),
+	min: z.number().int().min(0).optional().catch(undefined),
+	max: z.number().int().min(0).optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
 });
 
@@ -29,6 +40,17 @@ export const Route = createFileRoute(
 			throw redirect({
 				to: "/transactions",
 				search: { ...search, from: undefined, to: undefined },
+			});
+		}
+		// Likewise an amount range upside down
+		if (
+			search.min !== undefined &&
+			search.max !== undefined &&
+			search.min > search.max
+		) {
+			throw redirect({
+				to: "/transactions",
+				search: { ...search, min: undefined, max: undefined },
 			});
 		}
 	},

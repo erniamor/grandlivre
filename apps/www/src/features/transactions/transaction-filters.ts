@@ -1,4 +1,4 @@
-import type { Account } from "@repo/schemas";
+import type { Account, TransactionType } from "@repo/schemas";
 
 /** What narrows the list of transactions; every filter is optional. */
 export interface TransactionListFilters {
@@ -9,22 +9,52 @@ export interface TransactionListFilters {
 	from?: string;
 	/** Up to this day, included. */
 	to?: string;
+	/** Words searched in the payee, the note and a receipt's merchant and items. */
+	q?: string;
+	type?: TransactionType;
+	/** The transaction's total, in minor units: at least this much. */
+	minAmount?: number;
+	/** At most this much. */
+	maxAmount?: number;
 }
 
-/** The filters as the page's address writes them: `?account=…&tag=…&from=…&to=…`. */
+/** The filters as the page's address writes them: `?account=…&tag=…&q=…&min=…`. */
 export interface TransactionsSearch {
 	account?: string;
 	tag?: string;
 	from?: string;
 	to?: string;
+	q?: string;
+	type?: TransactionType;
+	min?: number;
+	max?: number;
 	page?: number;
 }
 
 export function toSearch(
-	{ accountId, tagId, from, to }: TransactionListFilters,
+	{
+		accountId,
+		tagId,
+		from,
+		to,
+		q,
+		type,
+		minAmount,
+		maxAmount,
+	}: TransactionListFilters,
 	page?: number,
 ): TransactionsSearch {
-	return { account: accountId, tag: tagId, from, to, page };
+	return {
+		account: accountId,
+		tag: tagId,
+		from,
+		to,
+		q,
+		type,
+		min: minAmount,
+		max: maxAmount,
+		page,
+	};
 }
 
 export function fromSearch({
@@ -32,8 +62,21 @@ export function fromSearch({
 	tag,
 	from,
 	to,
+	q,
+	type,
+	min,
+	max,
 }: TransactionsSearch): TransactionListFilters {
-	return { accountId: account, tagId: tag, from, to };
+	return {
+		accountId: account,
+		tagId: tag,
+		from,
+		to,
+		q,
+		type,
+		minAmount: min,
+		maxAmount: max,
+	};
 }
 
 export function hasFilters(filters: TransactionListFilters): boolean {

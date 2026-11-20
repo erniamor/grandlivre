@@ -134,6 +134,13 @@
 			"when": 1794967245182,
 			"tag": "0018_demo_households",
 			"breakpoints": true
+		},
+		{
+			"idx": 19,
+			"version": "7",
+			"when": 1795151350420,
+			"tag": "0019_unaccent",
+			"breakpoints": true
 		}
 	]
 }
