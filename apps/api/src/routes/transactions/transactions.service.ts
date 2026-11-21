@@ -19,6 +19,8 @@ import {
 	gte,
 	type InferSelectModel,
 	inArray,
+	isNotNull,
+	isNull,
 	lte,
 	or,
 	type SQL,
@@ -145,6 +147,7 @@ function toTransaction(
 			amount: line.amount,
 			tagId: line.tagId,
 		})),
+		undetermined: row.undeterminedAt !== null,
 		createdBy:
 			row.createdBy && creator
 				? { userId: row.createdBy, name: creator.name || creator.email }
@@ -220,6 +223,32 @@ async function tagSubtree(
 }
 
 /**
+ * The expenses and incomes with a line without a tag: still to categorize,
+ * or set aside as undetermined (none of their lines has one then).
+ */
+function untaggedCondition(
+	untagged: "to-define" | "undetermined",
+): SQL | undefined {
+	return and(
+		inArray(transactions.type, ["expense", "income"]),
+		untagged === "undetermined"
+			? isNotNull(transactions.undeterminedAt)
+			: isNull(transactions.undeterminedAt),
+		exists(
+			db
+				.select({ id: transactionLines.id })
+				.from(transactionLines)
+				.where(
+					and(
+						eq(transactionLines.transactionId, transactions.id),
+						isNull(transactionLines.tagId),
+					),
+				),
+		),
+	);
+}
+
+/**
  * The transactions of the household the viewer may see, most recent first:
  * those of the accounts they hold or that show their details.
  */
@@ -234,6 +263,7 @@ export async function listTransactions(
 		q,
 		minAmount,
 		maxAmount,
+		untagged,
 		...pagination
 	}: TransactionsQuery,
 ): Promise<Paginated<Transaction>> {
@@ -259,6 +289,7 @@ export async function listTransactions(
 		minAmount === undefined ? undefined : gte(transactions.amount, minAmount),
 		maxAmount === undefined ? undefined : lte(transactions.amount, maxAmount),
 		searchCondition(q),
+		untagged && untaggedCondition(untagged),
 	];
 	if (accountId) {
 		// An account the viewer can't see the details of shows nothing
@@ -586,6 +617,28 @@ async function reshare(
 	}
 }
 
+/**
+ * When the transaction is set aside as undetermined, once changed: only an
+ * expense or an income none of whose lines has a tag can be, and a tag on
+ * a line clears it. `undetermined` missing keeps what it was.
+ */
+function undeterminedAtOf(
+	input: UpdateTransaction,
+	previous: Date | null,
+): Date | null {
+	if (input.type === "transfer") {
+		return null;
+	}
+	if (input.lines.some((line) => line.tagId)) {
+		if (input.undetermined) {
+			throw invalid("undetermined", "transaction_undetermined_tagged");
+		}
+		return null;
+	}
+	const undetermined = input.undetermined ?? previous !== null;
+	return undetermined ? (previous ?? new Date()) : null;
+}
+
 /** Replaces a transaction with the one sent; where it comes from is kept. */
 export async function updateTransaction(
 	viewer: Viewer,
@@ -599,7 +652,10 @@ export async function updateTransaction(
 		const { lines, ...values } = await toValues(tx, viewer, access, input);
 		const [row] = await tx
 			.update(transactions)
-			.set(values)
+			.set({
+				...values,
+				undeterminedAt: undeterminedAtOf(input, previous.undeterminedAt),
+			})
 			.where(eq(transactions.id, transactionId))
 			.returning();
 		if (!row) {

@@ -15,6 +15,11 @@ export const REPORT_MAX_MONTHS = 60;
 export const tagTotalSchema = z.object({
 	/** Null for the uncategorized lines. */
 	tagId: z.uuid().nullable(),
+	/**
+	 * The uncategorized lines of the transactions set aside as undetermined,
+	 * apart from those still to categorize. Always false for a tag.
+	 */
+	undetermined: z.boolean(),
 	expense: z.number().int(),
 	income: z.number().int(),
 });
@@ -29,7 +34,8 @@ export const tagReportSchema = z.object({
 	to: z.iso.date(),
 	/**
 	 * The tags that had a line in the period, each once, and the
-	 * uncategorized lines if any. The amounts are each tag's own: the tags
+	 * uncategorized lines if any: those to categorize and those undetermined
+	 * apart. The amounts are each tag's own: the tags
 	 * under it aren't included.
 	 */
 	tags: z.array(tagTotalSchema),

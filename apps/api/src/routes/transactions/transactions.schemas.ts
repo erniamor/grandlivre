@@ -24,11 +24,21 @@ export const transactionsQuerySchema = paginationQuerySchema({
 	minAmount: z.coerce.number().int().min(0).optional(),
 	/** At most this much. */
 	maxAmount: z.coerce.number().int().min(0).optional(),
+	/**
+	 * The expenses and incomes with a line without a tag: still to
+	 * categorize, or set aside as undetermined.
+	 */
+	untagged: z.enum(["to-define", "undetermined"]).optional(),
 });
 
 export type TransactionsQuery = z.infer<typeof transactionsQuerySchema>;
 
 export const transactionParamSchema = z.object({ transactionId: z.uuid() });
+
+/** Counts the expenses and incomes without a tag before a day, excluded. */
+export const uncategorizedCountQuerySchema = z.object({
+	before: calendarDateSchema,
+});
 
 /** The payees without a tag: a family's fit in a few pages. */
 export const uncategorizedQuerySchema = paginationQuerySchema({

@@ -3,6 +3,7 @@ import {
 	createDraftSchema,
 	createTransactionSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
+	setAsideUndeterminedSchema,
 	suggestPayeeTagsSchema,
 	updateTransactionSchema,
 	VOICE_AUDIO_MAX_BYTES,
@@ -25,12 +26,15 @@ import {
 import { transcribeNote } from "@/routes/drafts/voice.service";
 import {
 	categorizePayee,
+	countUncategorizedBefore,
 	listUncategorizedPayees,
+	setAsideUndetermined,
 	suggestPayeeTags,
 } from "@/routes/transactions/categorize.service";
 import {
 	transactionParamSchema,
 	transactionsQuerySchema,
+	uncategorizedCountQuerySchema,
 	uncategorizedQuerySchema,
 } from "@/routes/transactions/transactions.schemas";
 import {
@@ -116,6 +120,25 @@ export const transactionRoutes = new Hono<Env>()
 		validate("query", uncategorizedQuerySchema),
 		async (c) =>
 			c.json(await listUncategorizedPayees(viewerOf(c), c.req.valid("query"))),
+	)
+	// How many of them are dated before a day: what setting them aside takes
+	.get(
+		"/uncategorized/count",
+		validate("query", uncategorizedCountQuerySchema),
+		async (c) =>
+			c.json(
+				await countUncategorizedBefore(
+					viewerOf(c),
+					c.req.valid("query").before,
+				),
+			),
+	)
+	// Some of them set aside as undetermined: a payee's, or those before a day
+	.post(
+		"/uncategorized/set-aside",
+		validate("json", setAsideUndeterminedSchema),
+		async (c) =>
+			c.json(await setAsideUndetermined(viewerOf(c), c.req.valid("json"))),
 	)
 	// The assistant's tag for payees without one, to review: nothing applied
 	.post(

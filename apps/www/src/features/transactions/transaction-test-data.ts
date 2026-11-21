@@ -88,6 +88,7 @@ function transaction(n: number, fields: Partial<Transaction>): Transaction {
 		note: null,
 		origin: "manual",
 		receipt: null,
+		undetermined: false,
 		lines: [],
 		createdBy: { userId: aliceProfile.id, name: "Alice" },
 		createdAt: NOW,

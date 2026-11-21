@@ -122,13 +122,24 @@ const transferInputSchema = z.strictObject({
 });
 
 /**
+ * Whether an expense or an income none of whose lines has a tag is set
+ * aside as undetermined: it can't be told for now, and leaves the ones to
+ * categorize. Missing keeps what it was; a tag on a line clears it.
+ */
+const undeterminedFields = { undetermined: z.boolean().optional() };
+
+/**
  * What a transaction is made of, and what changing one sends: the whole
  * transaction, which replaces the previous one.
  */
 export const updateTransactionSchema = z
 	.discriminatedUnion(
 		"type",
-		[expenseInputSchema, incomeInputSchema, transferInputSchema],
+		[
+			expenseInputSchema.extend(undeterminedFields),
+			incomeInputSchema.extend(undeterminedFields),
+			transferInputSchema,
+		],
 		"transaction_type_invalid",
 	)
 	.refine(
@@ -218,6 +229,11 @@ export const transactionSchema = z.object({
 	origin: transactionOriginSchema,
 	/** In the order they were entered; empty for a transfer. */
 	lines: z.array(transactionLineSchema),
+	/**
+	 * Set aside as undetermined: none of its lines has a tag, and it can't be
+	 * told for now. Always false for a transfer.
+	 */
+	undetermined: z.boolean(),
 	/** What its receipt said, when it was recorded from one. */
 	receipt: receiptSchema.nullable(),
 	/** How it is shared among members; missing when it isn't. */

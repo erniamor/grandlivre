@@ -377,10 +377,27 @@ describe("DashboardPage, the key figures", () => {
 						to: url.searchParams.get("to"),
 						tags: thisMonth
 							? [
-									{ tagId: food.id, expense: 3_210_00, income: 0 },
-									{ tagId: null, expense: 0, income: 6_400_00 },
+									{
+										tagId: food.id,
+										undetermined: false,
+										expense: 3_210_00,
+										income: 0,
+									},
+									{
+										tagId: null,
+										undetermined: false,
+										expense: 0,
+										income: 6_400_00,
+									},
 								]
-							: [{ tagId: food.id, expense: 2_972_22, income: 0 }],
+							: [
+									{
+										tagId: food.id,
+										undetermined: false,
+										expense: 2_972_22,
+										income: 0,
+									},
+								],
 					},
 				};
 			}
@@ -439,9 +456,19 @@ describe("DashboardPage, the charts", () => {
 						from: url.searchParams.get("from"),
 						to: url.searchParams.get("to"),
 						tags: [
-							{ tagId: food.id, expense: 300_00, income: 0 },
-							{ tagId: gas.id, expense: 100_00, income: 0 },
-							{ tagId: null, expense: 100_00, income: 0 },
+							{
+								tagId: food.id,
+								undetermined: false,
+								expense: 300_00,
+								income: 0,
+							},
+							{
+								tagId: gas.id,
+								undetermined: false,
+								expense: 100_00,
+								income: 0,
+							},
+							{ tagId: null, undetermined: false, expense: 100_00, income: 0 },
 						],
 					},
 				};
@@ -455,7 +482,14 @@ describe("DashboardPage, the charts", () => {
 								month: "2026-11",
 								expense: 500_00,
 								income: 0,
-								tags: [{ tagId: food.id, expense: 500_00, income: 0 }],
+								tags: [
+									{
+										tagId: food.id,
+										undetermined: false,
+										expense: 500_00,
+										income: 0,
+									},
+								],
 							},
 						],
 					},

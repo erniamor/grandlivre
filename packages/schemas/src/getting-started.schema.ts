@@ -100,6 +100,38 @@ export const categorizeResultSchema = z.object({
 
 export type CategorizeResult = z.infer<typeof categorizeResultSchema>;
 
+/**
+ * Expenses and incomes without a tag set aside as undetermined, on the
+ * member's accounts: those of a payee, or all those before a day. Not a
+ * tag: it teaches the categorizing nothing, and the payee's next ones are
+ * to categorize as usual.
+ */
+export const setAsideUndeterminedSchema = z.discriminatedUnion(
+	"by",
+	[
+		z.strictObject({
+			by: z.literal("payee"),
+			key: z.string().min(1, "payee_key_invalid").max(200, "payee_key_invalid"),
+			type: categorizableTypeSchema,
+		}),
+		z.strictObject({
+			by: z.literal("before"),
+			/** Those dated before this day, excluded. */
+			date: calendarDateSchema,
+		}),
+	],
+	"undetermined_scope_invalid",
+);
+
+export type SetAsideUndetermined = z.infer<typeof setAsideUndeterminedSchema>;
+
+/** How many expenses and incomes without a tag a member left before a day. */
+export const uncategorizedCountSchema = z.object({
+	count: z.number().int(),
+});
+
+export type UncategorizedCount = z.infer<typeof uncategorizedCountSchema>;
+
 /** The most payees the assistant suggests tags for at once: a page of them. */
 export const TAG_SUGGESTION_MAX_PAYEES = 50;
 

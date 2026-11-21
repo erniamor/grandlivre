@@ -143,6 +143,52 @@ describe("GET /v1/households/:householdId/reports/tags", () => {
 		});
 	});
 
+	it("keeps the uncategorized lines set aside as undetermined apart from those to categorize", async () => {
+		const { alice, chequing, h, report } = await setUp();
+		const repair = await h.created(alice, {
+			type: "expense",
+			accountId: chequing.id,
+			date: "2026-11-10",
+			lines: [{ amount: 8000 }],
+		});
+		await h.replace(alice, repair.id, {
+			type: "expense",
+			accountId: chequing.id,
+			date: "2026-11-10",
+			lines: [{ amount: 8000 }],
+			undetermined: true,
+		});
+
+		const uncategorized = (result: { tags: TagTotal[] }) =>
+			result.tags
+				.filter((each) => each.tagId === null)
+				.sort((a, b) => Number(a.undetermined) - Number(b.undetermined));
+		const expected = [
+			// Costco's uncategorized share, the salary
+			{ tagId: null, undetermined: false, expense: 1500, income: 250_000 },
+			{ tagId: null, undetermined: true, expense: 8000, income: 0 },
+		];
+		expect(
+			uncategorized(
+				await json<TagReport>(
+					await report(alice, "tags", "from=2026-11-01&to=2026-11-30"),
+				),
+			),
+		).toEqual(expected);
+		const monthly = await json<MonthlyReport>(
+			await report(alice, "monthly", "from=2026-11-01&to=2026-11-30"),
+		);
+		expect(uncategorized({ tags: monthly.months[0]?.tags ?? [] })).toEqual(
+			expected,
+		);
+		// A tag's lines are never undetermined
+		expect(
+			monthly.months[0]?.tags.filter(
+				(each) => each.tagId !== null && each.undetermined,
+			),
+		).toEqual([]);
+	});
+
 	it("keeps to each tag's own lines: those of the tags under it aren't added", async () => {
 		const { alice, car, report } = await setUp();
 

@@ -34,6 +34,7 @@ function report(totals: [string | null, number, number][]): TagReport {
 		to: "2026-11-30",
 		tags: totals.map(([tagId, expense, income]) => ({
 			tagId,
+			undetermined: false,
 			expense,
 			income,
 		})),
@@ -229,10 +230,15 @@ describe("monthTotals", () => {
 		expense: 46_500,
 		income: 253_000,
 		tags: [
-			{ tagId: "groceries", expense: 40_000, income: 3000 },
-			{ tagId: "restaurant", expense: 5000, income: 0 },
-			{ tagId: "salary", expense: 0, income: 250_000 },
-			{ tagId: null, expense: 1500, income: 0 },
+			{
+				tagId: "groceries",
+				undetermined: false,
+				expense: 40_000,
+				income: 3000,
+			},
+			{ tagId: "restaurant", undetermined: false, expense: 5000, income: 0 },
+			{ tagId: "salary", undetermined: false, expense: 0, income: 250_000 },
+			{ tagId: null, undetermined: false, expense: 1500, income: 0 },
 		],
 	};
 

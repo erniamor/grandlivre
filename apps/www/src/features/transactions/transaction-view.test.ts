@@ -22,6 +22,7 @@ function transaction(fields: Partial<Transaction> = {}): Transaction {
 		note: null,
 		origin: "manual",
 		receipt: null,
+		undetermined: false,
 		lines: [],
 		createdBy: null,
 		createdAt: NOW,

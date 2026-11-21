@@ -93,6 +93,10 @@ const incomeSum =
 		Number,
 	);
 
+// Whether a line's transaction is set aside as undetermined: only an
+// uncategorized line's can be. Raw SQL: a condition as a column.
+const undeterminedLine = sql<boolean>`${transactions.undeterminedAt} is not null`;
+
 /** What each tag gathered over the period, expenses and incomes apart. */
 export async function tagReport(
 	viewer: Viewer,
@@ -104,6 +108,7 @@ export async function tagReport(
 	const rows = await db
 		.select({
 			tagId: transactionLines.tagId,
+			undetermined: undeterminedLine,
 			expense: expenseSum,
 			income: incomeSum,
 		})
@@ -113,7 +118,7 @@ export async function tagReport(
 			eq(transactions.id, transactionLines.transactionId),
 		)
 		.where(linesOfPeriod(viewer.membership.household.id, query))
-		.groupBy(transactionLines.tagId);
+		.groupBy(transactionLines.tagId, undeterminedLine);
 	return { from: query.from, to: query.to, tags: rows };
 }
 
@@ -175,6 +180,7 @@ export async function monthlyReport(
 		.select({
 			month,
 			tagId: transactionLines.tagId,
+			undetermined: undeterminedLine,
 			expense: expenseSum,
 			income: incomeSum,
 		})
@@ -194,9 +200,9 @@ export async function monthlyReport(
 					: undefined,
 			),
 		)
-		.groupBy(month, transactionLines.tagId);
+		.groupBy(month, transactionLines.tagId, undeterminedLine);
 	const byMonth = new Map<string, MonthTotal>();
-	for (const { month: key, tagId, expense, income } of rows) {
+	for (const { month: key, tagId, undetermined, expense, income } of rows) {
 		const total = byMonth.get(key) ?? {
 			month: key,
 			expense: 0,
@@ -205,7 +211,7 @@ export async function monthlyReport(
 		};
 		total.expense += expense;
 		total.income += income;
-		total.tags.push({ tagId, expense, income });
+		total.tags.push({ tagId, undetermined, expense, income });
 		byMonth.set(key, total);
 	}
 	return {

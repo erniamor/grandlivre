@@ -154,6 +154,7 @@ describe("formStateOf", () => {
 		note: null,
 		origin: "manual",
 		receipt: null,
+		undetermined: false,
 		lines: [
 			{ id: "a", amount: 12_000, tagId: "food" },
 			{ id: "b", amount: 6000, tagId: null },

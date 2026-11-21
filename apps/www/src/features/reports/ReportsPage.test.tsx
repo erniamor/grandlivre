@@ -58,11 +58,11 @@ const november = monthPeriod(2026, 11);
 const novemberReport: TagReport = {
 	...november,
 	tags: [
-		{ tagId: groceries.id, expense: 40_000, income: 3000 },
-		{ tagId: restaurant.id, expense: 12_000, income: 0 },
-		{ tagId: car.id, expense: 5000, income: 0 },
-		{ tagId: salary.id, expense: 0, income: 250_000 },
-		{ tagId: null, expense: 1500, income: 10_000 },
+		{ tagId: groceries.id, undetermined: false, expense: 40_000, income: 3000 },
+		{ tagId: restaurant.id, undetermined: false, expense: 12_000, income: 0 },
+		{ tagId: car.id, undetermined: false, expense: 5000, income: 0 },
+		{ tagId: salary.id, undetermined: false, expense: 0, income: 250_000 },
+		{ tagId: null, undetermined: false, expense: 1500, income: 10_000 },
 	],
 };
 
@@ -74,7 +74,9 @@ const months: MonthlyReport = {
 	months: Array.from({ length: 12 }, (_, index) => {
 		const month = `${index === 0 ? 2025 : 2026}-${String(index === 0 ? 12 : index).padStart(2, "0")}`;
 		if (month === "2026-10") {
-			const tags = [{ tagId: car.id, expense: 20_000, income: 0 }];
+			const tags = [
+				{ tagId: car.id, undetermined: false, expense: 20_000, income: 0 },
+			];
 			return { month, expense: 20_000, income: 0, tags };
 		}
 		if (month === "2026-11") {
@@ -250,7 +252,7 @@ describe("ReportsPage", () => {
 	it("says when a section has nothing", async () => {
 		setUp({
 			...novemberReport,
-			tags: [{ tagId: car.id, expense: 5000, income: 0 }],
+			tags: [{ tagId: car.id, undetermined: false, expense: 5000, income: 0 }],
 		});
 
 		expect(

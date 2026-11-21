@@ -186,6 +186,7 @@ describe("recurringStateOfTransaction", () => {
 		note: null,
 		origin: "manual",
 		receipt: null,
+		undetermined: false,
 		lines: [{ id: "l", amount: 9_000, tagId: "home" }],
 		createdBy: null,
 		createdAt: "2026-11-02T12:00:00.000Z",

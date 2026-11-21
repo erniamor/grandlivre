@@ -3,10 +3,21 @@ import type {
 	CategorizeResult,
 	Paginated,
 	PayeeTagSuggestions,
+	SetAsideUndetermined,
 	SuggestPayeeTags,
+	UncategorizedCount,
 	UncategorizedPayee,
 } from "@repo/schemas";
-import { and, eq, exists, inArray, isNotNull, not, sql } from "drizzle-orm";
+import {
+	and,
+	eq,
+	exists,
+	inArray,
+	isNotNull,
+	isNull,
+	not,
+	sql,
+} from "drizzle-orm";
 import { db, type Transaction as Tx } from "@/db/client";
 import { tags, transactionLines, transactions } from "@/db/schema";
 import { assistant } from "@/lib/assistant";
@@ -41,7 +52,8 @@ interface Uncategorized {
 
 /**
  * The expenses and incomes without a tag the member may categorize: on an
- * account they hold, still open, none of their lines tagged.
+ * account they hold, still open, none of their lines tagged, not set aside
+ * as undetermined.
  */
 async function uncategorized(
 	database: typeof db | Tx,
@@ -68,6 +80,7 @@ async function uncategorized(
 				eq(transactions.householdId, viewer.membership.household.id),
 				inArray(transactions.accountId, held),
 				inArray(transactions.type, ["expense", "income"]),
+				isNull(transactions.undeterminedAt),
 				not(
 					exists(
 						database
@@ -278,6 +291,49 @@ export async function categorizePayee(
 				.update(transactionLines)
 				.set({ tagId })
 				.where(inArray(transactionLines.transactionId, ids));
+			await publishHouseholdEvent(tx, householdId, "transactions");
+		}
+		return { count: ids.length };
+	});
+}
+
+/**
+ * How many expenses and incomes the member may categorize are left without
+ * a tag before a day, excluded: what setting them aside would take.
+ */
+export async function countUncategorizedBefore(
+	viewer: Viewer,
+	before: string,
+): Promise<UncategorizedCount> {
+	// Days as YYYY-MM-DD: their text sorts as the days do
+	const rows = await uncategorized(db, viewer);
+	return { count: rows.filter((row) => row.date < before).length };
+}
+
+/**
+ * Sets aside as undetermined the expenses (or incomes) without a tag of a
+ * payee, or all those before a day, on the member's accounts. Not a tag:
+ * nothing learns from them, and the payee's next ones are to categorize.
+ */
+export async function setAsideUndetermined(
+	viewer: Viewer,
+	input: SetAsideUndetermined,
+): Promise<CategorizeResult> {
+	const householdId = viewer.membership.household.id;
+	return db.transaction(async (tx) => {
+		const ids = (await uncategorized(tx, viewer))
+			.filter((row) =>
+				input.by === "payee"
+					? row.type === input.type &&
+						descriptionKey(row.payee ?? "") === input.key
+					: row.date < input.date,
+			)
+			.map((row) => row.id);
+		if (ids.length > 0) {
+			await tx
+				.update(transactions)
+				.set({ undeterminedAt: new Date() })
+				.where(inArray(transactions.id, ids));
 			await publishHouseholdEvent(tx, householdId, "transactions");
 		}
 		return { count: ids.length };
