@@ -61,4 +61,25 @@ describe("HelpPage", () => {
 			faq.getByText("Aucune question ne correspond : essayez d'autres mots."),
 		).toBeVisible();
 	});
+
+	it("explains how to set aside a transaction that can't be told", async () => {
+		setTestLocale("fr");
+		renderWithRouter(<HelpPage />);
+		const user = userEvent.setup();
+		const faq = within(
+			await screen.findByRole("region", { name: "Questions fréquentes" }),
+		);
+
+		await user.type(
+			faq.getByRole("searchbox", { name: "Chercher dans les questions" }),
+			"indetermin",
+		);
+
+		expect(faq.getByText("Questions : 1")).toBeVisible();
+		expect(
+			faq.getByText(
+				"Je ne sais plus à quoi correspond une transaction : comment ne plus l'avoir à classer ?",
+			),
+		).toBeVisible();
+	});
 });

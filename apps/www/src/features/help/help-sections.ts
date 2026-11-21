@@ -75,7 +75,11 @@ export const helpSections: HelpSection[] = [
 	{
 		id: "sorting",
 		title: m.help_section_sorting_title,
-		paragraphs: [m.help_section_sorting_p1, m.help_section_sorting_p2],
+		paragraphs: [
+			m.help_section_sorting_p1,
+			m.help_section_sorting_p2,
+			m.help_section_sorting_p3,
+		],
 	},
 	{
 		id: "recurring",
