@@ -1,0 +1,1 @@
+ALTER TABLE "transactions" ADD COLUMN "undetermined_at" timestamp with time zone;

@@ -14,6 +14,7 @@ import {
 	jsonb,
 	pgTable,
 	text,
+	timestamp,
 	unique,
 	uuid,
 } from "drizzle-orm/pg-core";
@@ -55,6 +56,11 @@ export const transactions = pgTable(
 		shareSplit: jsonb().$type<ShareSplit>(),
 		// Who paid it (or received it), when shared: its account's holder then
 		sharePaidBy: uuid().references(() => users.id, { onDelete: "set null" }),
+		// When a holder set it aside as undetermined: an expense or an income
+		// none of whose lines has a tag, that can't be told for now. Not a tag:
+		// it teaches the categorizing nothing, and tagging a line clears it (the
+		// service keeps it so, the rule spanning the lines' table).
+		undeterminedAt: timestamp({ withTimezone: true }),
 		// Who recorded it; kept when they leave the household
 		createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
 		createdAt: createdAt(),
