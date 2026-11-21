@@ -20,6 +20,7 @@ The steps of Grand Livre, in the order they are built. A step is ticked once mer
 - [ ] The household's button moved into the side bar on a desktop and into the "+" menu on a phone, and perhaps renamed to something more fitting ("Settings" or another name).
 - [ ] The quick entry block taken off the transactions page, where the "+" now does its job.
 - [ ] More filters on the transactions page: a global search (payee, description and the other fields worth searching), a range slider on the amount, and the type (income, expense, transfer) to tell money coming in and going out apart from transfers between accounts.
+- [ ] Undetermined transactions: an expense or an income that can't be categorized for now set aside, out of those to sort, without a tag nor teaching anything; a payee's at once or everything before a day from the sorting page, one from its form; apart in the reports, the dashboard and a filter of the transactions.
 - [ ] Notifications from the installed app (PWA).
 
 ## Postponed
