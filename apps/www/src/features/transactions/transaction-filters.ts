@@ -1,5 +1,13 @@
 import type { Account, TransactionType } from "@repo/schemas";
 
+/**
+ * The expenses and incomes with a line without a tag: still to categorize,
+ * or set aside as undetermined.
+ */
+export type Untagged = "to-define" | "undetermined";
+
+export const UNTAGGED_VALUES = ["to-define", "undetermined"] as const;
+
 /** What narrows the list of transactions; every filter is optional. */
 export interface TransactionListFilters {
 	accountId?: string;
@@ -16,6 +24,7 @@ export interface TransactionListFilters {
 	minAmount?: number;
 	/** At most this much. */
 	maxAmount?: number;
+	untagged?: Untagged;
 }
 
 /** The filters as the page's address writes them: `?account=…&tag=…&q=…&min=…`. */
@@ -28,6 +37,7 @@ export interface TransactionsSearch {
 	type?: TransactionType;
 	min?: number;
 	max?: number;
+	untagged?: Untagged;
 	page?: number;
 }
 
@@ -41,6 +51,7 @@ export function toSearch(
 		type,
 		minAmount,
 		maxAmount,
+		untagged,
 	}: TransactionListFilters,
 	page?: number,
 ): TransactionsSearch {
@@ -53,6 +64,7 @@ export function toSearch(
 		type,
 		min: minAmount,
 		max: maxAmount,
+		untagged,
 		page,
 	};
 }
@@ -66,6 +78,7 @@ export function fromSearch({
 	type,
 	min,
 	max,
+	untagged,
 }: TransactionsSearch): TransactionListFilters {
 	return {
 		accountId: account,
@@ -76,6 +89,7 @@ export function fromSearch({
 		type,
 		minAmount: min,
 		maxAmount: max,
+		untagged,
 	};
 }
 

@@ -30,7 +30,11 @@ export function ReportNodeItem({
 		/>
 	);
 	const link = (
-		<TagTransactionsLink tagId={node.tag.id} name={node.name} period={period} />
+		<TagTransactionsLink
+			filter={{ tag: node.tag.id }}
+			name={node.name}
+			period={period}
+		/>
 	);
 
 	if (node.children.length === 0) {

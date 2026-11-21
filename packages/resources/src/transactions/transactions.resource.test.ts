@@ -29,6 +29,7 @@ const transaction = {
 	note: null,
 	origin: "manual",
 	receipt: null,
+	undetermined: false,
 	lines: [
 		{ id: "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f", amount: 7200, tagId: TAG_ID },
 	],
@@ -81,12 +82,14 @@ describe("transactions", () => {
 			minAmount: 0,
 			maxAmount: 50_000,
 		});
+		await api.transactions.list(HOUSEHOLD_ID, { untagged: "undetermined" });
 		await api.transactions.list(HOUSEHOLD_ID);
 
 		expect(requests.map((request) => request.url)).toEqual([
 			`${base}?accountId=${ACCOUNT_ID}&type=expense&from=2026-11-01&to=2026-11-30`,
 			`${base}?tagId=${TAG_ID}`,
 			`${base}?q=caf%C3%A9+olimpico&minAmount=0&maxAmount=50000`,
+			`${base}?untagged=undetermined`,
 			base,
 		]);
 	});

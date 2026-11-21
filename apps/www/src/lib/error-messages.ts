@@ -34,6 +34,7 @@ const messagesByCode: Record<string, () => string> = {
 	transaction_account_required: m.error_transaction_account_required,
 	transaction_account_invalid: m.error_transaction_account_invalid,
 	transaction_tag_invalid: m.error_transaction_tag_invalid,
+	transaction_undetermined_tagged: m.error_transaction_undetermined_tagged,
 	transaction_lines_required: m.error_transaction_lines_required,
 	transaction_lines_too_many: m.error_transaction_lines_too_many,
 	transaction_payee_too_long: m.error_transaction_payee_too_long,

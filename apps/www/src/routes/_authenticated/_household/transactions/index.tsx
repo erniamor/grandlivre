@@ -7,6 +7,7 @@ import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import {
 	fromSearch,
 	toSearch,
+	UNTAGGED_VALUES,
 } from "@/features/transactions/transaction-filters";
 import { transactionsQueryOptions } from "@/features/transactions/transactions-query";
 
@@ -27,6 +28,7 @@ const searchSchema = z.object({
 	type: transactionTypeSchema.optional().catch(undefined),
 	min: z.number().int().min(0).optional().catch(undefined),
 	max: z.number().int().min(0).optional().catch(undefined),
+	untagged: z.enum(UNTAGGED_VALUES).optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
 });
 

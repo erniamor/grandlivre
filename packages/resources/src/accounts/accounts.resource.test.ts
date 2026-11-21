@@ -209,6 +209,7 @@ describe("accounts", () => {
 			note: null,
 			origin: "adjustment",
 			receipt: null,
+			undetermined: false,
 			lines: [{ id: ACCOUNT_ID, amount: 12_000, tagId: null }],
 			createdBy: null,
 			createdAt: "2026-11-15T12:00:00.000Z",

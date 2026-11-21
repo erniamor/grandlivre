@@ -222,6 +222,16 @@ export function formStateOfDraft(
 	};
 }
 
+/**
+ * Whether the transaction can be set aside as undetermined: an expense or
+ * an income none of whose lines has a tag.
+ */
+export function canBeUndetermined(state: TransactionFormState): boolean {
+	return (
+		state.type !== "transfer" && state.lines.every((line) => line.tagId === "")
+	);
+}
+
 /** Whether some line of the form is on the proposed tag. */
 export function usesProposedTag(state: TransactionFormState): boolean {
 	return (

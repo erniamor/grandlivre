@@ -5,6 +5,7 @@ import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import type { TransactionListFilters } from "@/features/transactions/transaction-filters";
 import {
 	base,
+	cashExpense,
 	chequing,
 	fillUp,
 	food,
@@ -129,6 +130,16 @@ describe("TransactionsPage", () => {
 
 		expect(october.getByText("Expense")).toBeVisible();
 		expect(october.getByText("Uncategorized · Everyday")).toBeVisible();
+	});
+
+	it("names the lines of a transaction set aside as undetermined", async () => {
+		setUp({
+			respond: respondWith([{ ...cashExpense, undetermined: true }]),
+		});
+
+		const october = within(await day("Saturday, October 31, 2026"));
+
+		expect(october.getByText("Undetermined · Everyday")).toBeVisible();
 	});
 
 	it("names an adjustment, which has no payee", async () => {
@@ -311,6 +322,23 @@ describe("TransactionsPage", () => {
 			expect(onFiltersChange).toHaveBeenLastCalledWith({ type: "transfer" });
 			await user.click(screen.getByRole("button", { name: "All" }));
 			expect(onFiltersChange).toHaveBeenLastCalledWith({ type: undefined });
+		});
+
+		it("narrow on the transactions without a tag, to categorize or undetermined", async () => {
+			const { user, onFiltersChange } = setUp({
+				filters: { untagged: "to-define" },
+			});
+
+			await user.click(
+				await screen.findByRole("button", { name: "Undetermined" }),
+			);
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				untagged: "undetermined",
+			});
+			await user.click(screen.getByRole("button", { name: "Any" }));
+			expect(onFiltersChange).toHaveBeenLastCalledWith({
+				untagged: undefined,
+			});
 		});
 
 		it("narrow on an amount range, moved by the keyboard from stop to stop", async () => {

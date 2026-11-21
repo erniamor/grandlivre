@@ -11,7 +11,9 @@ import {
 	paginatedSchema,
 	payeeTagSuggestionsSchema,
 	RECEIPT_PHOTO_MAX_BYTES,
+	type SetAsideUndetermined,
 	type SuggestPayeeTags,
+	setAsideUndeterminedSchema,
 	suggestPayeeTagsSchema,
 	type Transaction,
 	type TransactionDraft,
@@ -20,8 +22,10 @@ import {
 	transactionDraftSchema,
 	transactionSchema,
 	transcriptionSchema,
+	type UncategorizedCount,
 	type UncategorizedPayee,
 	type UpdateTransaction,
+	uncategorizedCountSchema,
 	uncategorizedPayeeSchema,
 	updateTransactionSchema,
 	VOICE_AUDIO_MAX_BYTES,
@@ -90,6 +94,11 @@ export interface TransactionFilters {
 	minAmount?: number;
 	/** At most this much. */
 	maxAmount?: number;
+	/**
+	 * The expenses and incomes with a line without a tag: still to
+	 * categorize ("to-define"), or set aside as undetermined.
+	 */
+	untagged?: "to-define" | "undetermined";
 }
 
 /**
@@ -258,6 +267,43 @@ export function createTransactionsResource(client: ApiClient) {
 				method: "POST",
 				path: `${transactionsPath(householdId)}/categorize`,
 				body: parseInput(categorizePayeeSchema, input),
+				response: categorizeResultSchema,
+			});
+		},
+
+		/**
+		 * How many of the user's expenses and incomes without a tag are dated
+		 * before a day ("2026-01-01", excluded): what setting them aside takes.
+		 */
+		async countUncategorized(
+			householdId: string,
+			{ before, signal }: { before: string; signal?: AbortSignal },
+		): Promise<UncategorizedCount> {
+			return client.request({
+				path: withQuery(
+					`${transactionsPath(householdId)}/uncategorized/count`,
+					{
+						before,
+					},
+				),
+				response: uncategorizedCountSchema,
+				signal,
+			});
+		},
+
+		/**
+		 * Sets aside as undetermined the user's expenses (or incomes) without a
+		 * tag of a payee, or all those before a day: they leave the ones to
+		 * categorize, without a tag nor teaching anything.
+		 */
+		async setAside(
+			householdId: string,
+			input: SetAsideUndetermined,
+		): Promise<CategorizeResult> {
+			return client.request({
+				method: "POST",
+				path: `${transactionsPath(householdId)}/uncategorized/set-aside`,
+				body: parseInput(setAsideUndeterminedSchema, input),
 				response: categorizeResultSchema,
 			});
 		},

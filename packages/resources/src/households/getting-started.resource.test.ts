@@ -126,3 +126,52 @@ describe("categorizing by payee", () => {
 		expect(requests).toHaveLength(1);
 	});
 });
+
+describe("setting aside as undetermined", () => {
+	it("counts those before a day, and sets aside a payee's or those before a day", async () => {
+		const counted = fakeApi(200, { count: 7 });
+		const payeeSetAside = fakeApi(200, { count: 34 });
+		const beforeSetAside = fakeApi(200, { count: 7 });
+
+		expect(
+			await counted.api.transactions.countUncategorized(HOUSEHOLD_ID, {
+				before: "2026-01-01",
+			}),
+		).toEqual({ count: 7 });
+		expect(
+			await payeeSetAside.api.transactions.setAside(HOUSEHOLD_ID, {
+				by: "payee",
+				key: payee.key,
+				type: "expense",
+			}),
+		).toEqual({ count: 34 });
+		expect(
+			await beforeSetAside.api.transactions.setAside(HOUSEHOLD_ID, {
+				by: "before",
+				date: "2026-01-01",
+			}),
+		).toEqual({ count: 7 });
+		expect(counted.requests[0]?.url).toBe(
+			`${base}/transactions/uncategorized/count?before=2026-01-01`,
+		);
+		expect(payeeSetAside.requests[0]).toMatchObject({
+			url: `${base}/transactions/uncategorized/set-aside`,
+			method: "POST",
+			body: { by: "payee", key: payee.key, type: "expense" },
+		});
+		expect(beforeSetAside.requests[0]).toMatchObject({
+			body: { by: "before", date: "2026-01-01" },
+		});
+	});
+
+	it("checks the day before sending", async () => {
+		const { api, fetch } = fakeApi(200, { count: 0 });
+
+		const error = await api.transactions
+			.setAside(HOUSEHOLD_ID, { by: "before", date: "soon" })
+			.catch((reason: unknown) => reason);
+
+		expect(error).toBeInstanceOf(ValidationError);
+		expect(fetch).not.toHaveBeenCalled();
+	});
+});

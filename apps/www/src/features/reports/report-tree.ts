@@ -27,8 +27,10 @@ export interface ReportSection {
 	total: number;
 	/** The tags at the top of the tree; the biggest first. */
 	nodes: ReportNode[];
-	/** The lines without a tag. */
+	/** The lines without a tag still to categorize. */
 	uncategorized: number;
+	/** The lines without a tag of the transactions set aside as undetermined. */
+	undetermined: number;
 }
 
 export interface ReportView {
@@ -87,7 +89,8 @@ function toReportNodes(
  * Each tag counts the incomes against the expenses, so a refund lowers what
  * its tag cost: a tag is an expense if, with its sub-tags, it cost more than
  * it brought in, and an income otherwise. The uncategorized lines don't net
- * out: an uncategorized salary would hide uncategorized expenses.
+ * out: an uncategorized salary would hide uncategorized expenses. Those of
+ * the transactions set aside as undetermined are kept apart likewise.
  */
 export function buildReport(
 	report: TagReport,
@@ -97,8 +100,13 @@ export function buildReport(
 	const ownNet = new Map<string, number>();
 	let uncategorizedExpense = 0;
 	let uncategorizedIncome = 0;
-	for (const { tagId, expense, income } of report.tags) {
-		if (tagId === null) {
+	let undeterminedExpense = 0;
+	let undeterminedIncome = 0;
+	for (const { tagId, undetermined, expense, income } of report.tags) {
+		if (tagId === null && undetermined) {
+			undeterminedExpense += expense;
+			undeterminedIncome += income;
+		} else if (tagId === null) {
 			uncategorizedExpense += expense;
 			uncategorizedIncome += income;
 		} else {
@@ -109,20 +117,26 @@ export function buildReport(
 	const spent = roots.filter(({ net }) => net < 0);
 	const earned = roots.filter(({ net }) => net > 0);
 	const expenseTotal =
-		uncategorizedExpense - spent.reduce((total, { net }) => total + net, 0);
+		uncategorizedExpense +
+		undeterminedExpense -
+		spent.reduce((total, { net }) => total + net, 0);
 	const incomeTotal =
-		uncategorizedIncome + earned.reduce((total, { net }) => total + net, 0);
+		uncategorizedIncome +
+		undeterminedIncome +
+		earned.reduce((total, { net }) => total + net, 0);
 
 	return {
 		expenses: {
 			total: expenseTotal,
 			nodes: toReportNodes(spent, -1, expenseTotal),
 			uncategorized: uncategorizedExpense,
+			undetermined: undeterminedExpense,
 		},
 		incomes: {
 			total: incomeTotal,
 			nodes: toReportNodes(earned, 1, incomeTotal),
 			uncategorized: uncategorizedIncome,
+			undetermined: undeterminedIncome,
 		},
 		balance: incomeTotal - expenseTotal,
 		isEmpty: report.tags.length === 0,

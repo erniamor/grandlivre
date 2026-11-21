@@ -5,6 +5,7 @@ import { SparklesIcon } from "lucide-react";
 import { useId } from "react";
 import { FormAlert } from "@/components/FormAlert";
 import { sensitiveClass } from "@/components/sensitive";
+import { SetAsideButton } from "@/features/categorize/SetAsideButton";
 import { TagPicker } from "@/features/tags/TagPicker";
 import type { TagNode } from "@/features/tags/tag-tree";
 import { getApi } from "@/lib/api";
@@ -30,7 +31,8 @@ interface PayeeGroupItemProps {
 
 /**
  * A payee's transactions without a tag: how many, how much, since when;
- * and one tag for all of them, the assistant's when it suggested one.
+ * and one tag for all of them, the assistant's when it suggested one, or
+ * all of them set aside as undetermined.
  */
 export function PayeeGroupItem({
 	household,
@@ -102,6 +104,7 @@ export function PayeeGroupItem({
 				>
 					{m.categorize_submit()}
 				</Button>
+				<SetAsideButton householdId={household.id} group={group} />
 			</div>
 			{noSuggestion && (
 				<p className="text-muted-foreground text-sm">

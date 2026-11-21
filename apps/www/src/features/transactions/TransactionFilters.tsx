@@ -12,6 +12,7 @@ import {
 	type TransactionListFilters,
 } from "@/features/transactions/transaction-filters";
 import { accountsWithDetails } from "@/features/transactions/transaction-view";
+import { UntaggedFilter } from "@/features/transactions/UntaggedFilter";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -28,8 +29,9 @@ interface TransactionFiltersProps {
 const ALL = "";
 
 /**
- * Narrows the list: words searched, a type, an account, a tag, a period, an
- * amount range. Each applies at once, the search once typing pauses.
+ * Narrows the list: words searched, a type, the transactions without a tag
+ * (to categorize or undetermined), an account, a tag, a period, an amount
+ * range. Each applies at once, the search once typing pauses.
  */
 export function TransactionFilters({
 	filters,
@@ -75,6 +77,10 @@ export function TransactionFilters({
 			<TransactionTypeFilter
 				value={filters.type}
 				onChange={(type) => change({ ...filters, type })}
+			/>
+			<UntaggedFilter
+				value={filters.untagged}
+				onChange={(untagged) => change({ ...filters, untagged })}
 			/>
 			<div className="grid gap-3 sm:grid-cols-2">
 				<SelectField

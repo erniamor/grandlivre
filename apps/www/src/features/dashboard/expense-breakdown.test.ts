@@ -11,18 +11,34 @@ const node = (id: string, amount: number): ReportNode => ({
 	children: [],
 });
 
-function view(nodes: ReportNode[], uncategorized = 0): ReportView {
+function view(
+	nodes: ReportNode[],
+	uncategorized = 0,
+	undetermined = 0,
+): ReportView {
 	const total =
-		nodes.reduce((sum, each) => sum + each.amount, 0) + uncategorized;
+		nodes.reduce((sum, each) => sum + each.amount, 0) +
+		uncategorized +
+		undetermined;
 	return {
-		expenses: { total, nodes, uncategorized },
-		incomes: { total: 0, nodes: [], uncategorized: 0 },
+		expenses: { total, nodes, uncategorized, undetermined },
+		incomes: { total: 0, nodes: [], uncategorized: 0, undetermined: 0 },
 		balance: -total,
 		isEmpty: total === 0,
 	};
 }
 
 describe("expenseBreakdown", () => {
+	it("keeps the undetermined lines apart from those still to categorize", () => {
+		const rows = expenseBreakdown(view([node("food", 300_00)], 50_00, 150_00));
+
+		expect(rows.map(({ kind, amount }) => ({ kind, amount }))).toEqual([
+			{ kind: "tag", amount: 300_00 },
+			{ kind: "undetermined", amount: 150_00 },
+			{ kind: "uncategorized", amount: 50_00 },
+		]);
+	});
+
 	it("lists the tags at the top and the uncategorized lines, the biggest first, with their share", () => {
 		const rows = expenseBreakdown(
 			view([node("home", 600_00), node("food", 300_00)], 100_00),

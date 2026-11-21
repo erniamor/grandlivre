@@ -1,8 +1,11 @@
 import type { ReportView } from "@/features/reports/report-tree";
 
-/** A row of the breakdown: a tag at the top of the tree, the uncategorized lines, or the rest. */
+/**
+ * A row of the breakdown: a tag at the top of the tree, the uncategorized
+ * lines (still to categorize, or undetermined), or the rest.
+ */
 export interface BreakdownRow {
-	kind: "tag" | "uncategorized" | "others";
+	kind: "tag" | "uncategorized" | "undetermined" | "others";
 	/** The tag's id, for a tag. */
 	tagId: string | null;
 	/** The tag's name, in the user's language; empty for the other kinds. */
@@ -18,14 +21,14 @@ export const BREAKDOWN_ROWS = 5;
 
 /**
  * The period's expenses by tag at the top of the tree, the biggest first,
- * the uncategorized lines as one of them; past `limit` rows, the rest
+ * the uncategorized lines and the undetermined ones as two of them; past `limit` rows, the rest
  * gathered in one "others" row, last.
  */
 export function expenseBreakdown(
 	view: ReportView,
 	limit: number = BREAKDOWN_ROWS,
 ): BreakdownRow[] {
-	const { total, nodes, uncategorized } = view.expenses;
+	const { total, nodes, uncategorized, undetermined } = view.expenses;
 	if (total <= 0) {
 		return [];
 	}
@@ -46,6 +49,17 @@ export function expenseBreakdown(
 						name: "",
 						amount: uncategorized,
 						share: share(uncategorized),
+					},
+				]
+			: []),
+		...(undetermined > 0
+			? [
+					{
+						kind: "undetermined" as const,
+						tagId: null,
+						name: "",
+						amount: undetermined,
+						share: share(undetermined),
 					},
 				]
 			: []),

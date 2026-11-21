@@ -83,7 +83,12 @@ describe("buildReport", () => {
 				],
 			],
 		]);
-		expect(view.incomes).toEqual({ total: 0, nodes: [], uncategorized: 0 });
+		expect(view.incomes).toEqual({
+			total: 0,
+			nodes: [],
+			uncategorized: 0,
+			undetermined: 0,
+		});
 		expect(view.balance).toBe(-200_000);
 	});
 
@@ -192,6 +197,33 @@ describe("buildReport", () => {
 		});
 		expect(outline(view.expenses.nodes)).toEqual([["Car", 40_000, 96]]);
 		expect(view.balance).toBe(208_500);
+	});
+
+	it("keeps the undetermined lines apart from those to categorize, in the totals", () => {
+		const view = buildReport(
+			{
+				from: "2026-11-01",
+				to: "2026-11-30",
+				tags: [
+					{ tagId: null, undetermined: false, expense: 1500, income: 0 },
+					{ tagId: null, undetermined: true, expense: 8000, income: 2000 },
+					{ tagId: "car", undetermined: false, expense: 40_000, income: 0 },
+				],
+			},
+			tags,
+			"en",
+		);
+
+		expect(view.expenses).toMatchObject({
+			total: 49_500,
+			uncategorized: 1500,
+			undetermined: 8000,
+		});
+		expect(view.incomes).toMatchObject({
+			total: 2000,
+			uncategorized: 0,
+			undetermined: 2000,
+		});
 	});
 
 	it("keeps the period's balance equal to all incomes minus all expenses", () => {

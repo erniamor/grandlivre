@@ -26,6 +26,8 @@ function rowName(row: BreakdownRow): string {
 	switch (row.kind) {
 		case "uncategorized":
 			return m.transaction_uncategorized();
+		case "undetermined":
+			return m.transaction_undetermined();
 		case "others":
 			return m.dashboard_breakdown_others();
 		default:

@@ -48,8 +48,11 @@ export function TransactionItem({
 			? m.transaction_adjustment()
 			: typeLabels[transaction.type]());
 	const isTransfer = transaction.type === "transfer";
+	const untaggedName = transaction.undetermined
+		? m.transaction_undetermined()
+		: m.transaction_uncategorized();
 	const tagNames = transactionTagNames(transaction, tags, locale).map(
-		(name) => name ?? m.transaction_uncategorized(),
+		(name) => name ?? untaggedName,
 	);
 	const details = isTransfer
 		? [

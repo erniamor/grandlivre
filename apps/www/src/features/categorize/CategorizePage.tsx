@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { PayeeGroupItem } from "@/features/categorize/PayeeGroupItem";
+import { SetAsideBeforeSection } from "@/features/categorize/SetAsideBeforeSection";
 import { TagSuggestionsBar } from "@/features/categorize/TagSuggestionsBar";
 import {
 	type ChoiceMap,
@@ -124,6 +125,7 @@ export function CategorizePage({
 					</ul>
 				</>
 			)}
+			<SetAsideBeforeSection householdId={household.id} />
 		</section>
 	);
 }

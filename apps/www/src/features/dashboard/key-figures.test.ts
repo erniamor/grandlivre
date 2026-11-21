@@ -3,8 +3,8 @@ import { keyFigures, monthToDate } from "@/features/dashboard/key-figures";
 import type { ReportView } from "@/features/reports/report-tree";
 
 const view = (expenses: number, incomes: number): ReportView => ({
-	expenses: { total: expenses, nodes: [], uncategorized: 0 },
-	incomes: { total: incomes, nodes: [], uncategorized: 0 },
+	expenses: { total: expenses, nodes: [], uncategorized: 0, undetermined: 0 },
+	incomes: { total: incomes, nodes: [], uncategorized: 0, undetermined: 0 },
 	balance: incomes - expenses,
 	isEmpty: expenses === 0 && incomes === 0,
 });

@@ -220,7 +220,7 @@ describe("ReportsPage", () => {
 		expect(incomes.queryByText("Food")).not.toBeInTheDocument();
 	});
 
-	it("links each tag to its transactions over the period, but not the uncategorized lines", async () => {
+	it("links each tag, and the uncategorized lines, to their transactions over the period", async () => {
 		const { user } = setUp();
 
 		const expenses = await section("Expenses");
@@ -245,8 +245,13 @@ describe("ReportsPage", () => {
 			`/transactions?tag=${groceries.id}&from=2026-11-01&to=2026-11-30`,
 		);
 		expect(
-			expenses.queryByRole("link", { name: /Uncategorized/ }),
-		).not.toBeInTheDocument();
+			expenses.getByRole("link", {
+				name: "See the transactions of Uncategorized over this period",
+			}),
+		).toHaveAttribute(
+			"href",
+			"/transactions?untagged=to-define&from=2026-11-01&to=2026-11-30",
+		);
 	});
 
 	it("says when a section has nothing", async () => {

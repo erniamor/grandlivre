@@ -17,8 +17,8 @@ const tagReport = {
 	from: "2026-11-01",
 	to: "2026-11-30",
 	tags: [
-		{ tagId: TAG_ID, expense: 18_000, income: 3000 },
-		{ tagId: null, expense: 1500, income: 250_000 },
+		{ tagId: TAG_ID, undetermined: false, expense: 18_000, income: 3000 },
+		{ tagId: null, undetermined: false, expense: 1500, income: 250_000 },
 	],
 };
 
@@ -28,7 +28,9 @@ const monthlyReport = {
 			month: "2026-10",
 			expense: 40_000,
 			income: 0,
-			tags: [{ tagId: TAG_ID, expense: 40_000, income: 0 }],
+			tags: [
+				{ tagId: TAG_ID, undetermined: false, expense: 40_000, income: 0 },
+			],
 		},
 		{ month: "2026-11", expense: 0, income: 0, tags: [] },
 	],

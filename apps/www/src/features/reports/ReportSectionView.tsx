@@ -3,10 +3,9 @@ import { useId } from "react";
 import { sensitiveClass } from "@/components/sensitive";
 import type { Period } from "@/features/reports/period";
 import { ReportNodeItem } from "@/features/reports/ReportNodeItem";
-import { ReportRow } from "@/features/reports/ReportRow";
 import type { ReportSection } from "@/features/reports/report-tree";
+import { UntaggedReportItem } from "@/features/reports/UntaggedReportItem";
 import { formatAmount } from "@/lib/money";
-import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 interface ReportSectionViewProps {
@@ -57,17 +56,22 @@ export function ReportSectionView({
 						/>
 					))}
 					{section.uncategorized > 0 && (
-						<li className="flex items-start gap-2 py-2 pl-6">
-							<ReportRow
-								name={m.transaction_uncategorized()}
-								amount={section.uncategorized}
-								share={section.uncategorized / section.total}
-								currency={currency}
-							/>
-							{/* No filter for the uncategorized lines: an empty place keeps
-							the amounts aligned with those of the tags */}
-							<span aria-hidden className="size-7 shrink-0" />
-						</li>
+						<UntaggedReportItem
+							untagged="to-define"
+							amount={section.uncategorized}
+							total={section.total}
+							currency={currency}
+							period={period}
+						/>
+					)}
+					{section.undetermined > 0 && (
+						<UntaggedReportItem
+							untagged="undetermined"
+							amount={section.undetermined}
+							total={section.total}
+							currency={currency}
+							period={period}
+						/>
 					)}
 				</ul>
 			)}

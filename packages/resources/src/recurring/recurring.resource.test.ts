@@ -185,6 +185,7 @@ describe("recurring", () => {
 			note: null,
 			origin: "recurring",
 			receipt: null,
+			undetermined: false,
 			lines: [{ id: TAG_ID, amount: 8_734, tagId: null }],
 			createdBy: null,
 			createdAt: NOW,

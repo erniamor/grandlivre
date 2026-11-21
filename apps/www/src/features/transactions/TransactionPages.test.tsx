@@ -17,6 +17,7 @@ import {
 	household,
 	page,
 	respondWith,
+	salary,
 	savings,
 	toSavings,
 } from "@/features/transactions/transaction-test-data";
@@ -468,10 +469,32 @@ describe("EditTransactionPage", () => {
 					payee: "Shell",
 					note: null,
 					lines: [{ amount: 8000, tagId: gas.id }],
+					undetermined: false,
 				},
 			},
 		]);
 		expect(success).toHaveBeenCalledWith("The transaction was saved.");
+	});
+
+	it("sets a transaction without a tag aside as undetermined", async () => {
+		const { user, onDone, writes } = renderEdit(salary);
+
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Undetermined" }),
+		);
+		await user.click(submit("Save"));
+
+		await vi.waitFor(() => expect(onDone).toHaveBeenCalledOnce());
+		expect(writes()[0]?.body).toMatchObject({ undetermined: true });
+	});
+
+	it("offers to set aside only a transaction without a tag", async () => {
+		renderEdit(fillUp);
+
+		expect(await screen.findByLabelText("Amount")).toBeVisible();
+		expect(
+			screen.queryByRole("checkbox", { name: "Undetermined" }),
+		).not.toBeInTheDocument();
 	});
 
 	it("clears the destination when the transfer is made to leave it", async () => {

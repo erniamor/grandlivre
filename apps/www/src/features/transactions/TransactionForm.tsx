@@ -20,6 +20,7 @@ import { useLastAccountId } from "@/features/transactions/last-account";
 import { ProposedTagPanel } from "@/features/transactions/ProposedTagPanel";
 import { TransactionFields } from "@/features/transactions/TransactionFields";
 import {
+	canBeUndetermined,
 	emptyLine,
 	formStateOf,
 	formStateOfDraft,
@@ -29,6 +30,7 @@ import {
 	usesProposedTag,
 	writableAccounts,
 } from "@/features/transactions/transaction-form";
+import { UndeterminedField } from "@/features/transactions/UndeterminedField";
 import { useLocalToday } from "@/features/transactions/use-local-today";
 import { errorMessage, formErrors } from "@/lib/error-messages";
 import { m } from "@/paraglide/messages";
@@ -106,6 +108,10 @@ export function TransactionForm({
 			locale,
 		),
 	);
+	// Set aside as undetermined: only a transaction already recorded
+	const [undetermined, setUndetermined] = useState(
+		transaction?.undetermined ?? false,
+	);
 	// The tag the assistant proposed, until the user turns it down
 	const [proposal, setProposal] = useState(noteDraft?.proposedTag ?? null);
 	const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
@@ -147,6 +153,8 @@ export function TransactionForm({
 	};
 	const change = (fields: Partial<TransactionFormState>) =>
 		setDraft({ ...current, ...fields });
+	const undeterminable =
+		transaction !== undefined && canBeUndetermined(current);
 	// Shared: an expense or a refund paid from one member's own account
 	const shareable =
 		sharing !== undefined &&
@@ -199,6 +207,9 @@ export function TransactionForm({
 					return;
 				}
 				let input = result.input;
+				if (input.type !== "transfer" && transaction) {
+					input = { ...input, undetermined: undeterminable && undetermined };
+				}
 				if (input.type !== "transfer" && sharing) {
 					if (shareable && shares.on) {
 						const split = toShareSplit(
@@ -276,6 +287,9 @@ export function TransactionForm({
 					context={sharing}
 					error={errors.shares}
 				/>
+			)}
+			{undeterminable && (
+				<UndeterminedField checked={undetermined} onChange={setUndetermined} />
 			)}
 			<FormAlert message={apiErrors.form ?? unshownError} />
 			<Button type="submit" disabled={mutation.isPending}>

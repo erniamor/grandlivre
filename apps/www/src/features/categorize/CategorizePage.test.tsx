@@ -1,5 +1,5 @@
 import type { Household, Tag, UncategorizedPayee } from "@repo/schemas";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CategorizePage } from "@/features/categorize/CategorizePage";
@@ -83,6 +83,12 @@ function setUp(
 		if (request.path.endsWith("/transactions/categorize")) {
 			return { status: 200, body: { count: 34 } };
 		}
+		if (request.path.endsWith("/transactions/uncategorized/count")) {
+			return { status: 200, body: { count: 12 } };
+		}
+		if (request.path.endsWith("/transactions/uncategorized/set-aside")) {
+			return { status: 200, body: { count: 12 } };
+		}
 		return undefined;
 	});
 	renderWithRouter(
@@ -98,6 +104,53 @@ const writes = (requests: ApiRequest[]) =>
 	requests.filter((request) => request.method !== "GET");
 
 describe("CategorizePage", () => {
+	it("sets a payee's transactions aside as undetermined, without a tag", async () => {
+		const { requests, user } = setUp([costco]);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "Set the transactions of COSTCO ESSENCE W100 aside as undetermined",
+			}),
+		);
+
+		await vi.waitFor(() =>
+			expect(writes(requests)).toEqual([
+				{
+					method: "POST",
+					path: `/households/${household.id}/transactions/uncategorized/set-aside`,
+					body: { by: "payee", key: "costcoessencew", type: "expense" },
+				},
+			]),
+		);
+	});
+
+	it("sets aside everything without a tag before a day, once told how many and confirmed", async () => {
+		const { requests, user } = setUp([costco]);
+
+		fireEvent.change(await screen.findByLabelText("Before"), {
+			target: { value: "2026-01-01" },
+		});
+		expect(
+			await screen.findByText("Transactions without a tag before this day: 12"),
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Set aside" }));
+		await user.click(
+			within(screen.getByRole("alertdialog")).getByRole("button", {
+				name: "Set aside",
+			}),
+		);
+
+		await vi.waitFor(() =>
+			expect(writes(requests)).toEqual([
+				{
+					method: "POST",
+					path: `/households/${household.id}/transactions/uncategorized/set-aside`,
+					body: { by: "before", date: "2026-01-01" },
+				},
+			]),
+		);
+	});
+
 	it("lists the payees without a tag, the expenses and the refunds apart", async () => {
 		setUp([costco, refund]);
 

@@ -19,3 +19,26 @@ export function uncategorizedQueryOptions(householdId: string) {
 			}),
 	});
 }
+
+/**
+ * How many of the user's expenses and incomes without a tag are dated
+ * before a day: under the transactions' key, so it follows them.
+ */
+export function uncategorizedCountQueryOptions(
+	householdId: string,
+	before: string,
+) {
+	return queryOptions({
+		queryKey: [
+			...transactionsQueryKey(householdId),
+			"uncategorized",
+			"count",
+			before,
+		] as const,
+		queryFn: ({ signal }) =>
+			getApi().transactions.countUncategorized(householdId, {
+				before,
+				signal,
+			}),
+	});
+}
