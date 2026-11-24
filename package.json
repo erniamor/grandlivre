@@ -14,7 +14,8 @@
 		"typecheck": "pnpm -r typecheck",
 		"check": "biome check .",
 		"check:fix": "biome check --write .",
-		"db:reset": "pnpm --filter api db:reset"
+		"db:reset": "pnpm --filter api db:reset",
+		"db:migrate": "pnpm --filter api db:migrate"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
